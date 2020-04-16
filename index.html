@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/css/bootstrap-slider.min.css" integrity="sha256-G3IAYJYIQvZgPksNQDbjvxd/Ca1SfCDFwu2s2lt0oGo=" crossorigin="anonymous" />
+    <title>Virtueller Chor</title>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">Virtueller Chor</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="index.html">Mitsingen</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="conduct.php">Dirigieren</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="mix.php">Abmischen</a>
+                </li>
+            </ul>
+            <form id="login" class="form-inline my-2 my-lg-0">
+                <input type="text" class="form-control mr-sm-2" id="name" placeholder="Dein Name" pattern="[A-Za-z0-9]+">
+                <input type="submit" class="btn btn-light my-2 my-sm-0" value="Anmelden">
+            </form>
+        </div>
+    </nav>
+    <div class="container" style="margin-bottom: 20px;">
+        <br>
+        <h4>Bitte melde dich an.</h4>
+        <h5 style="color: darkred;">&nbsp;</h5>
+        <br>
+        <audio id="playback"></audio>
+        <div id="editing" style="display: none;">
+            <h5>Song</h5>
+            <div id="songWavesurfer"></div>
+            <label for="songVolume" style="padding: 0; margin: 10px 20px 10px;">Lautstärke</label>
+            <input id="songVolume" data-slider-id="songVolume" type="text" data-slider-min="0" data-slider-max="2" data-slider-step="0.01" data-slider-value="1" style="margin: 10px 0;"/>
+            <p></p>
+            <h5>Aufnahme</h5>
+            <div id="recordingWavesurfer"></div>
+            <label for="recordingVolume" style="padding: 0; margin: 10px 20px 10px;">Lautstärke</label>
+            <input id="recordingVolume" data-slider-id="recordingVolume" type="text" data-slider-min="0" data-slider-max="2" data-slider-step="0.01" data-slider-value="1" style="margin: 10px 0;"/>
+            <p></p>
+            <button id="preview" class="btn btn-outline-primary" style="margin-right: 6px;">Abspielen</button>
+            <button id="upload" class="btn btn-outline-success" style="margin-right: 6px;">Hochladen</button>
+            <button id="discard" class="btn btn-outline-danger">Verwerfen</button>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/OpusMediaRecorder.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/opus-media-recorder@latest/encoderWorker.umd.js"></script>
+    <script src="https://www.WebRTC-Experiment.com/RecordRTC.js"></script>
+    <script src="https://unpkg.com/wavesurfer.js"></script>
+    <script src="https://unpkg.com/wavesurfer.js/dist/plugin/wavesurfer.regions.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-slider/10.6.2/bootstrap-slider.min.js" integrity="sha256-oj52qvIP5c7N6lZZoh9z3OYacAIOjsROAcZBHUaJMyw=" crossorigin="anonymous"></script>    <script src="app.js"></script>
+    <script>
+        initializeIndex();
+    </script>
+</body>
+</html>
