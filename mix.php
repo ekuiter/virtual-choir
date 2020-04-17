@@ -1,6 +1,5 @@
 <?php
 
-define("INCLUDE_APP", 1);
 require_once "app.php";
 
 $rows = DB::query("SELECT DISTINCT date, song FROM uploads ORDER BY date DESC");
