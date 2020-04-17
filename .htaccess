@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Virtueller Chor"
+AuthUserFile /var/www/html/.htpasswd
+Require valid-user

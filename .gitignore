@@ -1,4 +1,10 @@
 _stuff
 mixes
+!mixes/.htaccess
 songs
 uploads
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
+.htpasswd
+.ebextensions/https.config

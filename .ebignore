@@ -1,0 +1,8 @@
+.git
+.gitignore
+_stuff
+mixes
+!mixes/.htaccess
+uploads
+README.md
+.ebextensions/https.config.template

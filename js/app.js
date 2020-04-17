@@ -233,15 +233,9 @@ const Index = () => {
     const [recordingTrackOffset, setRecordingTrackOffset] = useState();
     const [songTrackGain, setSongTrackGain] = useState();
     const [recordingTrackGain, setRecordingTrackGain] = useState();
-    const [_, setTime] = useState(Date.now());
     const playbackRef = useRef();
 
-    useEffect(() => {
-        const interval = setInterval(() => setTime(Date.now()), 1000);
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => fetchAudioBuffer("songs/" + song + ".mp3"), [song]);
+    useEffect(() => song && fetchAudioBuffer("songs/" + song + ".mp3"), [song]);
 
     const onRecordSubmit = e => {
         e.preventDefault();
@@ -303,7 +297,6 @@ const Index = () => {
         setRecordingTrackOffset();
     };
 
-    const currentTime = () => recorder.getInternalRecorder().getInternalRecorder().context.currentTime.toFixed(0);
     const recordDisabled = busy || recorder || recordingUri;
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
 
@@ -329,7 +322,7 @@ const Index = () => {
                     <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;">Playback</label>
                 </div>
                 <input type=submit class="btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0" 
-                    value=${recorder ? "Aufnahme stoppen (" + currentTime() + ") ..." : "Aufnahme starten!"} disabled=${busy || recordingUri} />
+                    value=${recorder ? "Aufnahme stoppen ..." : "Aufnahme starten!"} disabled=${busy || recordingUri} />
             </form>
         `}
         ${recordingUri && html`

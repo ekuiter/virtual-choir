@@ -2,10 +2,25 @@
 
 require_once "db.class.php";
 
-DB::$host = "";
-DB::$user = "";
-DB::$password = "";
-DB::$dbName = "";
+DB::$host = $_ENV["RDS_HOSTNAME"];
+DB::$user = $_ENV["RDS_USERNAME"];
+DB::$password = $_ENV["RDS_PASSWORD"];
+DB::$dbName = $_ENV["RDS_DB_NAME"];
+
+$sql = <<<SQL
+    CREATE TABLE IF NOT EXISTS `uploads` (
+        `id` int(11) NOT NULL AUTO_INCREMENT,
+        `name` varchar(255) NOT NULL,
+        `date` varchar(255) NOT NULL,
+        `file` varchar(255) NOT NULL,
+        `offset` varchar(255) NOT NULL,
+        `song` varchar(255) NOT NULL,
+        `gain` varchar(255) NOT NULL,
+        `register` varchar(255) NOT NULL,
+        PRIMARY KEY (`id`)
+    );
+SQL;
+DB::query($sql);
 
 if ($_FILES) {
     $tmp_name = $_FILES["file"]["tmp_name"];
