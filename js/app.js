@@ -205,7 +205,7 @@ const Track = ({title, src, defaultOffset = 0.5, defaultGain = 1, displaySeconds
             <img src="img/loading.gif" width="100" height="100" style="margin-top: 50px;" />
         </div>
         <audio src=${src} ref=${audioRef} onended=${() => onSetIsPlaying && onSetIsPlaying(false)} />
-        <div ref=${zoomviewRef} style="height: 150px;" />
+        <div ref=${zoomviewRef} style="height: 140px;" />
         <div ref=${overviewRef} style="height: 80px;" />
         <div style=${peaks ? "display: flex;" : "display: none;"}>
             ${showPlayButton && html`<${PlayButton} isPlaying=${isPlaying} onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />`}
@@ -302,34 +302,27 @@ const Index = () => {
 
     return html`
         <h4 style="margin-bottom: 15px;">Mitsingen</h4>
-        ${!recordingUri && html`
-            <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
-                <input type=text class="form-control mr-sm-2" placeholder="Dein Name" pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
-                <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
-                    <option>Deine Stimmlage</option>
-                    ${registers.map(_register => html`
-                        <option value=${_register} selected=${register === _register}>${_register}</option>
-                    `)}
-                </select>
-                <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setSong(e.target.value)}>
-                    <option>Welcher Song?</option>
-                    ${Object.keys(songs).map((_song) => html`
-                        <option value=${_song} selected=${song === _song}>${_song}</option>
-                    `)}
-                </select>
-                <div class=form-check>
-                    <input class=form-check-input type=checkbox id=playback checked=${playback} disabled=${recordDisabled} onchange=${e => setPlayback(e.target.checked)} />
-                    <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;">Playback</label>
-                </div>
-                <input type=submit class="btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0" 
-                    value=${recorder ? "Aufnahme stoppen ..." : "Aufnahme starten!"} disabled=${busy || recordingUri} />
-            </form>
-        `}
-        ${recordingUri && html`
-            <${PlayButton} isPlaying=${isPlaying} onClick=${() => setIsPlaying(!isPlaying)} disabled=${uploadDisabled} />
-            <button id="upload" class="btn btn-outline-success" style="margin-right: 6px;" disabled=${uploadDisabled} onclick=${onUploadClick}>Hochladen</button>
-            <button id="discard" class="btn btn-outline-danger" onclick=${onDiscardClick}>Verwerfen</button>
-        `}
+        <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
+            <input type=text class="form-control mr-sm-2" placeholder="Dein Name" pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
+            <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
+                <option>Deine Stimmlage</option>
+                ${registers.map(_register => html`
+                    <option value=${_register} selected=${register === _register}>${_register}</option>
+                `)}
+            </select>
+            <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setSong(e.target.value)}>
+                <option>Welcher Song?</option>
+                ${Object.keys(songs).map((_song) => html`
+                    <option value=${_song} selected=${song === _song}>${_song}</option>
+                `)}
+            </select>
+            <div class=form-check>
+                <input class=form-check-input type=checkbox id=playback checked=${playback} disabled=${recordDisabled} onchange=${e => setPlayback(e.target.checked)} />
+                <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;">Playback</label>
+            </div>
+            <input type=submit class="btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0" 
+                value=${recorder ? "Aufnahme stoppen ..." : "Aufnahme starten!"} disabled=${busy || recordingUri} />
+        </form>
         ${song && !recordingUri && html`
             <br />
             <iframe src="songs/${song}.pdf" style="width: 100%; height: 100vh;" frameborder="0"></iframe>
@@ -342,6 +335,10 @@ const Index = () => {
             <${Track} title="Deine Aufnahme" src=${recordingUri} onOffsetUpdated=${setRecordingTrackOffset}
                 onGainUpdated=${setRecordingTrackGain} isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsRecordingTrackReady(true)} />
+            <p />
+            <${PlayButton} isPlaying=${isPlaying} onClick=${() => setIsPlaying(!isPlaying)} disabled=${uploadDisabled} />
+            <button id="upload" class="btn btn-outline-success" style="margin-right: 6px;" disabled=${uploadDisabled} onclick=${onUploadClick}>Hochladen</button>
+            <button id="discard" class="btn btn-outline-danger" onclick=${onDiscardClick}>Verwerfen</button>
         `}
     `;
 };

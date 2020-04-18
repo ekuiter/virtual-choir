@@ -6,7 +6,7 @@ Coordinates voice recordings and synchronized mixes in virtual choirs.
 
 ### XAMPP setup instructions
 
-This works out of the box with XAMPP by accessing `http://[::1]/` in the browser.
+This works out of the box with XAMPP by accessing `http://[::1]/` in the browser (make sure ffmpeg is installed).
 
 ### AWS setup instructions
 
@@ -26,3 +26,12 @@ A custom domain is required because `MediaDevices.getUserMedia()` only works wit
 - You may need to press `y` and `Enter` after installing dependencies. Then agree to the terms and IP logging.
 - Take note of the `TXT` field, create according `CNAME` and `TXT` DNS records for your custom domain, wait a few seconds, and press `Enter`.
 - `eb deploy`
+
+### Benchmarking
+
+Use ApacheBench to simulate `n` users with `c` concurrent requests:
+
+```
+# use C:\xampp\apache\bin\abs.exe on Windows
+ab -n 100 -c 50 -A <user>:<password> https://<custom-domain>/
+```
