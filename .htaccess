@@ -1,4 +1,6 @@
-AuthType Basic
-AuthName "Virtueller Chor"
-AuthUserFile /var/www/html/.htpasswd
-Require valid-user
+<If "%{REMOTE_ADDR} != '127.0.0.1' && %{REMOTE_ADDR} != '::1'">
+    AuthType Basic
+    AuthName "Virtueller Chor"
+    AuthUserFile /var/www/html/.htpasswd
+    Require valid-user
+</If>
