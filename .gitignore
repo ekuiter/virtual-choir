@@ -7,4 +7,3 @@ uploads
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 .htpasswd
-.ebextensions/https.config
