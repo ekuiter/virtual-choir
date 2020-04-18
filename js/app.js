@@ -1,5 +1,4 @@
-import {html, render, useState, useEffect, useRef} from './preact.js';
-
+const {html, render, useState, useEffect, useRef} = window.htmPreact;
 const Peaks = window.peaks;
 const snippetDuration = 20;
 
@@ -21,8 +20,9 @@ const registers = [
 ];
 
 const navigation = [
-    { title: "Mitsingen", href: "index.html" },
-    { title: "Abmischen", href: "mix.html" }
+    {title: "Mitsingen", href: "index.html"},
+    {title: "Abmischen", href: "mix.html"},
+    {title: "GitHub", href: "https://github.com/ekuiter/virtual-choir"}
 ];
 
 // API
