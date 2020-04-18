@@ -2,10 +2,14 @@
 
 require_once "db.class.php";
 
-DB::$host = $_ENV["RDS_HOSTNAME"];
-DB::$user = $_ENV["RDS_USERNAME"];
-DB::$password = $_ENV["RDS_PASSWORD"];
-DB::$dbName = $_ENV["RDS_DB_NAME"];
+if (file_exists("local.php"))
+    require_once "local.php";
+else {
+    DB::$host = $_ENV["RDS_HOSTNAME"];
+    DB::$user = $_ENV["RDS_USERNAME"];
+    DB::$password = $_ENV["RDS_PASSWORD"];
+    DB::$dbName = $_ENV["RDS_DB_NAME"];
+}
 
 $sql = <<<SQL
     CREATE TABLE IF NOT EXISTS `uploads` (

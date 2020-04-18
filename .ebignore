@@ -7,3 +7,4 @@ uploads
 README.md
 .ebextensions/https.config.template
 img/screenshot.png
+local.php

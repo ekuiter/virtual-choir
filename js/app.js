@@ -26,17 +26,17 @@ const navigation = [
 ];
 
 // API
-function post(url, params) {
+function post(params) {
     const data = new FormData();
     for (const key in params)
         data.append(key, params[key]);
-    return window.fetch(url, {method: "POST", body: data});
+    return window.fetch("app.php", {method: "POST", body: data});
 }
 
 const upload = (blobUri, name, register, song, offset, gain) =>
     fetch(blobUri)
         .then(res => res.blob())
-        .then(blob => post("app.php", {
+        .then(blob => post({
             name: name,
             register: register,
             song: song,
@@ -338,15 +338,23 @@ const Index = () => {
                 onReady=${() => setIsRecordingTrackReady(true)} />
             <p />
             <${PlayButton} isPlaying=${isPlaying} onClick=${() => setIsPlaying(!isPlaying)} disabled=${uploadDisabled} />
-            <button id="upload" class="btn btn-outline-success" style="margin-right: 6px;" disabled=${uploadDisabled} onclick=${onUploadClick}>Hochladen</button>
-            <button id="discard" class="btn btn-outline-danger" onclick=${onDiscardClick}>Verwerfen</button>
+            <button class="btn btn-outline-success" style="margin-right: 6px;" disabled=${uploadDisabled} onclick=${onUploadClick}>Hochladen</button>
+            <button class="btn btn-outline-danger" onclick=${onDiscardClick}>Verwerfen</button>
         `}
     `;
 };
 
-const Mix = () => html`
-    <h4>Abmischen</h4>
-`;
+const Mix = () => {
+    const onResetClick = e => {
+        e.preventDefault();
+        if (confirm("Sicher? Dies löscht alle Aufnahmen."))
+            post({reset: true}).then(() => location.reload());
+    };
+    return html`
+        <h4>Abmischen</h4>
+        <button class="btn btn-outline-danger" onclick=${onResetClick}>Zurücksetzen</button>
+    `
+};
 
 const App = () => html`
     <${Navigation} activeHref=${location.pathname.indexOf(".") !== -1 ? location.pathname : "index.html"} />
