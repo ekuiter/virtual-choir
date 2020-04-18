@@ -11,12 +11,12 @@ $sql = <<<SQL
     CREATE TABLE IF NOT EXISTS `uploads` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
         `name` varchar(255) NOT NULL,
-        `date` varchar(255) NOT NULL,
-        `file` varchar(255) NOT NULL,
-        `offset` varchar(255) NOT NULL,
-        `song` varchar(255) NOT NULL,
-        `gain` varchar(255) NOT NULL,
         `register` varchar(255) NOT NULL,
+        `song` varchar(255) NOT NULL,
+        `offset` varchar(255) NOT NULL,
+        `gain` varchar(255) NOT NULL,
+        `file` varchar(255) NOT NULL,
+        `date` varchar(255) NOT NULL,
         PRIMARY KEY (`id`)
     );
 SQL;
@@ -27,8 +27,8 @@ if ($_FILES) {
     $file = md5_file($tmp_name) . ".dat";
     @mkdir("uploads");
     move_uploaded_file($tmp_name, "uploads/" . $file);
-    DB::query("INSERT INTO uploads (name, register, offset, gain, song, file) VALUES (%s, %s, %s, %s, %s, %s)",
-        $_POST["name"], $_POST["register"], $_POST["offset"], $_POST["gain"], $_POST["song"], $file);
+    DB::query("INSERT INTO uploads (name, register, song, offset, gain, date, file) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        $_POST["name"], $_POST["register"], $_POST["song"], $_POST["offset"],  $_POST["gain"], $_POST["date"], $file);
     die;
 }
 

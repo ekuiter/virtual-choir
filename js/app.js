@@ -42,6 +42,7 @@ const upload = (blobUri, name, register, song, offset, gain) =>
             song: song,
             offset: offset,
             gain: gain,
+            date: (new Date).toISOString().replace(/:|\./g, "-"),
             file: new File([blob], "audio.dat", {type: "application/octet-stream"})
         }));
 

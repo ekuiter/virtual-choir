@@ -24,8 +24,8 @@ A custom domain is required because `MediaDevices.getUserMedia()` only works wit
 - Take note of the `CNAME` field in `eb status`.
 - `eb ssh -c "wget https://dl.eff.org/certbot-auto; chmod a+x certbot-auto; sudo ./certbot-auto certonly --debug --manual --preferred-challenges dns --email <your-email-address> --domains <custom-domain>"`
 - You may need to press `y` and `Enter` after installing dependencies. Then agree to the terms and IP logging.
-- Take note of the `TXT` field, create according `CNAME` and `TXT` DNS records for your custom domain, wait a few seconds, and press `Enter`.
-- `eb deploy`
+- Take note of the `TXT` field, create according `CNAME` and `TXT` DNS records for your custom domain, wait a few seconds to minutes for the DNS update, and press `Enter`.
+- Restart Apache with `eb deploy`.
 
 ### Benchmarking
 
