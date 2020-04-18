@@ -1,5 +1,7 @@
 ## Virtual Choir
 
+![Screenshot](img/screenshot.png)
+
 Coordinates voice recordings and synchronized mixes in virtual choirs.
 
 ### AWS setup instructions
