@@ -1,23 +1,7 @@
 const {html, render, useState, useEffect, useRef} = window.htmPreact;
 const Peaks = window.peaks;
 const snippetDuration = 20;
-
-const songs = {
-    "21Guns": {offset: 0.41},
-    "BabaYetu": {offset: 1},
-    "ColorsOfTheWind": {offset: 1},
-    "Erlkoenig": {offset: 1},
-    "EveningRise80bpm": {offset: 1},
-    "WeWillRockYou": {offset: 1}
-};
-
-const registers = [
-    "Sopran",
-    "Alt",
-    "Tenor",
-    "Bass",
-    "Nichts davon"
-];
+const registers = ["Sopran", "Alt", "Tenor", "Bass", "Nichts davon"];
 
 const navigation = [
     {title: "Aufnehmen", href: "index.html"},
@@ -33,15 +17,11 @@ function post(params) {
     return window.fetch("php/app.php", {method: "POST", body: data});
 }
 
-const uploadTrack = (blobUri, name, register, song, offset, gain) =>
+const uploadTrack = (blobUri, name, register, song, songOffset, recordingOffset, gain) =>
     fetch(blobUri)
         .then(res => res.blob())
         .then(blob => post({
-            name: name,
-            register: register,
-            song: song,
-            offset: offset,
-            gain: gain,
+            name, register, song, songOffset, recordingOffset, gain,
             date: (new Date).toISOString(),
             file: new File([blob], "audio.dat", {type: "application/octet-stream"})
         }));
@@ -87,7 +67,20 @@ const fetchAudioBuffer = (duration => {
     };
 })(snippetDuration);
 
-// Preact components
+// React hook for debounced API calls
+const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(
+      () => {
+        const timeout = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(timeout);
+      },
+      [value]
+    );
+    return debouncedValue;
+  }
+
+// React components
 const Navigation = ({activeHref}) => html`
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class=navbar-brand href=index.html>Virtueller Chor</a>
@@ -144,13 +137,13 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
                 mediaElement: audioRef.current,
                 webAudio: {
                     audioContext: ctx,
-                    audioBuffer: audioBuffer
+                    audioBuffer
                 },
                 zoomLevels: [1],
                 points: [{
                     id: "offset",
                     time: offset,
-                    editable: true,
+                    editable: !!onOffsetUpdated,
                     color: "#ff0000"
                 }]
             };
@@ -275,10 +268,9 @@ const Index = () => {
     };
 
     const onUploadClick = () => {
-        const offset = recordingTrackOffset - getSongTrackOffset();
-        const gain = recordingTrackGain / songTrackGain;
         setBusy(true);
-        uploadTrack(recordingUri, name, register, song, offset, gain)
+        const gain = !isNaN(recordingTrackGain / songTrackGain) ? recordingTrackGain / songTrackGain : 1;
+        uploadTrack(recordingUri, name, register, song, getSongTrackOffset(), recordingTrackOffset, gain)
             .then(onDiscardClick)
             .then(() => setBusy(false));
     };
@@ -326,7 +318,7 @@ const Index = () => {
             <audio src="songs/${song}.mp3" ref=${playbackRef} />
         `}
         ${recordingUri && html`
-            <${Track} title="Song" src="songs/${song}.mp3" offset=${getSongTrackOffset()} gain=${songTrackGain}
+            <${Track} title=${song} src="songs/${song}.mp3" offset=${getSongTrackOffset()} gain=${songTrackGain}
                 onOffsetUpdated=${setSongTrackOffset} onGainUpdated=${setSongTrackGain}
                 isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsSongTrackReady(true)} />
@@ -342,21 +334,45 @@ const Index = () => {
     `;
 };
 
-const Mix = () => {
+const Mix = ({debounceApiCalls = 250}) => {
+    const [busy, setBusy] = useState();
     const [selectedTrackIds, setSelectedTracksIds] = useState([]);
     const [readyTracksIds, setReadyTracksIds] = useState([]);
     const [playingTrackIds, setPlayingTracksIds] = useState([]);
+    const [songTrackPlaying, setSongTrackPlaying] = useState();
+    const [songTrackReady, setSongTrackReady] = useState();
+    const [songTrackGain, setSongTrackGain] = useState(1);
+    const [pendingApiCall, setPendingApiCall] = useState();
+    const debouncedPendingApiCall = useDebounce(pendingApiCall, debounceApiCalls);
 
     useEffect(() => {
         if (location.hash)
             setSelectedTracksIds(JSON.parse(atob(location.hash.substr(1))));
     }, []);
 
-    const isReady = selectedTrackIds.length === readyTracksIds.length;
-    const isPlaying = playingTrackIds.length > 0;
-    const selectedTracks = selectedTrackIds.map(id => tracks.find(track => track.id === id));
+    useEffect(() => {
+        if (debouncedPendingApiCall) {
+            setBusy(true);
+            post(debouncedPendingApiCall).then(() => {
+                setPendingApiCall();
+                setBusy(false);
+            });
+        }
+    }, [debouncedPendingApiCall]);
+
+    const getSelectedSong = () => {
+        const track = tracks.find(track => track.id === selectedTrackIds[0]);
+        if (track)
+            return track.song;
+    };
+
+    const isReady = songTrackReady === getSelectedSong() && selectedTrackIds.length === readyTracksIds.length;
+    const isPlaying = songTrackPlaying === getSelectedSong() || playingTrackIds.length > 0;
+    const getSelectedTracks = selectedTrackIds => selectedTrackIds.map(id => tracks.find(track => track.id === id));
     const addReadyTrack = id => () => setReadyTracksIds(readyTracksIds => [...readyTracksIds, id]);
-    const formatDate = date => date.getDate() + "." + ("0" + (date.getMonth() + 1)).slice(-2) + " " + date.getHours() + ":" + date.getMinutes();
+    const formatDate = date => ("0" + date.getDate()).slice(-2) + "." + ("0" + (date.getMonth() + 1)).slice(-2) +
+        " " + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
+    const onlyUnique = (value, index, self) => self.indexOf(value) === index;
 
     const setPlayingTrack = id => isPlaying => setPlayingTracksIds(playingTrackIds => {
         if (isPlaying)
@@ -367,10 +383,15 @@ const Mix = () => {
 
     const onTracksSelected = e => {
         const newSelectedTrackIds = [...e.target.options].filter(o => o.selected).map(o => o.value);
-        setReadyTracksIds(readyTrackIds => readyTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
-        setPlayingTracksIds(playingTrackIds => playingTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
-        setSelectedTracksIds(newSelectedTrackIds);
-        location.hash = btoa(JSON.stringify(newSelectedTrackIds));
+        if (getSelectedTracks(newSelectedTrackIds).map(({song}) => song).filter(onlyUnique).length > 1)
+            window.alert("Bitte nur Aufnahmen eines einzelnen Songs wählen.");
+        else {
+            setReadyTracksIds(readyTrackIds => readyTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
+            setPlayingTracksIds([]);
+            setSongTrackPlaying(null);
+            setSelectedTracksIds(newSelectedTrackIds);
+            location.hash = btoa(JSON.stringify(newSelectedTrackIds));
+        }
     };
 
     const onResetClick = e => {
@@ -380,28 +401,51 @@ const Mix = () => {
     };
 
     const onPlayClick = () => {
-        if (isPlaying)
+        if (isPlaying) {
             setPlayingTracksIds([]);
-        else
+            setSongTrackPlaying(null);
+        } else {
             setPlayingTracksIds(selectedTrackIds);
+            setSongTrackPlaying(getSelectedSong());
+        }
     };
 
     return html`
         <button class="btn btn-outline-danger" style="float: right;" onclick=${onResetClick}>Alles löschen</button>
         <h4>Abmischen</h4>
-        <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTracks.length > 0 ? 5 : 20} onchange=${onTracksSelected}>
+        <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
             ${tracks.map(({id, name, register, song, date}) =>
                 html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)} ${song}</strong> ${name} (${register})</option>`)}
         </select>
-        ${selectedTracks.length > 0 && html`
-            <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
-            ${selectedTracks.map(({id, name, register, song, date, md5, offset, gain}) => html`
-                <${Track} key=${id} title=${html`<strong>${formatDate(date)} ${song}</strong> ${name} (${register})`}
-                    src="tracks/${md5}.dat" offset=${parseFloat(offset)} gain=${parseFloat(gain)}
-                    onOffsetUpdated=${() => {}} onGainUpdated=${() => {}}
-                    isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
-                    onReady=${addReadyTrack(id)} />
-            `)}
+        ${selectedTrackIds.length > 0 && html`
+            <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${busy || !isReady} />
+            <button class="btn btn-outline-success" disabled=${busy || !isReady} onclick=${() => {}}>Abmischen</button>
+            <${Track} key=${getSelectedSong()} title=${getSelectedSong()} src="songs/${getSelectedSong()}.mp3" offset=${songs[getSelectedSong()].offset}
+                gain=${songTrackGain} onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === getSelectedSong()}
+                onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && getSelectedSong())}
+                onReady=${() => setSongTrackReady(getSelectedSong())} />
+            ${getSelectedTracks(selectedTrackIds).map(track => {
+                const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
+
+                const onOffsetUpdated = offset => {
+                    track.recordingOffset = offset + (parseFloat(songOffset) - songs[song].offset);
+                    setPendingApiCall({"set-for": id, "recordingOffset": track.recordingOffset});
+                };
+
+                const onGainUpdated = gain => {
+                    track.gain = gain;
+                    setPendingApiCall({"set-for": id, "gain": track.gain});
+                };
+
+                return html`
+                    <${Track} key=${id} title="${name} (${register})"
+                        src="tracks/${md5}.dat"
+                        offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)} gain=${parseFloat(gain)}
+                        onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}
+                        isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
+                        onReady=${addReadyTrack(id)} />
+                `;
+            })}
         `}
     `
 };

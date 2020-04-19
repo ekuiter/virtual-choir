@@ -17,7 +17,8 @@ $sql = <<<SQL
         `name` varchar(255) NOT NULL,
         `register` varchar(255) NOT NULL,
         `song` varchar(255) NOT NULL,
-        `offset` varchar(255) NOT NULL,
+        `songOffset` varchar(255) NOT NULL,
+        `recordingOffset` varchar(255) NOT NULL,
         `gain` varchar(255) NOT NULL,
         `md5` varchar(255) NOT NULL,
         `date` varchar(255) NOT NULL,
@@ -31,8 +32,8 @@ if ($_FILES) {
     $md5 = md5_file($tmp_name);
     @mkdir("../tracks");
     move_uploaded_file($tmp_name, "../tracks/" . $md5 . ".dat");
-    DB::query("INSERT INTO tracks (name, register, song, offset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s)",
-        $_POST["name"], $_POST["register"], $_POST["song"], $_POST["offset"],  $_POST["gain"], $_POST["date"], $md5);
+    DB::query("INSERT INTO tracks (name, register, song, songOffset, recordingOffset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+        $_POST["name"], $_POST["register"], $_POST["song"], $_POST["songOffset"], $_POST["recordingOffset"], $_POST["gain"], $_POST["date"], $md5);
     die;
 }
 
@@ -94,15 +95,17 @@ if ($_REQUEST) {
     }
 
     if (isset($_REQUEST["reset"])) {
-        DB::query("TRUNCATE TABLE tracks");
+        DB::query("DROP TABLE tracks");
         array_map("unlink", array_filter((array) glob("../tracks/*")));
         array_map("unlink", array_filter((array) glob("../mixes/*")));
     }
 
-    if (isset($_REQUEST["set-offset"]) && isset($_REQUEST["offset"]))
-        DB::query("UPDATE tracks SET offset = %s WHERE id = %i", $_REQUEST["offset"], (int) $_REQUEST["set-offset"]);
-    if (isset($_REQUEST["set-gain"]) && isset($_REQUEST["gain"]))
-        DB::query("UPDATE tracks SET gain = %s WHERE id = %i", $_REQUEST["gain"], (int) $_REQUEST["set-gain"]);
+    if (isset($_REQUEST["set-for"]) && isset($_REQUEST["songOffset"]))
+        DB::query("UPDATE tracks SET songOffset = %s WHERE id = %i", $_REQUEST["songOffset"], (int) $_REQUEST["set-for"]);
+    if (isset($_REQUEST["set-for"]) && isset($_REQUEST["recordingOffset"]))
+        DB::query("UPDATE tracks SET recordingOffset = %s WHERE id = %i", $_REQUEST["recordingOffset"], (int) $_REQUEST["set-for"]);
+    if (isset($_REQUEST["set-for"]) && isset($_REQUEST["gain"]))
+        DB::query("UPDATE tracks SET gain = %s WHERE id = %i", $_REQUEST["gain"], (int) $_REQUEST["set-for"]);
 }
 
 ?>
