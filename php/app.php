@@ -29,8 +29,8 @@ DB::query($sql);
 if ($_FILES) {
     $tmp_name = $_FILES["file"]["tmp_name"];
     $md5 = md5_file($tmp_name);
-    @mkdir("tracks");
-    move_uploaded_file($tmp_name, "tracks/" . $md5 . ".dat");
+    @mkdir("../tracks");
+    move_uploaded_file($tmp_name, "../tracks/" . $md5 . ".dat");
     DB::query("INSERT INTO tracks (name, register, song, offset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s)",
         $_POST["name"], $_POST["register"], $_POST["song"], $_POST["offset"],  $_POST["gain"], $_POST["date"], $md5);
     die;
@@ -46,7 +46,7 @@ if ($_REQUEST) {
         if ($count === 0)
             die('no tracks found');
         $song = basename($tracks[0]["song"], ".mp3");
-        $mixfile = "mixes/$from-$song.mp3";
+        $mixfile = "../mixes/$from-$song.mp3";
 
         if (strlen(shell_exec('ffmpeg -version')))
             $ffmpeg = "ffmpeg";
@@ -57,9 +57,9 @@ if ($_REQUEST) {
 
         $command = "$ffmpeg -y";
         if ($playback)
-            $command .= " -i \"songs/$song.mp3\"";
+            $command .= " -i \"../songs/$song.mp3\"";
         foreach ($tracks as $track)
-            $command .= " -i \"tracks/$track[md5].dat\"";
+            $command .= " -i \"../tracks/$track[md5].dat\"";
         $command .= " -filter_complex \"";
         foreach ($tracks as $idx => $track) {
             if ($playback)
@@ -86,7 +86,7 @@ if ($_REQUEST) {
         if ($playback)
             $count++;
         $command .= "amix=inputs=$count:duration=longest\" \"$mixfile\"";
-        @mkdir("mixes");
+        @mkdir("../mixes");
         shell_exec($command);
         header("Location: $mixfile");
 
@@ -95,8 +95,8 @@ if ($_REQUEST) {
 
     if (isset($_REQUEST["reset"])) {
         DB::query("TRUNCATE TABLE tracks");
-        array_map("unlink", array_filter((array) glob("tracks/*")));
-        array_map("unlink", array_filter((array) glob("mixes/*")));
+        array_map("unlink", array_filter((array) glob("../tracks/*")));
+        array_map("unlink", array_filter((array) glob("../mixes/*")));
     }
 
     if (isset($_REQUEST["set-offset"]) && isset($_REQUEST["offset"]))

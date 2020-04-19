@@ -21,7 +21,7 @@ const registers = [
 
 const navigation = [
     {title: "Aufnehmen", href: "index.html"},
-    {title: "Abmischen", href: "mix.php"},
+    {title: "Abmischen", href: "mix.html"},
     {title: "GitHub", href: "https://github.com/ekuiter/virtual-choir"}
 ];
 
@@ -30,10 +30,10 @@ function post(params) {
     const data = new FormData();
     for (const key in params)
         data.append(key, params[key]);
-    return window.fetch("app.php", {method: "POST", body: data});
+    return window.fetch("php/app.php", {method: "POST", body: data});
 }
 
-const upload = (blobUri, name, register, song, offset, gain) =>
+const uploadTrack = (blobUri, name, register, song, offset, gain) =>
     fetch(blobUri)
         .then(res => res.blob())
         .then(blob => post({
@@ -282,7 +282,7 @@ const Index = () => {
         const offset = recordingTrackOffset - songTrackOffset;
         const gain = recordingTrackGain / songTrackGain;
         setBusy(true);
-        upload(recordingUri, name, register, song, offset, gain)
+        uploadTrack(recordingUri, name, register, song, offset, gain)
             .then(onDiscardClick)
             .then(() => setBusy(false));
     };
@@ -412,8 +412,8 @@ const App = () => html`
     <${Navigation} activeHref=${location.pathname.indexOf(".") !== -1 ? location.pathname : "index.html"} />
     <div class=container style="margin-bottom: 20px;">
         <br />
-        ${location.pathname.indexOf("mix.php") !== -1
-            ? html`<${Mix} path=/mix.php />`
+        ${location.pathname.indexOf("mix.html") !== -1
+            ? html`<${Mix} path=/mix.html />`
             : html`<${Index} />`}
     </div>
 `;

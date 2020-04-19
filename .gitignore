@@ -7,4 +7,4 @@ tracks
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
 .htpasswd
-local.php
+php/local.php
