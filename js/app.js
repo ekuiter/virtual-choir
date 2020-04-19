@@ -120,20 +120,19 @@ const PlayButton = ({isPlaying, onClick, ...props}) =>
         ? html`<${IconButton} icon="img/stop.svg" onClick=${onClick} ...${props}>Stoppen<//>`
         : html`<${IconButton} icon="img/play.svg" onClick=${onClick} ...${props}>Abspielen<//>`;
 
-const Track = ({title, src, defaultOffset = 0.5, defaultGain = 1, displaySeconds = 5.0, onReady,
+const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true}) => {
     const [peaks, setPeaks] = useState();
     const audioRef = useRef();
     const zoomviewRef = useRef();
     const overviewRef = useRef();
     const gainNodeRef = useRef();
-    const gainSliderRef = useRef();
     
     useEffect(() => {
         const ctx = new AudioContext();
         const source = ctx.createMediaElementSource(audioRef.current);
         gainNodeRef.current = ctx.createGain();
-        gainNodeRef.current.gain.value = defaultGain;
+        gainNodeRef.current.gain.value = gain;
         source.connect(gainNodeRef.current);
         gainNodeRef.current.connect(ctx.destination);
         fetchAudioBuffer(src).then(audioBuffer => {
@@ -150,7 +149,7 @@ const Track = ({title, src, defaultOffset = 0.5, defaultGain = 1, displaySeconds
                 zoomLevels: [1],
                 points: [{
                     id: "offset",
-                    time: defaultOffset,
+                    time: offset,
                     editable: true,
                     color: "#ff0000"
                 }]
@@ -161,14 +160,12 @@ const Track = ({title, src, defaultOffset = 0.5, defaultGain = 1, displaySeconds
                 else {
                     peaks.views.getView("zoomview").setZoom({seconds: displaySeconds});
                     peaks.player.seek(peaks.points.getPoint("offset").time);
-                    if (onOffsetUpdated) {
-                        peaks.on("points.dragmove", () => {
-                            if (onSetIsPlaying)
-                                onSetIsPlaying(false);
+                    peaks.on("points.dragmove", () => {
+                        if (onSetIsPlaying)
+                            onSetIsPlaying(false);
+                        if (onOffsetUpdated)
                             onOffsetUpdated(peaks.points.getPoint("offset").time);
-                        });
-                        onOffsetUpdated(defaultOffset);
-                    }
+                    });
                     setPeaks(peaks);
                     if (onReady)
                         onReady();
@@ -176,18 +173,6 @@ const Track = ({title, src, defaultOffset = 0.5, defaultGain = 1, displaySeconds
             });
         });
         return () => peaks && peaks.destroy();
-    }, []);
-
-    useEffect(() => {
-        new Slider(gainSliderRef.current);
-        if (onGainUpdated) {
-            gainSliderRef.current.onchange = e => {
-                const gain = parseFloat(e.target.value);
-                gainNodeRef.current.gain.value = parseFloat(e.target.value);
-                onGainUpdated(gain);
-            };
-            onGainUpdated(defaultGain);
-        }
     }, []);
 
     useEffect(() => {
@@ -200,6 +185,13 @@ const Track = ({title, src, defaultOffset = 0.5, defaultGain = 1, displaySeconds
         }
     }, [isPlaying]);
 
+    const onGainInput = e => {
+        const gain = parseFloat(e.target.value);
+        gainNodeRef.current.gain.value = parseFloat(e.target.value);
+        if (onGainUpdated)
+            onGainUpdated(gain);
+    };
+
     return html`
         <h5 style="margin-top: 20px;">${title}</h5>
         <div style=${peaks ? "display: none;" : "position: absolute; left: calc(50% - 50px);"}>
@@ -210,11 +202,13 @@ const Track = ({title, src, defaultOffset = 0.5, defaultGain = 1, displaySeconds
         <div ref=${overviewRef} style="height: 80px;" />
         <div style=${peaks ? "display: flex;" : "display: none;"}>
             ${showPlayButton && html`<${PlayButton} isPlaying=${isPlaying} onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />`}
-            <label style="margin-top: 14px;">
-                <span style="padding: 10px 20px 0;">Lautstärke</span>
-                <input ref=${gainSliderRef} type="text" data-slider-min="0.01" data-slider-max="2"
-                    data-slider-step="0.01" data-slider-value=${defaultGain} style="margin: 10px 0;" />
-            </label>
+            <div class="form-group form-inline">
+                <label style="margin-top: 6px;">
+                    <span style="margin-top: -3px; padding: 0 20px 0 10px;">Lautstärke</span>
+                    <input type=range class=custom-range min=0.01 max=2 step=0.01
+                        style="margin: 10px 0;" value=${gain} oninput=${onGainInput} />
+                </label>
+            </div>
         </div>
     `;
 };
@@ -231,12 +225,14 @@ const Index = () => {
     const [isSongTrackReady, setIsSongTrackReady] = useState(false);
     const [isRecordingTrackReady, setIsRecordingTrackReady] = useState(false);
     const [songTrackOffset, setSongTrackOffset] = useState();
-    const [recordingTrackOffset, setRecordingTrackOffset] = useState();
-    const [songTrackGain, setSongTrackGain] = useState();
-    const [recordingTrackGain, setRecordingTrackGain] = useState();
+    const [recordingTrackOffset, setRecordingTrackOffset] = useState(0.5);
+    const [songTrackGain, setSongTrackGain] = useState(1);
+    const [recordingTrackGain, setRecordingTrackGain] = useState(1);
     const playbackRef = useRef();
 
     useEffect(() => song && fetchAudioBuffer("songs/" + song + ".mp3"), [song]);
+
+    const getSongTrackOffset = () => songTrackOffset || songs[song].offset;
 
     const onRecordSubmit = e => {
         e.preventDefault();
@@ -279,7 +275,7 @@ const Index = () => {
     };
 
     const onUploadClick = () => {
-        const offset = recordingTrackOffset - songTrackOffset;
+        const offset = recordingTrackOffset - getSongTrackOffset();
         const gain = recordingTrackGain / songTrackGain;
         setBusy(true);
         uploadTrack(recordingUri, name, register, song, offset, gain)
@@ -330,11 +326,13 @@ const Index = () => {
             <audio src="songs/${song}.mp3" ref=${playbackRef} />
         `}
         ${recordingUri && html`
-            <${Track} title="Song" src="songs/${song}.mp3" defaultOffset=${songs[song].offset} onOffsetUpdated=${setSongTrackOffset}
-                onGainUpdated=${setSongTrackGain} isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
+            <${Track} title="Song" src="songs/${song}.mp3" offset=${getSongTrackOffset()} gain=${songTrackGain}
+                onOffsetUpdated=${setSongTrackOffset} onGainUpdated=${setSongTrackGain}
+                isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsSongTrackReady(true)} />
-            <${Track} title="Deine Aufnahme" src=${recordingUri} onOffsetUpdated=${setRecordingTrackOffset}
-                onGainUpdated=${setRecordingTrackGain} isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
+            <${Track} title="Deine Aufnahme" src=${recordingUri} offset=${recordingTrackOffset} gain=${recordingTrackGain}
+                onOffsetUpdated=${setRecordingTrackOffset} onGainUpdated=${setRecordingTrackGain}
+                isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsRecordingTrackReady(true)} />
             <p />
             <${PlayButton} isPlaying=${isPlaying} onClick=${() => setIsPlaying(!isPlaying)} disabled=${uploadDisabled} />
@@ -399,8 +397,8 @@ const Mix = () => {
             <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
             ${selectedTracks.map(({id, name, register, song, date, md5, offset, gain}) => html`
                 <${Track} key=${id} title=${html`<strong>${formatDate(date)} ${song}</strong> ${name} (${register})`}
-                    src="tracks/${md5}.dat" defaultOffset=${parseFloat(offset)} onOffsetUpdated=${() => {}}
-                    defaultGain=${parseFloat(gain)} onGainUpdated=${() => {}}
+                    src="tracks/${md5}.dat" offset=${parseFloat(offset)} gain=${parseFloat(gain)}
+                    onOffsetUpdated=${() => {}} onGainUpdated=${() => {}}
                     isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
                     onReady=${addReadyTrack(id)} />
             `)}
