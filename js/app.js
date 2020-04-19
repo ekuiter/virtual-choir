@@ -20,8 +20,8 @@ const registers = [
 ];
 
 const navigation = [
-    {title: "Mitsingen", href: "index.html"},
-    {title: "Abmischen", href: "mix.html"},
+    {title: "Aufnehmen", href: "index.html"},
+    {title: "Abmischen", href: "mix.php"},
     {title: "GitHub", href: "https://github.com/ekuiter/virtual-choir"}
 ];
 
@@ -42,7 +42,7 @@ const upload = (blobUri, name, register, song, offset, gain) =>
             song: song,
             offset: offset,
             gain: gain,
-            date: (new Date).toISOString().replace(/:|\./g, "-"),
+            date: (new Date).toISOString(),
             file: new File([blob], "audio.dat", {type: "application/octet-stream"})
         }));
 
@@ -213,7 +213,7 @@ const Track = ({title, src, defaultOffset = 0.5, defaultGain = 1, displaySeconds
             <label style="margin-top: 14px;">
                 <span style="padding: 10px 20px 0;">Lautstärke</span>
                 <input ref=${gainSliderRef} type="text" data-slider-min="0.01" data-slider-max="2"
-                    data-slider-step="0.01" data-slider-value="1" style="margin: 10px 0;" />
+                    data-slider-step="0.01" data-slider-value=${defaultGain} style="margin: 10px 0;" />
             </label>
         </div>
     `;
@@ -302,7 +302,7 @@ const Index = () => {
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
 
     return html`
-        <h4 style="margin-bottom: 15px;">Mitsingen</h4>
+        <h4 style="margin-bottom: 15px;">Aufnehmen</h4>
         <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
             <input type=text class="form-control mr-sm-2" placeholder="Dein Name" pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
@@ -345,14 +345,66 @@ const Index = () => {
 };
 
 const Mix = () => {
+    const [selectedTrackIds, setSelectedTracksIds] = useState([]);
+    const [readyTracksIds, setReadyTracksIds] = useState([]);
+    const [playingTrackIds, setPlayingTracksIds] = useState([]);
+
+    useEffect(() => {
+        if (location.hash)
+            setSelectedTracksIds(JSON.parse(atob(location.hash.substr(1))));
+    }, []);
+
+    const isReady = selectedTrackIds.length === readyTracksIds.length;
+    const isPlaying = playingTrackIds.length > 0;
+    const selectedTracks = selectedTrackIds.map(id => tracks.find(track => track.id === id));
+    const addReadyTrack = id => () => setReadyTracksIds(readyTracksIds => [...readyTracksIds, id]);
+    const formatDate = date => date.getDate() + "." + ("0" + (date.getMonth() + 1)).slice(-2) + " " + date.getHours() + ":" + date.getMinutes();
+
+    const setPlayingTrack = id => isPlaying => setPlayingTracksIds(playingTrackIds => {
+        if (isPlaying)
+            return playingTrackIds.indexOf(id) === -1 ? [...playingTrackIds, id] : playingTrackIds;
+        else
+            return playingTrackIds.indexOf(id) !== -1 ? playingTrackIds.filter(_id => _id !== id) : playingTrackIds;
+    });
+
+    const onTracksSelected = e => {
+        const newSelectedTrackIds = [...e.target.options].filter(o => o.selected).map(o => o.value);
+        setReadyTracksIds(readyTrackIds => readyTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
+        setPlayingTracksIds(playingTrackIds => playingTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
+        setSelectedTracksIds(newSelectedTrackIds);
+        location.hash = btoa(JSON.stringify(newSelectedTrackIds));
+    };
+
     const onResetClick = e => {
         e.preventDefault();
         if (confirm("Sicher? Dies löscht alle Aufnahmen."))
             post({reset: true}).then(() => location.reload());
     };
+
+    const onPlayClick = () => {
+        if (isPlaying)
+            setPlayingTracksIds([]);
+        else
+            setPlayingTracksIds(selectedTrackIds);
+    };
+
     return html`
+        <button class="btn btn-outline-danger" style="float: right;" onclick=${onResetClick}>Alles löschen</button>
         <h4>Abmischen</h4>
-        <button class="btn btn-outline-danger" onclick=${onResetClick}>Zurücksetzen</button>
+        <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTracks.length > 0 ? 5 : 20} onchange=${onTracksSelected}>
+            ${tracks.map(({id, name, register, song, date}) =>
+                html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)} ${song}</strong> ${name} (${register})</option>`)}
+        </select>
+        ${selectedTracks.length > 0 && html`
+            <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
+            ${selectedTracks.map(({id, name, register, song, date, md5, offset, gain}) => html`
+                <${Track} key=${id} title=${html`<strong>${formatDate(date)} ${song}</strong> ${name} (${register})`}
+                    src="tracks/${md5}.dat" defaultOffset=${parseFloat(offset)} onOffsetUpdated=${() => {}}
+                    defaultGain=${parseFloat(gain)} onGainUpdated=${() => {}}
+                    isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
+                    onReady=${addReadyTrack(id)} />
+            `)}
+        `}
     `
 };
 
@@ -360,8 +412,8 @@ const App = () => html`
     <${Navigation} activeHref=${location.pathname.indexOf(".") !== -1 ? location.pathname : "index.html"} />
     <div class=container style="margin-bottom: 20px;">
         <br />
-        ${location.pathname.indexOf("mix.html") !== -1
-            ? html`<${Mix} path=/mix.html />`
+        ${location.pathname.indexOf("mix.php") !== -1
+            ? html`<${Mix} path=/mix.php />`
             : html`<${Index} />`}
     </div>
 `;
