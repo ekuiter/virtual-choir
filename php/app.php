@@ -38,24 +38,26 @@ if ($_FILES) {
 }
 
 if ($_REQUEST) {
-    if (isset($_REQUEST["mix-from"]) && isset($_REQUEST["mix-to"])) {
+    if (isset($_REQUEST["mix"])) {
         $playback = isset($_REQUEST["playback"]);
-        $from = $_REQUEST["mix-from"];
-        $to = $_REQUEST["mix-to"];
-        $tracks = DB::query("SELECT * FROM tracks WHERE date >= %s AND date <= %s", $from, $to);
+        $track_ids = json_decode(base64_decode($_REQUEST["mix"]));
+        if (!$track_ids)
+            die("no tracks given");
+        $where = new WhereClause("or");
+        foreach ($track_ids as $track_id)
+            $where->add("id=%i", (int) $track_id);
+        $tracks = DB::query("SELECT * FROM tracks WHERE %l", $where);
         $count = count($tracks);
         if ($count === 0)
-            die('no tracks found');
-        $song = basename($tracks[0]["song"], ".mp3");
-        $mixfile = "../mixes/$from-$song.mp3";
-
-        if (strlen(shell_exec('ffmpeg -version')))
+            die("no tracks found");
+        $song = $tracks[0]["song"];
+        $mixfile = "../mixes/" . date("Y-m-d-H-i-s") . "-$song.mp3";
+        if (strlen(shell_exec("ffmpeg -version")))
             $ffmpeg = "ffmpeg";
-        else if (strlen(shell_exec('./ffmpeg -version')))
+        else if (strlen(shell_exec("./ffmpeg -version")))
             $ffmpeg = "./ffmpeg";
         else
-            die('no ffmpeg found');
-
+            die("no ffmpeg found");
         $command = "$ffmpeg -y";
         if ($playback)
             $command .= " -i \"../songs/$song.mp3\"";
@@ -65,7 +67,7 @@ if ($_REQUEST) {
         foreach ($tracks as $idx => $track) {
             if ($playback)
                 $idx++;
-            $offset = (float) $track["offset"];
+            $offset = ((float) $track["recordingOffset"]) - ((float) $track["songOffset"]);
             if ($offset >= 0) {
                 $offset = number_format($offset, 4, ".", "");
                 $offset = "atrim=start=$offset";
@@ -90,7 +92,6 @@ if ($_REQUEST) {
         @mkdir("../mixes");
         shell_exec($command);
         header("Location: $mixfile");
-
         die;
     }
 

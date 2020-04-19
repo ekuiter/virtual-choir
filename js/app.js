@@ -114,7 +114,8 @@ const PlayButton = ({isPlaying, onClick, ...props}) =>
         : html`<${IconButton} icon="img/play.svg" onClick=${onClick} ...${props}>Abspielen<//>`;
 
 const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
-    isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true}) => {
+    isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true,
+    gainMin = 0.01}) => {
     const [peaks, setPeaks] = useState();
     const audioRef = useRef();
     const zoomviewRef = useRef();
@@ -127,7 +128,16 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
         gainNodeRef.current = ctx.createGain();
         gainNodeRef.current.gain.value = gain;
         source.connect(gainNodeRef.current);
-        gainNodeRef.current.connect(ctx.destination);
+
+        if (offset < 0) {
+            offset *= -1;
+            const delayNode = ctx.createDelay(offset);
+            delayNode.delayTime.value = offset;
+            gainNodeRef.current.connect(delayNode);
+            delayNode.connect(ctx.destination);
+        } else
+            gainNodeRef.current.connect(ctx.destination);
+
         fetchAudioBuffer(src).then(audioBuffer => {
             const options = {
                 containers: {
@@ -142,7 +152,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
                 zoomLevels: [1],
                 points: [{
                     id: "offset",
-                    time: offset,
+                    time: offset >= 0 ? offset : 0,
                     editable: !!onOffsetUpdated,
                     color: "#ff0000"
                 }]
@@ -198,7 +208,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
             <div class="form-group form-inline">
                 <label style="margin-top: 6px;">
                     <span style="margin-top: -3px; padding: 0 20px 0 10px;">Lautstärke</span>
-                    <input type=range class=custom-range min=0.01 max=2 step=0.01
+                    <input type=range class=custom-range min=${gainMin} max=2 step=0.01
                         style="margin: 10px 0;" value=${gain} oninput=${onGainInput} />
                 </label>
             </div>
@@ -251,7 +261,7 @@ const Index = () => {
                     }
                     setBusy(false);
                     setRecorder(recorder);
-                });
+                }, () => setBusy(false));
             }
         } else {
             setBusy(true);
@@ -335,7 +345,6 @@ const Index = () => {
 };
 
 const Mix = ({debounceApiCalls = 250}) => {
-    const [busy, setBusy] = useState();
     const [selectedTrackIds, setSelectedTracksIds] = useState([]);
     const [readyTracksIds, setReadyTracksIds] = useState([]);
     const [playingTrackIds, setPlayingTracksIds] = useState([]);
@@ -351,13 +360,8 @@ const Mix = ({debounceApiCalls = 250}) => {
     }, []);
 
     useEffect(() => {
-        if (debouncedPendingApiCall) {
-            setBusy(true);
-            post(debouncedPendingApiCall).then(() => {
-                setPendingApiCall();
-                setBusy(false);
-            });
-        }
+        if (debouncedPendingApiCall)
+            post(debouncedPendingApiCall).then(() => setPendingApiCall());
     }, [debouncedPendingApiCall]);
 
     const getSelectedSong = () => {
@@ -373,6 +377,7 @@ const Mix = ({debounceApiCalls = 250}) => {
     const formatDate = date => ("0" + date.getDate()).slice(-2) + "." + ("0" + (date.getMonth() + 1)).slice(-2) +
         " " + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
     const onlyUnique = (value, index, self) => self.indexOf(value) === index;
+    const getHash = (_selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify(_selectedTrackIds));
 
     const setPlayingTrack = id => isPlaying => setPlayingTracksIds(playingTrackIds => {
         if (isPlaying)
@@ -390,7 +395,7 @@ const Mix = ({debounceApiCalls = 250}) => {
             setPlayingTracksIds([]);
             setSongTrackPlaying(null);
             setSelectedTracksIds(newSelectedTrackIds);
-            location.hash = btoa(JSON.stringify(newSelectedTrackIds));
+            location.hash = getHash(newSelectedTrackIds);
         }
     };
 
@@ -418,10 +423,11 @@ const Mix = ({debounceApiCalls = 250}) => {
                 html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)} ${song}</strong> ${name} (${register})</option>`)}
         </select>
         ${selectedTrackIds.length > 0 && html`
-            <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${busy || !isReady} />
-            <button class="btn btn-outline-success" disabled=${busy || !isReady} onclick=${() => {}}>Abmischen</button>
+            <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
+            <a class="btn btn-outline-success" href="php/app.php?mix=${getHash()}" style="margin-right: 6px;">Abmischen</a>
+            <a class="btn btn-outline-success" href="php/app.php?mix=${getHash()}&playback">Abmischen (Playback)</a>
             <${Track} key=${getSelectedSong()} title=${getSelectedSong()} src="songs/${getSelectedSong()}.mp3" offset=${songs[getSelectedSong()].offset}
-                gain=${songTrackGain} onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === getSelectedSong()}
+                gain=${songTrackGain} gainMin=0 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === getSelectedSong()}
                 onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && getSelectedSong())}
                 onReady=${() => setSongTrackReady(getSelectedSong())} />
             ${getSelectedTracks(selectedTrackIds).map(track => {
@@ -440,7 +446,8 @@ const Mix = ({debounceApiCalls = 250}) => {
                 return html`
                     <${Track} key=${id} title="${name} (${register})"
                         src="tracks/${md5}.dat"
-                        offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)} gain=${parseFloat(gain)}
+                        offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)}
+                        gain=${parseFloat(gain)} gainMin=0
                         onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}
                         isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
                         onReady=${addReadyTrack(id)} />
