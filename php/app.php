@@ -39,6 +39,7 @@ if ($_FILES) {
 
 if ($_REQUEST) {
     if (isset($_REQUEST["mix"])) {
+        $config = json_decode(file_get_contents("../config.json"));
         $playback = isset($_REQUEST["playback"]);
         $track_ids = json_decode(base64_decode($_REQUEST["mix"]));
         if (!$track_ids)
@@ -77,7 +78,10 @@ if ($_REQUEST) {
                 $offset = "adelay=delays=${offset}|${offset}";
             }
             $gain = number_format((float) $track["gain"], 4, ".", "");
-            $command .= "[$idx]aresample=44100,aformat=channel_layouts=stereo,volume=${gain},${offset}[${idx}_out];";
+            $balance = @$config->registers->{$track["register"]}->balance;
+            if (!$balance)
+                $balance = 0;
+            $command .= "[$idx]aresample=44100,aformat=channel_layouts=stereo,stereotools=balance_out=$balance,volume=${gain},${offset}[${idx}_out];";
         }
         if ($playback)
             $command .= "[0]";
@@ -88,7 +92,8 @@ if ($_REQUEST) {
         }
         if ($playback)
             $count++;
-        $command .= "amix=inputs=$count:duration=longest\" \"$mixfile\"";
+        $gain = isset($_REQUEST["gain"]) ? $_REQUEST["gain"] : 1;
+        $command .= "amix=inputs=$count:duration=longest,volume=$gain\" \"$mixfile\"";
         @mkdir("../mixes");
         shell_exec($command);
         header("Location: $mixfile");

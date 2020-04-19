@@ -1,0 +1,20 @@
+{
+    "songs": {
+        "21Guns": {"offset": 0.41},
+        "BabaYetu": {"offset": 1},
+        "ColorsOfTheWind": {"offset": 1},
+        "Erlkoenig": {"offset": 1},
+        "EveningRise80bpm": {"offset": 0.79},
+        "WeWillRockYou": {"offset": 1}
+    },
+    "registers": {
+        "Sopran": {"balance": -0.6},
+        "Alt": {"balance": 0.6},
+        "Tenor": {"balance": -0.3},
+        "Bass": {"balance": 0.3},
+        "Nichts davon": {
+            "value": null,
+            "balance": 0
+        }
+    }
+}

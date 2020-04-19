@@ -1,7 +1,6 @@
 const {html, render, useState, useEffect, useRef} = window.htmPreact;
 const Peaks = window.peaks;
 const snippetDuration = 20;
-const registers = ["Sopran", "Alt", "Tenor", "Bass", "Nichts davon"];
 
 const navigation = [
     {title: "Aufnehmen", href: "index.html"},
@@ -235,7 +234,7 @@ const Index = () => {
 
     useEffect(() => song && fetchAudioBuffer("songs/" + song + ".mp3"), [song]);
 
-    const getSongTrackOffset = () => songTrackOffset || songs[song].offset;
+    const getSongTrackOffset = () => songTrackOffset || config.songs[song].offset;
 
     const onRecordSubmit = e => {
         e.preventDefault();
@@ -305,13 +304,15 @@ const Index = () => {
             <input type=text class="form-control mr-sm-2" placeholder="Dein Name" pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
                 <option>Deine Stimmlage</option>
-                ${registers.map(_register => html`
-                    <option value=${_register} selected=${register === _register}>${_register}</option>
+                ${Object.keys(config.registers).map(_register => html`
+                    <option value=${typeof config.registers[_register].value !== "undefined" ? "" + config.registers[_register].value : _register} selected=${register === _register}>
+                        ${_register}
+                    </option>
                 `)}
             </select>
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setSong(e.target.value)}>
                 <option>Welcher Song?</option>
-                ${Object.keys(songs).map((_song) => html`
+                ${Object.keys(config.songs).map((_song) => html`
                     <option value=${_song} selected=${song === _song}>${_song}</option>
                 `)}
             </select>
@@ -378,6 +379,7 @@ const Mix = ({debounceApiCalls = 250}) => {
         " " + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
     const onlyUnique = (value, index, self) => self.indexOf(value) === index;
     const getHash = (_selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify(_selectedTrackIds));
+    const getName = (name, register) => register !== "null" ? html`<span>${name} <em>${register}</em></span>` : html`<span>${name}</span>`;
 
     const setPlayingTrack = id => isPlaying => setPlayingTracksIds(playingTrackIds => {
         if (isPlaying)
@@ -405,7 +407,8 @@ const Mix = ({debounceApiCalls = 250}) => {
             post({reset: true}).then(() => location.reload());
     };
 
-    const onPlayClick = () => {
+    const onPlayClick = e => {
+        e.preventDefault();
         if (isPlaying) {
             setPlayingTracksIds([]);
             setSongTrackPlaying(null);
@@ -420,13 +423,23 @@ const Mix = ({debounceApiCalls = 250}) => {
         <h4>Abmischen</h4>
         <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
             ${tracks.map(({id, name, register, song, date}) =>
-                html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)} ${song}</strong> ${name} (${register})</option>`)}
+                html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)} ${song}</strong> ${getName(name, register)}</option>`)}
         </select>
         ${selectedTrackIds.length > 0 && html`
+            <form action=php/app.php method=post class=form-inline style="margin: 10px 0.3rem;">
             <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
-            <a class="btn btn-outline-success" href="php/app.php?mix=${getHash()}" style="margin-right: 6px;">Abmischen</a>
-            <a class="btn btn-outline-success" href="php/app.php?mix=${getHash()}&playback">Abmischen (Playback)</a>
-            <${Track} key=${getSelectedSong()} title=${getSelectedSong()} src="songs/${getSelectedSong()}.mp3" offset=${songs[getSelectedSong()].offset}
+                <input type=hidden name=mix value=${getHash()} />
+                <label class=form-check-label style="margin: 0 15px;">
+                    <input class="form-check-input" type="checkbox" name="playback" />
+                    <span>Playback</span>
+                </label>
+                <label style="margin-top: 6px;">
+                    <span style="margin-top: -5px; padding: 0 20px 0 10px;">Lautstärke</span>
+                    <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=5 style="margin: 0 20px 0 0;" />
+                </label>
+                <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value="Abmischen" />
+            </form>
+            <${Track} key=${getSelectedSong()} title=${getSelectedSong()} src="songs/${getSelectedSong()}.mp3" offset=${config.songs[getSelectedSong()].offset}
                 gain=${songTrackGain} gainMin=0 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === getSelectedSong()}
                 onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && getSelectedSong())}
                 onReady=${() => setSongTrackReady(getSelectedSong())} />
@@ -434,7 +447,7 @@ const Mix = ({debounceApiCalls = 250}) => {
                 const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
 
                 const onOffsetUpdated = offset => {
-                    track.recordingOffset = offset + (parseFloat(songOffset) - songs[song].offset);
+                    track.recordingOffset = offset + (parseFloat(songOffset) - config.songs[song].offset);
                     setPendingApiCall({"set-for": id, "recordingOffset": track.recordingOffset});
                 };
 
@@ -444,9 +457,9 @@ const Mix = ({debounceApiCalls = 250}) => {
                 };
 
                 return html`
-                    <${Track} key=${id} title="${name} (${register})"
+                    <${Track} key=${id} title=${getName(name, register)}
                         src="tracks/${md5}.dat"
-                        offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)}
+                        offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
                         gain=${parseFloat(gain)} gainMin=0
                         onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}
                         isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
