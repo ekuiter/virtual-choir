@@ -1,6 +1,6 @@
 const {html, render, useState, useEffect, useRef} = window.htmPreact;
 const Peaks = window.peaks;
-const snippetDuration = 20;
+const snippetDuration = 25;
 
 // localization
 const translationMap = {
@@ -169,7 +169,6 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
     const [peaks, setPeaks] = useState();
     const audioRef = useRef();
     const zoomviewRef = useRef();
-    const overviewRef = useRef();
     const gainNodeRef = useRef();
     
     useEffect(() => {
@@ -188,11 +187,13 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
         } else
             gainNodeRef.current.connect(ctx.destination);
 
-        fetchAudioBuffer(src).then(audioBuffer => {
+        Promise.all([
+            new Promise(resolve => require(["./js/peaks/main"], resolve)),
+            fetchAudioBuffer(src)
+        ]).then(([Peaks, audioBuffer]) => {
             const options = {
                 containers: {
-                    zoomview: zoomviewRef.current,
-                    overview: overviewRef.current
+                    zoomview: zoomviewRef.current
                 },
                 mediaElement: audioRef.current,
                 webAudio: {
@@ -212,6 +213,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
                     window.alert(err);
                 else {
                     peaks.views.getView("zoomview").setZoom({seconds: displaySeconds});
+                    peaks.views.getView("zoomview").enableAutoScroll(false);
                     peaks.player.seek(peaks.points.getPoint("offset").time);
                     peaks.on("points.dragmove", () => {
                         if (onSetIsPlaying)
@@ -248,11 +250,10 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
     return html`
         <h5 style="margin-top: 20px;">${title}</h5>
         <div style=${peaks ? "display: none;" : "position: absolute; left: calc(50% - 50px);"}>
-            <img src="img/loading.gif" width="100" height="100" style="margin-top: 50px;" />
+            <img src="img/loading.gif" width="100" height="100" style="margin-top: 20px;" />
         </div>
         <audio src=${src} ref=${audioRef} onended=${() => onSetIsPlaying && onSetIsPlaying(false)} />
-        <div ref=${zoomviewRef} style="height: 140px;" />
-        <div ref=${overviewRef} style="height: 80px;" />
+        <div ref=${zoomviewRef} style="height: 140px; ${peaks ? "cursor: move;" : ""}" />
         <div style=${peaks ? "display: flex;" : "display: none;"}>
             ${showPlayButton && html`<${PlayButton} isPlaying=${isPlaying} onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />`}
             <div class="form-group form-inline">
