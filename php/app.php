@@ -100,18 +100,34 @@ if ($_REQUEST) {
         die;
     }
 
+    if (isset($_REQUEST["deleteSelected"])) {
+        $track_ids = json_decode(base64_decode($_REQUEST["deleteSelected"]));
+        if (!$track_ids)
+            die("no tracks given");
+        $where = new WhereClause("or");
+        foreach ($track_ids as $track_id)
+            $where->add("id=%i", (int) $track_id);
+        $tracks = DB::query("SELECT * FROM tracks WHERE %l", $where);
+        $count = count($tracks);
+        if ($count === 0)
+            die("no tracks found");
+        foreach ($tracks as $idx => $track)
+            unlink("../tracks/$track[md5].dat");
+        DB::query("DELETE FROM tracks WHERE %l", $where);
+    }
+
     if (isset($_REQUEST["reset"])) {
         DB::query("DROP TABLE tracks");
         array_map("unlink", array_filter((array) glob("../tracks/*")));
         array_map("unlink", array_filter((array) glob("../mixes/*")));
     }
 
-    if (isset($_REQUEST["set-for"]) && isset($_REQUEST["songOffset"]))
-        DB::query("UPDATE tracks SET songOffset = %s WHERE id = %i", $_REQUEST["songOffset"], (int) $_REQUEST["set-for"]);
-    if (isset($_REQUEST["set-for"]) && isset($_REQUEST["recordingOffset"]))
-        DB::query("UPDATE tracks SET recordingOffset = %s WHERE id = %i", $_REQUEST["recordingOffset"], (int) $_REQUEST["set-for"]);
-    if (isset($_REQUEST["set-for"]) && isset($_REQUEST["gain"]))
-        DB::query("UPDATE tracks SET gain = %s WHERE id = %i", $_REQUEST["gain"], (int) $_REQUEST["set-for"]);
+    if (isset($_REQUEST["setFor"]) && isset($_REQUEST["songOffset"]))
+        DB::query("UPDATE tracks SET songOffset = %s WHERE id = %i", $_REQUEST["songOffset"], (int) $_REQUEST["setFor"]);
+    if (isset($_REQUEST["setFor"]) && isset($_REQUEST["recordingOffset"]))
+        DB::query("UPDATE tracks SET recordingOffset = %s WHERE id = %i", $_REQUEST["recordingOffset"], (int) $_REQUEST["setFor"]);
+    if (isset($_REQUEST["setFor"]) && isset($_REQUEST["gain"]))
+        DB::query("UPDATE tracks SET gain = %s WHERE id = %i", $_REQUEST["gain"], (int) $_REQUEST["setFor"]);
 }
 
 ?>

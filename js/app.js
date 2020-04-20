@@ -24,7 +24,9 @@ const translationMap = {
         discard: "Discard",
         singleSong: "Please choose only recordings of a single song.",
         reset: "Delete all",
+        deleteSelected: "Delete selected",
         confirmReset: "Sure? This will delete all recordings.",
+        confirmDeleteSelected: "Sure? This will delete the selected recordings."
     },
     de: {
         record: "Aufnehmen",
@@ -46,7 +48,9 @@ const translationMap = {
         discard: "Verwerfen",
         singleSong: "Bitte nur Aufnahmen eines einzelnen Songs wählen.",
         reset: "Alles löschen",
+        deleteSelected: "Auswahl löschen",
         confirmReset: "Sicher? Dies löscht alle Aufnahmen.",
+        confirmDeleteSelected: "Sicher? Dies löscht alle ausgewählten Aufnahmen."
     }
 };
 
@@ -215,7 +219,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
                     peaks.views.getView("zoomview").enableAutoScroll(false);
                     peaks.player.seek(peaks.points.getPoint("offset").time);
                     peaks.on("points.offsetUpdated", offset => {
-                        console.log(title, "offset = ", offset);
+                        console.log("offset = ", offset);
                         if (onSetIsPlaying)
                             onSetIsPlaying(false);
                         if (onOffsetUpdated)
@@ -244,7 +248,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
         const gain = parseFloat(e.target.value);
         gainNodeRef.current.gain.value = parseFloat(e.target.value);
         if (onGainUpdated) {
-            console.log(title, "gain = ", gain);
+            console.log("gain = ", gain);
             onGainUpdated(gain);
         }
     };
@@ -461,7 +465,13 @@ const Mix = ({debounceApiCalls = 250}) => {
     const onResetClick = e => {
         e.preventDefault();
         if (confirm(t`confirmReset`))
-            post({reset: true}).then(() => location.reload());
+            post({reset: true}).then(() => location.href = "mix.html");
+    };
+
+    const onDeleteSelectedClick = e => {
+        e.preventDefault();
+        if (confirm(t`confirmDeleteSelected`))
+            post({deleteSelected: getHash()}).then(() => location.href = "mix.html");
     };
 
     const onPlayClick = e => {
@@ -477,6 +487,9 @@ const Mix = ({debounceApiCalls = 250}) => {
 
     return html`
         <button class="btn btn-outline-danger" style="float: right;" onclick=${onResetClick}>${t`reset`}</button>
+        ${selectedTrackIds.length > 0 && html`
+            <button class="btn btn-outline-danger" style="float: right; margin-right: 6px;" onclick=${onDeleteSelectedClick}>${t`deleteSelected`}</button>
+        `}
         <h4>${t`mix`}</h4>
         <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
             ${tracks.map(({id, name, register, song, date}) =>
@@ -505,12 +518,12 @@ const Mix = ({debounceApiCalls = 250}) => {
 
                 const onOffsetUpdated = offset => {
                     track.recordingOffset = offset + (parseFloat(songOffset) - config.songs[song].offset);
-                    setPendingApiCall({"set-for": id, "recordingOffset": track.recordingOffset});
+                    setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
                 };
 
                 const onGainUpdated = gain => {
                     track.gain = gain;
-                    setPendingApiCall({"set-for": id, "gain": track.gain});
+                    setPendingApiCall({"setFor": id, "gain": track.gain});
                 };
 
                 return html`
