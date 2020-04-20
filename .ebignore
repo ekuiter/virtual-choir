@@ -5,6 +5,8 @@ mixes
 !mixes/.htaccess
 tracks
 README.md
+LICENSE.txt
 .ebextensions/https.config.template
 img/screenshot.png
 php/local.php
+config.template.json

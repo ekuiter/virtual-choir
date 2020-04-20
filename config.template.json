@@ -1,0 +1,16 @@
+{
+    "language": "en",
+    "songs": {
+        "SomeSong": {"offset": 1.0}
+    },
+    "registers": {
+        "Soprano": {"balance": -0.6},
+        "Alto": {"balance": 0.6},
+        "Tenor": {"balance": -0.3},
+        "Bass": {"balance": 0.3},
+        "Other": {
+            "value": null,
+            "balance": 0.0
+        }
+    }
+}
