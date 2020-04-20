@@ -165,7 +165,7 @@ const PlayButton = ({isPlaying, onClick, ...props}) =>
 
 const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true,
-    gainMin = 0.01}) => {
+    gainMin = 0.01, gainMax = 2}) => {
     const [peaks, setPeaks] = useState();
     const audioRef = useRef();
     const zoomviewRef = useRef();
@@ -209,14 +209,13 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
                 }]
             };
             Peaks.init(options, (err, peaks) => {
-                if (err)
-                    window.alert(err);
-                else {
+                if (!err) {
                     peaks.views.getView("zoomview").setZoom({seconds: displaySeconds});
                     peaks.views.getView("zoomview").setStartTime(offset >= 0 ? offset : 0);
                     peaks.views.getView("zoomview").enableAutoScroll(false);
                     peaks.player.seek(peaks.points.getPoint("offset").time);
                     peaks.on("points.offsetUpdated", offset => {
+                        console.log(title, "offset = ", offset);
                         if (onSetIsPlaying)
                             onSetIsPlaying(false);
                         if (onOffsetUpdated)
@@ -244,8 +243,10 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
     const onGainInput = e => {
         const gain = parseFloat(e.target.value);
         gainNodeRef.current.gain.value = parseFloat(e.target.value);
-        if (onGainUpdated)
+        if (onGainUpdated) {
+            console.log(title, "gain = ", gain);
             onGainUpdated(gain);
+        }
     };
 
     return html`
@@ -260,7 +261,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
             <div class="form-group form-inline">
                 <label style="margin-top: 6px;">
                     <span style="margin-top: -3px; padding: 0 20px 0 10px;">${t`volume`}</span>
-                    <input type=range class=custom-range min=${gainMin} max=2 step=0.01
+                    <input type=range class=custom-range min=${gainMin} max=${gainMax} step=0.01
                         style="margin: 10px 0;" value=${gain} oninput=${onGainInput} />
                 </label>
             </div>
@@ -272,7 +273,7 @@ const Index = () => {
     const [name, setName] = useState(localStorage.getItem("name"));
     const [register, setRegister] = useState(localStorage.getItem("register"));
     const [song, setSong] = useState(localStorage.getItem("song"));
-    const [playback, setPlayback] = useState(localStorage.getItem("playback") === "true");
+    const [playback, setPlayback] = useState(localStorage.getItem("playback") !== "false");
     const [busy, setBusy] = useState();
     const [recorder, setRecorder] = useState();
     const [recordingUri, setRecordingUri] = useState();
@@ -287,8 +288,10 @@ const Index = () => {
 
     useEffect(() => song && fetchAudioBuffer("songs/" + song + ".mp3"), [song]);
 
-    const getSongTrackOffset = () => songTrackOffset || (config.songs[song].registerOffsets[register] || config.songs[song].offset);
-    const getRecordingTrackOffset = () => recordingTrackOffset || (config.songs[song].registerOffsets[register] || config.songs[song].offset);
+    const getSongTrackOffset = () => songTrackOffset ||
+        ((config.songs[song].registerOffsets && config.songs[song].registerOffsets[register]) || config.songs[song].offset);
+    const getRecordingTrackOffset = () => recordingTrackOffset ||
+        ((config.songs[song].registerOffsets && config.songs[song].registerOffsets[register]) || config.songs[song].offset);
 
     const onRecordSubmit = e => {
         e.preventDefault();
@@ -494,7 +497,7 @@ const Mix = ({debounceApiCalls = 250}) => {
                 <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
             </form>
             <${Track} key=${getSelectedSong()} title=${getSelectedSong()} src="songs/${getSelectedSong()}.mp3" offset=${config.songs[getSelectedSong()].offset}
-                gain=${songTrackGain} gainMin=0 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === getSelectedSong()}
+                gain=${songTrackGain} gainMin=0 gainMax=5 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === getSelectedSong()}
                 onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && getSelectedSong())}
                 onReady=${() => setSongTrackReady(getSelectedSong())} />
             ${getSelectedTracks(selectedTrackIds).map(track => {
@@ -514,7 +517,7 @@ const Mix = ({debounceApiCalls = 250}) => {
                     <${Track} key=${id} title=${getName(name, register)}
                         src="tracks/${md5}.dat"
                         offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
-                        gain=${parseFloat(gain)} gainMin=0
+                        gain=${parseFloat(gain)} gainMin=0 gainMax=5
                         onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}
                         isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
                         onReady=${addReadyTrack(id)} />
