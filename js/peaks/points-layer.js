@@ -145,7 +145,7 @@ define([
     var marker = this._peaks.options.createPointMarker({
       point:     point,
       draggable: editable,
-      color:     point.color ? point.color : this._peaks.options.pointMarkerColor,
+      color:     point.color ? point.color : "#39cccc",
       layer:     this,
       view:      this._view.getName()
     });

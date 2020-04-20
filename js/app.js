@@ -188,7 +188,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
             gainNodeRef.current.connect(ctx.destination);
 
         Promise.all([
-            new Promise(resolve => require(["./js/peaks/main"], resolve)),
+            new Promise(resolve => require(["main"], resolve)),
             fetchAudioBuffer(src)
         ]).then(([Peaks, audioBuffer]) => {
             const options = {
