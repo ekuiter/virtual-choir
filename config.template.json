@@ -1,13 +1,27 @@
 {
     "language": "en",
     "songs": {
-        "SomeSong": {"offset": 1.0}
+        "SomeSong": {
+            "offset": 3.81,
+            "registerOffsets": {
+                "Soprano": 16.55,
+                "Tenor": 15.80
+            }
+        }
     },
     "registers": {
-        "Soprano": {"balance": -0.6},
-        "Alto": {"balance": 0.6},
-        "Tenor": {"balance": -0.3},
-        "Bass": {"balance": 0.3},
+        "Soprano": {
+            "balance": -0.5
+        },
+        "Alto": {
+            "balance": 0.5
+        },
+        "Tenor": {
+            "balance": -0.2
+        },
+        "Bass": {
+            "balance": 0.2
+        },
         "Other": {
             "value": null,
             "balance": 0.0

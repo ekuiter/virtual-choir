@@ -192,6 +192,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
             fetchAudioBuffer(src)
         ]).then(([Peaks, audioBuffer]) => {
             const options = {
+                editable: !!onOffsetUpdated,
                 containers: {
                     zoomview: zoomviewRef.current
                 },
@@ -204,8 +205,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
                 points: [{
                     id: "offset",
                     time: offset >= 0 ? offset : 0,
-                    editable: !!onOffsetUpdated,
-                    color: "#ff0000"
+                    editable: false
                 }]
             };
             Peaks.init(options, (err, peaks) => {
@@ -213,13 +213,14 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
                     window.alert(err);
                 else {
                     peaks.views.getView("zoomview").setZoom({seconds: displaySeconds});
+                    peaks.views.getView("zoomview").setStartTime(offset >= 0 ? offset : 0);
                     peaks.views.getView("zoomview").enableAutoScroll(false);
                     peaks.player.seek(peaks.points.getPoint("offset").time);
-                    peaks.on("points.dragmove", () => {
+                    peaks.on("points.offsetUpdated", offset => {
                         if (onSetIsPlaying)
                             onSetIsPlaying(false);
                         if (onOffsetUpdated)
-                            onOffsetUpdated(peaks.points.getPoint("offset").time);
+                            onOffsetUpdated(offset);
                     });
                     setPeaks(peaks);
                     if (onReady)
@@ -253,7 +254,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
             <img src="img/loading.gif" width="100" height="100" style="margin-top: 20px;" />
         </div>
         <audio src=${src} ref=${audioRef} onended=${() => onSetIsPlaying && onSetIsPlaying(false)} />
-        <div ref=${zoomviewRef} style="height: 140px; ${peaks ? "cursor: move;" : ""}" />
+        <div ref=${zoomviewRef} style="height: 140px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}" />
         <div style=${peaks ? "display: flex;" : "display: none;"}>
             ${showPlayButton && html`<${PlayButton} isPlaying=${isPlaying} onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />`}
             <div class="form-group form-inline">
@@ -279,14 +280,15 @@ const Index = () => {
     const [isSongTrackReady, setIsSongTrackReady] = useState(false);
     const [isRecordingTrackReady, setIsRecordingTrackReady] = useState(false);
     const [songTrackOffset, setSongTrackOffset] = useState();
-    const [recordingTrackOffset, setRecordingTrackOffset] = useState(0.5);
+    const [recordingTrackOffset, setRecordingTrackOffset] = useState();
     const [songTrackGain, setSongTrackGain] = useState(1);
     const [recordingTrackGain, setRecordingTrackGain] = useState(1);
     const playbackRef = useRef();
 
     useEffect(() => song && fetchAudioBuffer("songs/" + song + ".mp3"), [song]);
 
-    const getSongTrackOffset = () => songTrackOffset || config.songs[song].offset;
+    const getSongTrackOffset = () => songTrackOffset || (config.songs[song].registerOffsets[register] || config.songs[song].offset);
+    const getRecordingTrackOffset = () => recordingTrackOffset || (config.songs[song].registerOffsets[register] || config.songs[song].offset);
 
     const onRecordSubmit = e => {
         e.preventDefault();
@@ -331,7 +333,7 @@ const Index = () => {
     const onUploadClick = () => {
         setBusy(true);
         const gain = !isNaN(recordingTrackGain / songTrackGain) ? recordingTrackGain / songTrackGain : 1;
-        uploadTrack(recordingUri, name, register, song, getSongTrackOffset(), recordingTrackOffset, gain)
+        uploadTrack(recordingUri, name, register, song, getSongTrackOffset(), getRecordingTrackOffset(), gain)
             .then(onDiscardClick)
             .then(() => setBusy(false));
     };
@@ -385,7 +387,7 @@ const Index = () => {
                 onOffsetUpdated=${setSongTrackOffset} onGainUpdated=${setSongTrackGain}
                 isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsSongTrackReady(true)} />
-            <${Track} title=${t`recording`} src=${recordingUri} offset=${recordingTrackOffset} gain=${recordingTrackGain}
+            <${Track} title=${t`recording`} src=${recordingUri} offset=${getRecordingTrackOffset()} gain=${recordingTrackGain}
                 onOffsetUpdated=${setRecordingTrackOffset} onGainUpdated=${setRecordingTrackGain}
                 isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsRecordingTrackReady(true)} />

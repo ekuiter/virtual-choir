@@ -28,12 +28,14 @@ define([
    * @param {Boolean} allowEditing
    */
 
-  function PointsLayer(peaks, view, allowEditing) {
+  function PointsLayer(peaks, view, allowEditing, centeredLine) {
     this._peaks        = peaks;
     this._view         = view;
     this._allowEditing = allowEditing;
     this._pointMarkers = {};
     this._layer        = new Konva.Layer();
+
+    this._layer.add(centeredLine);
 
     this._onPointsDrag = this._onPointsDrag.bind(this);
 
@@ -178,7 +180,7 @@ define([
 
     this._pointMarkers[point.id] = pointMarker;
 
-    pointMarker.addToLayer(this._layer);
+    // pointMarker.addToLayer(this._layer);
 
     return pointMarker;
   };

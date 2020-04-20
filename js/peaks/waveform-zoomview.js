@@ -92,7 +92,14 @@ define([
 
     self._createWaveform();
 
-    self._pointsLayer = new PointsLayer(peaks, self, true);
+    self._centeredLine = new Konva.Line({
+      x:           self._width / 4,
+      y:           0,
+      points:      [0.5, 0, 0.5, self._height],
+      stroke:      "#ff3333",
+      strokeWidth: 3
+    });
+    self._pointsLayer = new PointsLayer(peaks, self, true, self._centeredLine);
     self._pointsLayer.addToStage(self._stage);
 
     self._mouseDragHandler = new MouseDragHandler(self._stage, {
@@ -104,14 +111,16 @@ define([
       onMouseMove: function(mousePosX) {
         // Moving the mouse to the left increases the time position of the
         // left-hand edge of the visible waveform.
-        var diff = this.mouseDownX - mousePosX;
+        if (self._peaks.options.editable) {
+          var diff = this.mouseDownX - mousePosX;
 
-        var newFrameOffset = Utils.clamp(
-          this.initialFrameOffset + diff, 0, self._pixelLength - self._width
-        );
+          var newFrameOffset = Utils.clamp(
+            this.initialFrameOffset + diff, 0, self._pixelLength - self._width
+          );
 
-        if (newFrameOffset !== this.initialFrameOffset) {
-          self._updateWaveform(newFrameOffset);
+          if (newFrameOffset !== this.initialFrameOffset) {
+            self._updateWaveform(newFrameOffset);
+          }
         }
       },
 
@@ -155,12 +164,14 @@ define([
   WaveformZoomView.prototype._onWindowResize = function() {
     var self = this;
 
+    var oldWidth = self._width;
     var width = self._container.clientWidth;
+    self._centeredLine.setX(width / 4);
 
     if (!self._zoomLevelAuto) {
       self._width = width;
       self._stage.width(width);
-      self._updateWaveform(self._frameOffset);
+      self._updateWaveform(self._frameOffset - width / 4 + oldWidth / 4);
     }
     else {
       if (self._resizeTimeoutId) {
@@ -178,7 +189,7 @@ define([
           self._data = self._originalWaveformData.resample(width);
           self._stage.width(width);
 
-          self._updateWaveform(self._frameOffset);
+          self._updateWaveform(self._frameOffset - width / 4 + oldWidth / 4);
         }, 500);
       }
     }
@@ -324,7 +335,7 @@ define([
       time = 0;
     }
 
-    this._updateWaveform(this.timeToPixels(time));
+    this._updateWaveform(this.timeToPixels(time) - this._width / 4);
   };
 
   /**
@@ -437,6 +448,12 @@ define([
    */
 
   WaveformZoomView.prototype._updateWaveform = function(frameOffset) {
+    const newTime = this.pixelsToTime(frameOffset + this._width / 4);
+    if (newTime !== this._peaks.points.getPoint("offset").time) {
+      this._peaks.points.getPoint("offset").time = newTime;
+      this._peaks.emit('points.offsetUpdated', newTime);
+    }
+
     var upperLimit;
 
     if (this._pixelLength < this._width) {
