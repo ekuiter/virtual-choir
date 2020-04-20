@@ -2,9 +2,60 @@ const {html, render, useState, useEffect, useRef} = window.htmPreact;
 const Peaks = window.peaks;
 const snippetDuration = 20;
 
+// localization
+const translationMap = {
+    en: {
+        record: "Record",
+        mix: "Mix",
+        stop: "Stop",
+        play: "Play",
+        volume: "Volume",
+        name: "Your name",
+        register: "Your register",
+        song: "Which song?",
+        playback: "Playback",
+        nameMissing: "Please type in a name!",
+        registerMissing: "Please choose a register!",
+        songMissing: "Please choose a song!",
+        startRecording: "Start recording!",
+        stopRecording: "Stop recording ...",
+        recording: "Your recording",
+        upload: "Upload",
+        discard: "Discard",
+        singleSong: "Please choose only recordings of a single song.",
+        reset: "Delete all",
+        confirmReset: "Sure? This will delete all recordings.",
+    },
+    de: {
+        record: "Aufnehmen",
+        mix: "Abmischen",
+        stop: "Stoppen",
+        play: "Abspielen",
+        volume: "Lautstärke",
+        name: "Dein Name",
+        register: "Deine Stimmlage",
+        song: "Welcher Song?",
+        playback: "Playback",
+        nameMissing: "Bitte einen Namen eingeben!",
+        registerMissing: "Bitte eine Stimmlage auswählen!",
+        songMissing: "Bitte einen Song auswählen!",
+        startRecording: "Aufnahme starten!",
+        stopRecording: "Aufnahme stoppen ...",
+        recording: "Deine Aufnahme",
+        upload: "Hochladen",
+        discard: "Verwerfen",
+        singleSong: "Bitte nur Aufnahmen eines einzelnen Songs wählen.",
+        reset: "Alles löschen",
+        confirmReset: "Sicher? Dies löscht alle Aufnahmen.",
+    }
+};
+
+const t = key => translationMap[config.language || "en"][key];
+
+// navigation
 const navigation = [
-    {title: "Aufnehmen", href: "index.html"},
-    {title: "Abmischen", href: "mix.html"},
+    {title: t`record`, href: "index.html"},
+    {title: t`mix`, href: "mix.html"},
     {title: "GitHub", href: "https://github.com/ekuiter/virtual-choir"}
 ];
 
@@ -109,8 +160,8 @@ const IconButton = ({onClick, icon, children, ...props}) => html `
 
 const PlayButton = ({isPlaying, onClick, ...props}) =>
     isPlaying
-        ? html`<${IconButton} icon="img/stop.svg" onClick=${onClick} ...${props}>Stoppen<//>`
-        : html`<${IconButton} icon="img/play.svg" onClick=${onClick} ...${props}>Abspielen<//>`;
+        ? html`<${IconButton} icon="img/stop.svg" onClick=${onClick} ...${props}>${t`stop`}<//>`
+        : html`<${IconButton} icon="img/play.svg" onClick=${onClick} ...${props}>${t`play`}<//>`;
 
 const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true,
@@ -206,7 +257,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
             ${showPlayButton && html`<${PlayButton} isPlaying=${isPlaying} onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />`}
             <div class="form-group form-inline">
                 <label style="margin-top: 6px;">
-                    <span style="margin-top: -3px; padding: 0 20px 0 10px;">Lautstärke</span>
+                    <span style="margin-top: -3px; padding: 0 20px 0 10px;">${t`volume`}</span>
                     <input type=range class=custom-range min=${gainMin} max=2 step=0.01
                         style="margin: 10px 0;" value=${gain} oninput=${onGainInput} />
                 </label>
@@ -240,11 +291,11 @@ const Index = () => {
         e.preventDefault();
         if (!recorder) {
             if (!name)
-                alert("Bitte einen Namen eingeben!");
+                alert(t`nameMissing`);
             else if (!register)
-                alert("Bitte eine Stimmlage auswählen!");
+                alert(t`registerMissing`);
             else if (!song)
-                alert("Bitte einen Song auswählen!");
+                alert(t`songMissing`);
             else {
                 localStorage.setItem("name", name);
                 localStorage.setItem("register", register);
@@ -299,11 +350,11 @@ const Index = () => {
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
 
     return html`
-        <h4 style="margin-bottom: 15px;">Aufnehmen</h4>
+        <h4 style="margin-bottom: 15px;">${t`record`}</h4>
         <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
-            <input type=text class="form-control mr-sm-2" placeholder="Dein Name" pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
+            <input type=text class="form-control mr-sm-2" placeholder=${t`name`} pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
-                <option>Deine Stimmlage</option>
+                <option>${t`register`}</option>
                 ${Object.keys(config.registers).map(_register => html`
                     <option value=${typeof config.registers[_register].value !== "undefined" ? "" + config.registers[_register].value : _register} selected=${register === _register}>
                         ${_register}
@@ -311,17 +362,17 @@ const Index = () => {
                 `)}
             </select>
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setSong(e.target.value)}>
-                <option>Welcher Song?</option>
+                <option>${t`song`}</option>
                 ${Object.keys(config.songs).map((_song) => html`
                     <option value=${_song} selected=${song === _song}>${_song}</option>
                 `)}
             </select>
             <div class=form-check>
                 <input class=form-check-input type=checkbox id=playback checked=${playback} disabled=${recordDisabled} onchange=${e => setPlayback(e.target.checked)} />
-                <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;">Playback</label>
+                <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;">${t`playback`}</label>
             </div>
             <input type=submit class="btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0" 
-                value=${recorder ? "Aufnahme stoppen ..." : "Aufnahme starten!"} disabled=${busy || recordingUri} />
+                value=${recorder ? t`stopRecording` : t`startRecording`} disabled=${busy || recordingUri} />
         </form>
         ${song && !recordingUri && html`
             <br />
@@ -333,14 +384,14 @@ const Index = () => {
                 onOffsetUpdated=${setSongTrackOffset} onGainUpdated=${setSongTrackGain}
                 isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsSongTrackReady(true)} />
-            <${Track} title="Deine Aufnahme" src=${recordingUri} offset=${recordingTrackOffset} gain=${recordingTrackGain}
+            <${Track} title=${t`recording`} src=${recordingUri} offset=${recordingTrackOffset} gain=${recordingTrackGain}
                 onOffsetUpdated=${setRecordingTrackOffset} onGainUpdated=${setRecordingTrackGain}
                 isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsRecordingTrackReady(true)} />
             <p />
             <${PlayButton} isPlaying=${isPlaying} onClick=${() => setIsPlaying(!isPlaying)} disabled=${uploadDisabled} />
-            <button class="btn btn-outline-success" style="margin-right: 6px;" disabled=${uploadDisabled} onclick=${onUploadClick}>Hochladen</button>
-            <button class="btn btn-outline-danger" onclick=${onDiscardClick}>Verwerfen</button>
+            <button class="btn btn-outline-success" style="margin-right: 6px;" disabled=${uploadDisabled} onclick=${onUploadClick}>${t`upload`}</button>
+            <button class="btn btn-outline-danger" onclick=${onDiscardClick}>${t`discard`}</button>
         `}
     `;
 };
@@ -391,7 +442,7 @@ const Mix = ({debounceApiCalls = 250}) => {
     const onTracksSelected = e => {
         const newSelectedTrackIds = [...e.target.options].filter(o => o.selected).map(o => o.value);
         if (getSelectedTracks(newSelectedTrackIds).map(({song}) => song).filter(onlyUnique).length > 1)
-            window.alert("Bitte nur Aufnahmen eines einzelnen Songs wählen.");
+            window.alert(t`singleSong`);
         else {
             setReadyTracksIds(readyTrackIds => readyTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
             setPlayingTracksIds([]);
@@ -403,7 +454,7 @@ const Mix = ({debounceApiCalls = 250}) => {
 
     const onResetClick = e => {
         e.preventDefault();
-        if (confirm("Sicher? Dies löscht alle Aufnahmen."))
+        if (confirm(t`confirmReset`))
             post({reset: true}).then(() => location.reload());
     };
 
@@ -419,8 +470,8 @@ const Mix = ({debounceApiCalls = 250}) => {
     };
 
     return html`
-        <button class="btn btn-outline-danger" style="float: right;" onclick=${onResetClick}>Alles löschen</button>
-        <h4>Abmischen</h4>
+        <button class="btn btn-outline-danger" style="float: right;" onclick=${onResetClick}>${t`reset`}</button>
+        <h4>${t`mix`}</h4>
         <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
             ${tracks.map(({id, name, register, song, date}) =>
                 html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)} ${song}</strong> ${getName(name, register)}</option>`)}
@@ -431,13 +482,13 @@ const Mix = ({debounceApiCalls = 250}) => {
                 <input type=hidden name=mix value=${getHash()} />
                 <label class=form-check-label style="margin: 0 15px;">
                     <input class="form-check-input" type="checkbox" name="playback" />
-                    <span>Playback</span>
+                    <span>${t`playback`}</span>
                 </label>
                 <label style="margin-top: 6px;">
-                    <span style="margin-top: -5px; padding: 0 20px 0 10px;">Lautstärke</span>
+                    <span style="margin-top: -5px; padding: 0 20px 0 10px;">${t`volume`}</span>
                     <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=5 style="margin: 0 20px 0 0;" />
                 </label>
-                <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value="Abmischen" />
+                <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
             </form>
             <${Track} key=${getSelectedSong()} title=${getSelectedSong()} src="songs/${getSelectedSong()}.mp3" offset=${config.songs[getSelectedSong()].offset}
                 gain=${songTrackGain} gainMin=0 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === getSelectedSong()}
