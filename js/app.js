@@ -99,15 +99,14 @@ window.MediaRecorder = MyRecorder;
 // audio buffer preparation for peaks.js
 const fetchAudioBuffer = (duration => {
     const cache = {};
-    return (src) => {
+    return (ctx, src) => {
         if (cache[src])
             return Promise.resolve(cache[src]);
         return fetch(src)
             .then(res => res.arrayBuffer())
-            .then(arrayBuffer => new Promise(resolve => new (AudioContext || webkitAudioContext)().decodeAudioData(arrayBuffer, resolve)))
+            .then(arrayBuffer => new Promise(resolve => ctx.resume().then(() => ctx.decodeAudioData(arrayBuffer, resolve))))
             .then(duration
                 ? audioBuffer => {
-                    const ctx =  new (AudioContext || webkitAudioContext)();
                     const shortAudioBuffer = ctx.createBuffer(audioBuffer.numberOfChannels,
                         Math.min(audioBuffer.length, ctx.sampleRate * duration), ctx.sampleRate);
                     for (var channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
@@ -178,7 +177,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
     const gainNodeRef = useRef();
     
     useEffect(() => {
-        const ctx = new AudioContext();
+        const ctx = new (AudioContext || webkitAudioContext)();
         const source = ctx.createMediaElementSource(audioRef.current);
         gainNodeRef.current = ctx.createGain();
         gainNodeRef.current.gain.value = gain;
@@ -195,7 +194,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
 
         Promise.all([
             new Promise(resolve => require(["main"], resolve)),
-            fetchAudioBuffer(src)
+            fetchAudioBuffer(ctx, src)
         ]).then(([Peaks, audioBuffer]) => {
             const options = {
                 editable: !!onOffsetUpdated,
@@ -292,8 +291,6 @@ const Index = () => {
     const [recordingTrackGain, setRecordingTrackGain] = useState(1);
     const playbackRef = useRef();
 
-    useEffect(() => song && fetchAudioBuffer("songs/" + song + ".mp3"), [song]);
-
     const getSongTrackOffset = () => songTrackOffset ||
         ((config.songs[song].registerOffsets && config.songs[song].registerOffsets[register]) || config.songs[song].offset);
     const getRecordingTrackOffset = () => recordingTrackOffset ||
@@ -366,6 +363,13 @@ const Index = () => {
 
     return html`
         <h4 style="margin-bottom: 15px;">${t`record`}</h4>
+        <p style="font-size: 0.8rem; color: #555;">
+            Version: 2019-04-23 11:50<br />
+            ☑ Firefox 65-75, Chrome 79-81 (Windows 10, Ubuntu 18, macOS 14)<br />
+            ☑ Chrome 81 (Android 7)<br />
+            ☒ Internet Explorer, Edge 44 (Windows 10)<br />
+            ☒ Safari (macOS 14)
+        </span>
         <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
             <input type=text class="form-control mr-sm-2" placeholder=${t`name`} pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
