@@ -7,6 +7,10 @@
     <title>Virtueller Chor</title>
 </head>
 <body>
+    <script>
+        window.addEventListener("error", err => "Error: " + window.alert(err.message));
+        window.addEventListener("unhandledrejection", e => "Unhandled Rejection: " + window.alert(e.reason));
+    </script>
     <script src="php/config.js.php"></script>
     <script src="php/tracks.js.php"></script>
     <script src="js/lib.js"></script>

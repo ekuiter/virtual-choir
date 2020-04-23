@@ -17,6 +17,7 @@ const translationMap = {
         nameMissing: "Please type in a name!",
         registerMissing: "Please choose a register!",
         songMissing: "Please choose a song!",
+        permissionMissing: "Your permission is required to start recording.",
         startRecording: "Start recording!",
         stopRecording: "Stop recording ...",
         recording: "Your recording",
@@ -41,6 +42,7 @@ const translationMap = {
         nameMissing: "Bitte einen Namen eingeben!",
         registerMissing: "Bitte eine Stimmlage auswählen!",
         songMissing: "Bitte einen Song auswählen!",
+        permissionMissing: "Deine Erlaubnis wird benötigt, um die Aufnahme zu starten.",
         startRecording: "Aufnahme starten!",
         stopRecording: "Aufnahme stoppen ...",
         recording: "Deine Aufnahme",
@@ -102,10 +104,10 @@ const fetchAudioBuffer = (duration => {
             return Promise.resolve(cache[src]);
         return fetch(src)
             .then(res => res.arrayBuffer())
-            .then(arrayBuffer => new AudioContext().decodeAudioData(arrayBuffer))
+            .then(arrayBuffer => new Promise(resolve => new (AudioContext || webkitAudioContext)().decodeAudioData(arrayBuffer, resolve)))
             .then(duration
                 ? audioBuffer => {
-                    const ctx = new AudioContext();
+                    const ctx =  new (AudioContext || webkitAudioContext)();
                     const shortAudioBuffer = ctx.createBuffer(audioBuffer.numberOfChannels,
                         Math.min(audioBuffer.length, ctx.sampleRate * duration), ctx.sampleRate);
                     for (var channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
@@ -321,7 +323,10 @@ const Index = () => {
                     }
                     setBusy(false);
                     setRecorder(recorder);
-                }, () => setBusy(false));
+                }, () => {
+                    setBusy(false);
+                    window.alert(t`permissionMissing`);
+                });
             }
         } else {
             setBusy(true);
