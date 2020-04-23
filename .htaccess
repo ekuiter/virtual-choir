@@ -5,7 +5,7 @@
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
     AuthType Basic
-    AuthName "Virtueller Chor"
+    AuthName "Speak Friend And Enter"
     AuthUserFile /var/www/html/.htpasswd
     Require valid-user
 </If>

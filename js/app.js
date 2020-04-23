@@ -17,6 +17,7 @@ const translationMap = {
         nameMissing: "Please type in a name!",
         registerMissing: "Please choose a register!",
         songMissing: "Please choose a song!",
+        testPermission: "Test permission",
         permissionMissing: "You did not grant the permission to start recording.",
         startRecording: "Start recording!",
         stopRecording: "Stop recording ...",
@@ -45,6 +46,7 @@ const translationMap = {
         registerMissing: "Bitte eine Stimmlage auswählen!",
         songMissing: "Bitte einen Song auswählen!",
         permissionMissing: "Erlaubnis zur Aufnahme wurde nicht erteilt.",
+        testPermission: "Berechtigung testen",
         startRecording: "Aufnahme starten!",
         stopRecording: "Aufnahme stoppen ...",
         recording: "Deine Aufnahme",
@@ -61,6 +63,9 @@ const translationMap = {
 };
 
 const t = key => translationMap[config.language || "en"][key];
+
+const formatDate = (date, sep = " ") => ("0" + date.getDate()).slice(-2) + "." + ("0" + (date.getMonth() + 1)).slice(-2) + "." +
+    sep + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
 
 // navigation
 const navigation = [
@@ -301,6 +306,13 @@ const Index = () => {
     const getRecordingTrackOffset = () => recordingTrackOffset ||
         ((config.songs[song].registerOffsets && config.songs[song].registerOffsets[register]) || config.songs[song].offset);
 
+    const onTestClick = e => {
+        e.preventDefault();
+        navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(
+            stream => window.alert("permission granted: " + stream),
+            err => window.alert("permission denied: " + err));
+    };
+
     const onRecordSubmit = e => {
         e.preventDefault();
         if (!recorder) {
@@ -367,11 +379,11 @@ const Index = () => {
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
 
     return html`
-        <h4 style="margin-bottom: 15px;">${t`record`} <span style="padding-left: 10px; cursor: pointer; font-size: 1.2rem; color: #007bff;" onclick=${() => setShowHelp(prev => !prev)}>🛈</span></h4>
+        <h4 style="margin-bottom: 15px;">${t`record`} <span style="padding-left: 5px; cursor: pointer; font-size: 1.2rem; color: #007bff;" onclick=${() => setShowHelp(prev => !prev)}>🛈</span></h4>
         <div style="font-size: 0.8rem; color: #555; ${showHelp ? "" : "display: none;"}">
             <p>
                 <strong>Version</strong><br />
-                2019-04-23 15:30
+                <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> ${formatDate(version)}
             </p>
             <p>
                 <strong>${t`browserSupport`}</strong><br />
@@ -381,7 +393,7 @@ const Index = () => {
                 ✖ Safari (macOS 14)
             </p>
             <p>
-                <strong>${t`microphoneSettings`}</strong><br />
+                <strong>${t`microphoneSettings`}</strong> <button class="btn btn-outline-primary btn-sm" onclick=${onTestClick} style="padding: 0.15rem 0.4rem; margin: -0.3rem 0 0 0.6rem;">${t`testPermission`}</button><br />
                 Chrome: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">chrome://settings/content/microphone</span><br />
                 Firefox: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">about:preferences#privacy</span>
             </p>
@@ -461,8 +473,6 @@ const Mix = ({debounceApiCalls = 250}) => {
     const isPlaying = songTrackPlaying === getSelectedSong() || playingTrackIds.length > 0;
     const getSelectedTracks = selectedTrackIds => selectedTrackIds.map(id => tracks.find(track => track.id === id));
     const addReadyTrack = id => () => setReadyTracksIds(readyTracksIds => [...readyTracksIds, id]);
-    const formatDate = date => ("0" + date.getDate()).slice(-2) + "." + ("0" + (date.getMonth() + 1)).slice(-2) +
-        " " + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
     const onlyUnique = (value, index, self) => self.indexOf(value) === index;
     const getHash = (_selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify(_selectedTrackIds));
     const getName = (name, register) => register !== "null" ? html`<span>${name} <em>${register}</em></span>` : html`<span>${name}</span>`;
