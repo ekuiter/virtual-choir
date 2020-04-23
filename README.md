@@ -35,3 +35,9 @@ Use ApacheBench to simulate `n` users with `c` concurrent requests:
 # use C:\xampp\apache\bin\abs.exe on Windows
 ab -n 100 -c 50 -A <user>:<password> https://<custom-domain>/
 ```
+
+To simulate recordings, use a hex editor to insert an OGG file into `ab.txt` (this can fail on Windows, in which case you should use wsl with `apache2-utils`):
+
+```
+ab -n 100 -c 50 -A <user>:<password> -p ab.txt -T "multipart/form-data; boundary=1234567890" https://<custom-domain>/php/app.php
+```

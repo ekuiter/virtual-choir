@@ -1,0 +1,35 @@
+--1234567890
+Content-Disposition: form-data; name="name"
+
+test
+--1234567890
+Content-Disposition: form-data; name="register"
+
+null
+--1234567890
+Content-Disposition: form-data; name="song"
+
+song
+--1234567890
+Content-Disposition: form-data; name="songOffset"
+
+0.0
+--1234567890
+Content-Disposition: form-data; name="recordingOffset"
+
+0.0
+--1234567890
+Content-Disposition: form-data; name="gain"
+
+1.0
+--1234567890
+Content-Disposition: form-data; name="date"
+
+2030-01-01T00:00:00.000Z
+--1234567890
+Content-Disposition: form-data; name="file"; filename="audio.dat"
+Content-Type: application/octet-stream
+Content-Transfer-Encoding: binary
+
+Ogg<...binary data ...>
+--1234567890--
