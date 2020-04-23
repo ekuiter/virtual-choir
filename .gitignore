@@ -9,3 +9,4 @@ tracks
 .htpasswd
 php/local.php
 config.json
+.cache

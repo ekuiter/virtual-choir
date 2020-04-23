@@ -12,3 +12,4 @@ php/local.php
 config.template.json
 js/peaks
 ab.txt
+.cache

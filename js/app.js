@@ -1,5 +1,8 @@
+// can be bundled with something like:
+// parcel build js\app.js --out-dir js --out-file app.min.js --experimental-scope-hoisting
+// this d Microsoft Edge
+
 const {html, render, useState, useEffect, useRef} = window.htmPreact;
-const Peaks = window.peaks;
 const snippetDuration = 25;
 
 // localization
