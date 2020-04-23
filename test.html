@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <title>Virtueller Chor</title>
+</head>
+<body>
+    <form class="form form-inline my-2 my-lg-0" onsubmit="window.onRecordSubmit(event);">
+        <input type="submit" value="Aufnehmen (form)" />
+    </form>
+    <button onclick="window.onRecordSubmit(event);">
+        Aufnehmen (button)
+    </button>
+    <script>
+        window.addEventListener("error", err => "Error: " + window.alert(err.message));
+        window.addEventListener("unhandledrejection", e => "Unhandled Rejection: " + window.alert(e.reason));
+
+        window.onRecordSubmit = e => {
+            e.preventDefault();
+            navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
+                window.alert("permission granted!");
+            }, () => {
+                window.alert("permission denied!");
+            });
+        };
+    </script>
+</body>
+</html>

@@ -17,7 +17,7 @@ const translationMap = {
         nameMissing: "Please type in a name!",
         registerMissing: "Please choose a register!",
         songMissing: "Please choose a song!",
-        permissionMissing: "Your permission is required to start recording.",
+        permissionMissing: "You did not grant the permission to start recording.",
         startRecording: "Start recording!",
         stopRecording: "Stop recording ...",
         recording: "Your recording",
@@ -27,7 +27,9 @@ const translationMap = {
         reset: "Delete all",
         deleteSelected: "Delete selected",
         confirmReset: "Sure? This will delete all recordings.",
-        confirmDeleteSelected: "Sure? This will delete the selected recordings."
+        confirmDeleteSelected: "Sure? This will delete the selected recordings.",
+        microphoneSettings: "Microphone settings",
+        browserSupport: "Browser Support",
     },
     de: {
         record: "Aufnehmen",
@@ -42,7 +44,7 @@ const translationMap = {
         nameMissing: "Bitte einen Namen eingeben!",
         registerMissing: "Bitte eine Stimmlage auswählen!",
         songMissing: "Bitte einen Song auswählen!",
-        permissionMissing: "Deine Erlaubnis wird benötigt, um die Aufnahme zu starten.",
+        permissionMissing: "Erlaubnis zur Aufnahme wurde nicht erteilt.",
         startRecording: "Aufnahme starten!",
         stopRecording: "Aufnahme stoppen ...",
         recording: "Deine Aufnahme",
@@ -52,7 +54,9 @@ const translationMap = {
         reset: "Alles löschen",
         deleteSelected: "Auswahl löschen",
         confirmReset: "Sicher? Dies löscht alle Aufnahmen.",
-        confirmDeleteSelected: "Sicher? Dies löscht alle ausgewählten Aufnahmen."
+        confirmDeleteSelected: "Sicher? Dies löscht alle ausgewählten Aufnahmen.",
+        microphoneSettings: "Mikrofon-Einstellungen",
+        browserSupport: "Browser-Unterstützung",
     }
 };
 
@@ -275,6 +279,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
 };
 
 const Index = () => {
+    const [showHelp, setShowHelp] = useState(false);
     const [name, setName] = useState(localStorage.getItem("name"));
     const [register, setRegister] = useState(localStorage.getItem("register"));
     const [song, setSong] = useState(localStorage.getItem("song"));
@@ -362,14 +367,25 @@ const Index = () => {
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
 
     return html`
-        <h4 style="margin-bottom: 15px;">${t`record`}</h4>
-        <p style="font-size: 0.8rem; color: #555;">
-            Version: 2019-04-23 11:50<br />
-            ☑ Firefox 65-75, Chrome 79-81 (Windows 10, Ubuntu 18, macOS 14)<br />
-            ☑ Chrome 81 (Android 7)<br />
-            ☒ Internet Explorer, Edge 44 (Windows 10)<br />
-            ☒ Safari (macOS 14)
-        </span>
+        <h4 style="margin-bottom: 15px;">${t`record`} <span style="padding-left: 10px; cursor: pointer; font-size: 1.2rem; color: #007bff;" onclick=${() => setShowHelp(prev => !prev)}>🛈</span></h4>
+        <div style="font-size: 0.8rem; color: #555; ${showHelp ? "" : "display: none;"}">
+            <p>
+                <strong>Version</strong><br />
+                2019-04-23 15:30
+            </p>
+            <p>
+                <strong>${t`browserSupport`}</strong><br />
+                ✔ Firefox 65-75, Chrome 79-81 (Windows 10, Ubuntu 18, macOS 14)<br />
+                ✔ Chrome 81 (Android 7)<br />
+                ✖ Internet Explorer, Edge 44 (Windows 10)<br />
+                ✖ Safari (macOS 14)
+            </p>
+            <p>
+                <strong>${t`microphoneSettings`}</strong><br />
+                Chrome: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">chrome://settings/content/microphone</span><br />
+                Firefox: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">about:preferences#privacy</span>
+            </p>
+        </div>
         <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
             <input type=text class="form-control mr-sm-2" placeholder=${t`name`} pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
