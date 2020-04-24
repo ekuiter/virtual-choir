@@ -477,9 +477,13 @@ const Index = () => {
 };
 
 const Mix = ({debounceApiCalls = 250}) => {
-    const [selectedTrackIds, setSelectedTracksIds] = useState([]);
-    const [readyTracksIds, setReadyTracksIds] = useState([]);
-    const [playingTrackIds, setPlayingTracksIds] = useState([]);
+    const initialSong = location.hash ? JSON.parse(atob(location.hash.substr(1)))[0] : [];
+    const initialSelectedTrackIds = location.hash ? JSON.parse(atob(location.hash.substr(1)))[1] : [];
+
+    const [song, setSong] = useState(initialSong);
+    const [selectedTrackIds, setSelectedTrackIds] = useState(initialSelectedTrackIds);
+    const [readyTrackIds, setReadyTrackIds] = useState([]);
+    const [playingTrackIds, setPlayingTrackIds] = useState([]);
     const [songTrackPlaying, setSongTrackPlaying] = useState();
     const [songTrackReady, setSongTrackReady] = useState();
     const [songTrackGain, setSongTrackGain] = useState(1);
@@ -487,47 +491,41 @@ const Mix = ({debounceApiCalls = 250}) => {
     const debouncedPendingApiCall = useDebounce(pendingApiCall, debounceApiCalls);
 
     useEffect(() => {
-        if (location.hash)
-            setSelectedTracksIds(JSON.parse(atob(location.hash.substr(1))));
-    }, []);
-
-    useEffect(() => {
         if (debouncedPendingApiCall)
             post(debouncedPendingApiCall).then(() => setPendingApiCall());
     }, [debouncedPendingApiCall]);
 
-    const getSelectedSong = () => {
-        const track = tracks.find(track => track.id === selectedTrackIds[0]);
-        if (track)
-            return track.song;
-    };
-
-    const isReady = songTrackReady === getSelectedSong() && selectedTrackIds.length === readyTracksIds.length;
-    const isPlaying = songTrackPlaying === getSelectedSong() || playingTrackIds.length > 0;
+    const isReady = songTrackReady === song && selectedTrackIds.length === readyTrackIds.length;
+    const isPlaying = songTrackPlaying === song || playingTrackIds.length > 0;
     const getSelectedTracks = selectedTrackIds => selectedTrackIds.map(id => tracks.find(track => track.id === id));
-    const addReadyTrack = id => () => setReadyTracksIds(readyTracksIds => [...readyTracksIds, id]);
-    const onlyUnique = (value, index, self) => self.indexOf(value) === index;
-    const getHash = (_selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify(_selectedTrackIds));
+    const addReadyTrack = id => () => setReadyTrackIds(readyTrackIds => [...readyTrackIds, id]);
+    const getHash = (_song = song, _selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify([_song, _selectedTrackIds]));
     const getName = (name, register) => register !== "null" ? html`<span>${name}, <em>${register}</em></span>` : html`<span>${name}</span>`;
 
-    const setPlayingTrack = id => isPlaying => setPlayingTracksIds(playingTrackIds => {
+    const setPlayingTrack = id => isPlaying => setPlayingTrackIds(playingTrackIds => {
         if (isPlaying)
             return playingTrackIds.indexOf(id) === -1 ? [...playingTrackIds, id] : playingTrackIds;
         else
             return playingTrackIds.indexOf(id) !== -1 ? playingTrackIds.filter(_id => _id !== id) : playingTrackIds;
     });
 
+    const onSongSelected = e => {
+        const newSong = e.target.value;
+        setSong(newSong);
+        setReadyTrackIds([]);
+        setPlayingTrackIds([]);
+        setSongTrackPlaying(null);
+        setSelectedTrackIds([]);
+        location.hash = getHash(newSong, []);
+    };
+
     const onTracksSelected = e => {
         const newSelectedTrackIds = [...e.target.options].filter(o => o.selected).map(o => o.value);
-        if (getSelectedTracks(newSelectedTrackIds).map(({song}) => song).filter(onlyUnique).length > 1)
-            window.alert(t`singleSong`);
-        else {
-            setReadyTracksIds(readyTrackIds => readyTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
-            setPlayingTracksIds([]);
-            setSongTrackPlaying(null);
-            setSelectedTracksIds(newSelectedTrackIds);
-            location.hash = getHash(newSelectedTrackIds);
-        }
+        setReadyTrackIds(readyTrackIds => readyTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
+        setPlayingTrackIds([]);
+        setSongTrackPlaying(null);
+        setSelectedTrackIds(newSelectedTrackIds);
+        location.hash = getHash(song, newSelectedTrackIds);
     };
 
     const onDeleteSelectedClick = e => {
@@ -539,26 +537,36 @@ const Mix = ({debounceApiCalls = 250}) => {
     const onPlayClick = e => {
         e.preventDefault();
         if (isPlaying) {
-            setPlayingTracksIds([]);
+            setPlayingTrackIds([]);
             setSongTrackPlaying(null);
         } else {
-            setPlayingTracksIds(selectedTrackIds);
-            setSongTrackPlaying(getSelectedSong());
+            setPlayingTrackIds(selectedTrackIds);
+            setSongTrackPlaying(song);
         }
     };
 
     return html`
-        <button class="btn btn-outline-danger" style="float: right; margin-right: 6px; ${selectedTrackIds.length > 0 ? "" : "visibility: hidden;"}" onclick=${onDeleteSelectedClick}>
-            ${t`deleteSelected`}
-        </button>
-        <h4>${t`mix`}</h4>
-        <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
-            ${tracks.map(({id, name, register, song, date}) =>
-                html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)}, ${song}</strong>, ${getName(name, register)}</option>`)}
+        <h4 style="margin-bottom: 15px;">${t`mix`}</h4>
+        <form class=form-inline>
+            <select class=custom-select class="form-control mr-sm-2" name=song onchange=${onSongSelected}>
+                <option>${t`song`}</option>
+                ${Object.keys(config.songs).map((_song) => html`
+                    <option value=${_song} selected=${song === _song}>${_song}</option>
+                `)}
+            </select>
+            <button class="btn btn-outline-danger" style=${selectedTrackIds.length > 0 ? "" : "visibility: hidden;"} onclick=${onDeleteSelectedClick}>
+                ${t`deleteSelected`}
+            </button>
+        </form>
+        <select class=custom-select multiple style="clear: both; margin: 15px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
+            ${tracks
+                .filter(track => track.song === song)
+                .map(({id, name, register, date}) =>
+                html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)}</strong> | ${getName(name, register)}</option>`)}
         </select>
-        ${selectedTrackIds.length > 0 && getSelectedSong() && config.songs.hasOwnProperty(getSelectedSong()) && html`
+        ${selectedTrackIds.length > 0 && song && config.songs.hasOwnProperty(song) && html`
             <form action=php/app.php method=post class=form-inline style="margin: 10px 0.3rem;">
-            <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
+                <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
                 <input type=hidden name=mix value=${getHash()} />
                 <label class=form-check-label style="margin: 0 15px;">
                     <input class="form-check-input" type="checkbox" name="playback" />
@@ -570,10 +578,10 @@ const Mix = ({debounceApiCalls = 250}) => {
                 </label>
                 <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
             </form>
-            <${Track} key=${getSelectedSong()} title=${getSelectedSong()} src="songs/${getSelectedSong()}.mp3" offset=${config.songs[getSelectedSong()].offset}
-                gain=${songTrackGain} gainMin=0 gainMax=5 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === getSelectedSong()}
-                onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && getSelectedSong())}
-                onReady=${() => setSongTrackReady(getSelectedSong())} />
+            <${Track} key=${song} title=${song} src="songs/${song}.mp3" offset=${config.songs[song].offset}
+                gain=${songTrackGain} gainMin=0 gainMax=5 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === song}
+                onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && song)}
+                onReady=${() => setSongTrackReady(song)} />
             ${getSelectedTracks(selectedTrackIds).map(track => {
                 const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
 
