@@ -8,6 +8,8 @@ const snippetDuration = 25;
 // localization
 const translationMap = {
     en: {
+        en: "English",
+        de: "Deutsch",
         record: "Record",
         mix: "Mix",
         stop: "Stop",
@@ -28,14 +30,15 @@ const translationMap = {
         upload: "Upload",
         discard: "Discard",
         singleSong: "Please choose only recordings of a single song.",
-        reset: "Delete all",
         deleteSelected: "Delete selected",
-        confirmReset: "Sure? This will delete all recordings.",
         confirmDeleteSelected: "Sure? This will delete the selected recordings.",
         microphoneSettings: "Microphone settings",
         browserSupport: "Browser Support",
+        info: "Info",
     },
     de: {
+        en: "English",
+        de: "Deutsch",
         record: "Aufnehmen",
         mix: "Abmischen",
         stop: "Stoppen",
@@ -56,19 +59,25 @@ const translationMap = {
         upload: "Hochladen",
         discard: "Verwerfen",
         singleSong: "Bitte nur Aufnahmen eines einzelnen Songs wählen.",
-        reset: "Alles löschen",
         deleteSelected: "Auswahl löschen",
-        confirmReset: "Sicher? Dies löscht alle Aufnahmen.",
         confirmDeleteSelected: "Sicher? Dies löscht alle ausgewählten Aufnahmen.",
         microphoneSettings: "Mikrofon-Einstellungen",
         browserSupport: "Browser-Unterstützung",
+        info: "Info",
     }
 };
 
-const t = key => translationMap[config.language || "en"][key];
+const language = localStorage.getItem("language") || config.defaultLanguage || "en";
+const t = key => translationMap[language][key];
 
 const formatDate = (date, sep = " ") => ("0" + date.getDate()).slice(-2) + "." + ("0" + (date.getMonth() + 1)).slice(-2) + "." +
     sep + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
+
+const setLanguage = language => {
+    localStorage.setItem("language", language);
+    location.reload();
+
+};
 
 // navigation
 const navigation = [
@@ -163,6 +172,15 @@ const Navigation = ({activeHref}) => html`
                     </li>
                 `)}
             </ul>
+            <form class="form-inline my-2 my-lg-0">
+                <select class=custom-select class="form-control mr-sm-2" onchange=${e => setLanguage(e.target.value)}>
+                    ${Object.keys(translationMap).map(_language => html`
+                        <option value=${_language} selected=${language === _language}>
+                            ${t(_language)}
+                        </option>
+                    `)}
+                </select>
+            </form>
         </div>
     </nav>
 `;
@@ -287,7 +305,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
 };
 
 const Index = () => {
-    const [showHelp, setShowHelp] = useState(false);
+    const [showInfo, setShowInfo] = useState(false);
     const [name, setName] = useState(localStorage.getItem("name"));
     const [register, setRegister] = useState(localStorage.getItem("register"));
     const [song, setSong] = useState(localStorage.getItem("song"));
@@ -382,8 +400,8 @@ const Index = () => {
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
 
     return html`
-        <h4 style="margin-bottom: 15px;">${t`record`} <span style="padding-left: 5px; cursor: pointer; font-size: 1.2rem; color: #007bff;" onclick=${() => setShowHelp(prev => !prev)}>🛈</span></h4>
-        <div style="font-size: 0.8rem; color: #555; ${showHelp ? "" : "display: none;"}">
+        <h4 style="margin-bottom: 15px;">${t`record`} <span style="padding-left: 5px; cursor: pointer; font-size: 0.8rem; color: #007bff;" onclick=${() => setShowInfo(prev => !prev)}>${t`info`}</span></h4>
+        <div style="font-size: 0.8rem; color: #555; ${showInfo ? "" : "display: none;"}">
             <p>
                 <strong>Version</strong><br />
                 <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> ${formatDate(version)}
@@ -402,7 +420,7 @@ const Index = () => {
             </p>
         </div>
         <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
-            <input type=text class="form-control mr-sm-2" placeholder=${t`name`} pattern="[A-Za-z0-9]+" value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
+            <input type=text class="form-control mr-sm-2" placeholder=${t`name`} value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
                 <option>${t`register`}</option>
                 ${Object.keys(config.registers).map(_register => html`
@@ -500,12 +518,6 @@ const Mix = ({debounceApiCalls = 250}) => {
         }
     };
 
-    const onResetClick = e => {
-        e.preventDefault();
-        if (confirm(t`confirmReset`))
-            post({reset: true}).then(() => location.href = "mix.html");
-    };
-
     const onDeleteSelectedClick = e => {
         e.preventDefault();
         if (confirm(t`confirmDeleteSelected`))
@@ -524,10 +536,9 @@ const Mix = ({debounceApiCalls = 250}) => {
     };
 
     return html`
-        <button class="btn btn-outline-danger" style="float: right;" onclick=${onResetClick}>${t`reset`}</button>
-        ${selectedTrackIds.length > 0 && html`
-            <button class="btn btn-outline-danger" style="float: right; margin-right: 6px;" onclick=${onDeleteSelectedClick}>${t`deleteSelected`}</button>
-        `}
+        <button class="btn btn-outline-danger" style="float: right; margin-right: 6px; ${selectedTrackIds.length > 0 ? "" : "visibility: hidden;"}" onclick=${onDeleteSelectedClick}>
+            ${t`deleteSelected`}
+        </button>
         <h4>${t`mix`}</h4>
         <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
             ${tracks.map(({id, name, register, song, date}) =>

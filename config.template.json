@@ -1,5 +1,5 @@
 {
-    "language": "en",
+    "defaultLanguage": "en",
     "songs": {
         "SomeSong": {
             "offset": 3.81,
