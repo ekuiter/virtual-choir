@@ -8,10 +8,12 @@ const snippetDuration = 25;
 // localization
 const translationMap = {
     en: {
+        language: "Language",
         en: "English",
         de: "Deutsch",
         record: "Record",
         mix: "Mix",
+        listen: "Listen",
         stop: "Stop",
         play: "Play",
         volume: "Volume",
@@ -35,12 +37,18 @@ const translationMap = {
         microphoneSettings: "Microphone settings",
         browserSupport: "Browser Support",
         info: "Info",
+        nameHelp: "Your name so that you can identify your own recording.",
+        registerHelp: "Determines your voice's balance when mixing to simulate a choir arrangement.",
+        songHelp: "Choose the song you want to sing. This makes it easier to synchronize your recording.",
+        playbackHelp: "Plays the song in the background while recording.",
     },
     de: {
+        language: "Sprache",
         en: "English",
         de: "Deutsch",
         record: "Aufnehmen",
         mix: "Abmischen",
+        listen: "Anhören",
         stop: "Stoppen",
         play: "Abspielen",
         volume: "Lautstärke",
@@ -64,6 +72,10 @@ const translationMap = {
         microphoneSettings: "Mikrofon-Einstellungen",
         browserSupport: "Browser-Unterstützung",
         info: "Info",
+        nameHelp: "Dein Name, damit du die Aufnahme später wiederfinden kannst.",
+        registerHelp: "Bestimmt die Balance deiner Stimme beim Abmischen, um eine Choraufstellung zu simulieren.",
+        songHelp: "Wähle den Song aus, den du singen möchtest, um das Synchronisieren deiner Aufnahme zu erleichtern.",
+        playbackHelp: "Spielt den Song bei der Aufnahme im Hintergrund ab.",
     }
 };
 
@@ -173,7 +185,7 @@ const Navigation = ({activeHref}) => html`
                 `)}
             </ul>
             <form class="form-inline my-2 my-lg-0">
-                <select class=custom-select class="form-control mr-sm-2" onchange=${e => setLanguage(e.target.value)}>
+                <select class=custom-select class="form-control mr-sm-2" onchange=${e => setLanguage(e.target.value)} title=${t`language`}>
                     ${Object.keys(translationMap).map(_language => html`
                         <option value=${_language} selected=${language === _language}>
                             ${t(_language)}
@@ -420,8 +432,8 @@ const Index = () => {
             </p>
         </div>
         <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
-            <input type=text class="form-control mr-sm-2" placeholder=${t`name`} value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} />
-            <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)}>
+            <input type=text class="form-control mr-sm-2" placeholder=${t`name`} value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} title=${t`nameHelp`} />
+            <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)} title=${t`registerHelp`}>
                 <option>${t`register`}</option>
                 ${Object.keys(config.registers).map(_register => html`
                     <option value=${typeof config.registers[_register].value !== "undefined" ? "" + config.registers[_register].value : _register} selected=${register === _register}>
@@ -429,15 +441,15 @@ const Index = () => {
                     </option>
                 `)}
             </select>
-            <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setSong(e.target.value)}>
+            <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setSong(e.target.value)} title=${t`songHelp`}>
                 <option>${t`song`}</option>
                 ${Object.keys(config.songs).map((_song) => html`
                     <option value=${_song} selected=${song === _song}>${_song}</option>
                 `)}
             </select>
             <div class=form-check>
-                <input class=form-check-input type=checkbox id=playback checked=${playback} disabled=${recordDisabled} onchange=${e => setPlayback(e.target.checked)} />
-                <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;">${t`playback`}</label>
+                <input class=form-check-input type=checkbox id=playback checked=${playback} disabled=${recordDisabled} onchange=${e => setPlayback(e.target.checked)} title=${t`playbackHelp`} />
+                <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;" title=${t`playbackHelp`}>${t`playback`}</label>
             </div>
             <input type=submit class="btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0" 
                 value=${recorder ? t`stopRecording` : t`startRecording`} disabled=${busy || recordingUri} />
@@ -496,7 +508,7 @@ const Mix = ({debounceApiCalls = 250}) => {
     const addReadyTrack = id => () => setReadyTracksIds(readyTracksIds => [...readyTracksIds, id]);
     const onlyUnique = (value, index, self) => self.indexOf(value) === index;
     const getHash = (_selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify(_selectedTrackIds));
-    const getName = (name, register) => register !== "null" ? html`<span>${name} <em>${register}</em></span>` : html`<span>${name}</span>`;
+    const getName = (name, register) => register !== "null" ? html`<span>${name}, <em>${register}</em></span>` : html`<span>${name}</span>`;
 
     const setPlayingTrack = id => isPlaying => setPlayingTracksIds(playingTrackIds => {
         if (isPlaying)
@@ -542,9 +554,9 @@ const Mix = ({debounceApiCalls = 250}) => {
         <h4>${t`mix`}</h4>
         <select class=custom-select multiple style="clear: both; margin: 20px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
             ${tracks.map(({id, name, register, song, date}) =>
-                html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)} ${song}</strong> ${getName(name, register)}</option>`)}
+                html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)}, ${song}</strong>, ${getName(name, register)}</option>`)}
         </select>
-        ${selectedTrackIds.length > 0 && html`
+        ${selectedTrackIds.length > 0 && getSelectedSong() && config.songs.hasOwnProperty(getSelectedSong()) && html`
             <form action=php/app.php method=post class=form-inline style="margin: 10px 0.3rem;">
             <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
                 <input type=hidden name=mix value=${getHash()} />
