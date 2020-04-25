@@ -41,6 +41,8 @@ const translationMap = {
         registerHelp: "Determines your voice's balance when mixing to simulate a choir arrangement.",
         songHelp: "Choose the song you want to sing. This makes it easier to synchronize your recording.",
         playbackHelp: "Plays the song in the background while recording.",
+        saveChanges: "Save changes",
+        confirmClose: "There are unsaved changes.",
     },
     de: {
         language: "Sprache",
@@ -76,6 +78,8 @@ const translationMap = {
         registerHelp: "Bestimmt die Balance deiner Stimme beim Abmischen, um eine Choraufstellung zu simulieren.",
         songHelp: "Wähle den Song aus, den du singen möchtest, um das Synchronisieren deiner Aufnahme zu erleichtern.",
         playbackHelp: "Spielt den Song bei der Aufnahme im Hintergrund ab.",
+        saveChanges: "Änderungen speichern",
+        confirmClose: "Nicht alle Änderungen wurden gespeichert.",
     }
 };
 
@@ -491,10 +495,11 @@ const Index = ({recordingTimeout = 500}) => {
     `;
 };
 
-const Mix = ({debounceApiCalls = 250}) => {
+const Mix = ({debounceApiCalls = 500}) => {
     const initialSong = location.hash ? JSON.parse(atob(location.hash.substr(1)))[0] : [];
     const initialSelectedTrackIds = location.hash ? JSON.parse(atob(location.hash.substr(1)))[1] : [];
 
+    const [busy, setBusy] = useState(false);
     const [song, setSong] = useState(initialSong);
     const [selectedTrackIds, setSelectedTrackIds] = useState(initialSelectedTrackIds);
     const [readyTrackIds, setReadyTrackIds] = useState([]);
@@ -502,18 +507,26 @@ const Mix = ({debounceApiCalls = 250}) => {
     const [songTrackPlaying, setSongTrackPlaying] = useState();
     const [songTrackReady, setSongTrackReady] = useState();
     const [songTrackGain, setSongTrackGain] = useState(1);
+    const [pendingApiCalls, setPendingApiCalls] = useState([]);
     const [pendingApiCall, setPendingApiCall] = useState();
     const debouncedPendingApiCall = useDebounce(pendingApiCall, debounceApiCalls);
 
     useEffect(() => {
-        if (debouncedPendingApiCall)
-            post(debouncedPendingApiCall).then(() => setPendingApiCall());
+        if (debouncedPendingApiCall) {
+            setBusy(false);
+            addPendingApiCall(debouncedPendingApiCall);
+        }
     }, [debouncedPendingApiCall]);
+
+    useEffect(() => {
+        window.onbeforeunload = pendingApiCalls.length > 0 && (() => t`confirmClose`);
+    }, [pendingApiCalls]);
 
     const isReady = songTrackReady === song && selectedTrackIds.length === readyTrackIds.length;
     const isPlaying = songTrackPlaying === song || playingTrackIds.length > 0;
     const getSelectedTracks = selectedTrackIds => selectedTrackIds.map(id => tracks.find(track => track.id === id));
     const addReadyTrack = id => () => setReadyTrackIds(readyTrackIds => [...readyTrackIds, id]);
+    const addPendingApiCall = pendingApiCall => setPendingApiCalls(pendingApiCalls => [...pendingApiCalls, pendingApiCall]);
     const getHash = (_song = song, _selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify([_song, _selectedTrackIds]));
     const getName = (name, register) => register !== "null" ? html`<span>${name}, <em>${register}</em></span>` : html`<span>${name}</span>`;
 
@@ -560,6 +573,17 @@ const Mix = ({debounceApiCalls = 250}) => {
         }
     };
 
+    const onSaveChangesClick = e => {
+        e.preventDefault();
+        setBusy(true);
+        pendingApiCalls
+            .reduce((promise, pendingApiCall) => promise.then(() => post(pendingApiCall)), Promise.resolve())
+            .then(() => {
+                setPendingApiCalls([]);
+                setBusy(false);
+            });
+    };
+
     return html`
         <h4 style="margin-bottom: 15px;">${t`mix`}</h4>
         <form class=form-inline>
@@ -582,23 +606,27 @@ const Mix = ({debounceApiCalls = 250}) => {
             </select>
             ${selectedTrackIds.length > 0 && html`
                 <div style="display: flex; flex-basis: 1;">
-                        <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
-                            <form action=php/app.php method=post class=form-inline>
-                                <input type=hidden name=mix value=${getHash()} />
-                                <label class=form-check-label style="margin: 2px 5px 0 0;" title=${t`playbackHelp`}>
-                                    <input class="form-check-input" type="checkbox" name="playback" />
-                                    <span>${t`playback`}</span>
-                                </label>
-                                <label style="margin-top: 6px;">
-                                    <span style="margin-top: -5px; padding: 0 20px 0 10px;">${t`volume`}</span>
-                                    <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=5 style="margin: 0 20px 0 0;" />
-                                </label>
-                                <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
-                            </form>
-                        </div>
-                        <div class="form-group form-inline" style="margin-bottom: 0;">
-                            <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
-                        </div>
+                    <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
+                        <form action=php/app.php method=post class=form-inline>
+                            <input type=hidden name=mix value=${getHash()} />
+                            <label class=form-check-label style="margin: 2px 5px 0 0;" title=${t`playbackHelp`}>
+                                <input class="form-check-input" type="checkbox" name="playback" />
+                                <span>${t`playback`}</span>
+                            </label>
+                            <label style="margin-top: 6px;">
+                                <span style="margin-top: -5px; padding: 0 20px 0 10px;">${t`volume`}</span>
+                                <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=5 style="margin: 0 20px 0 0;" />
+                            </label>
+                            <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
+                            <button class="btn btn-outline-danger" style=${pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
+                                onclick=${onSaveChangesClick} disabled=${busy}>
+                                ${t`saveChanges`}
+                            </button>
+                        </form>
+                    </div>
+                    <div class="form-group form-inline" style="margin-bottom: 0;">
+                        <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
+                    </div>
                 </div>
                 <${Track} key=${song} title=${song} src="songs/${song}.mp3" offset=${config.songs[song].offset}
                     gain=${songTrackGain} gainMin=0 gainMax=5 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === song}
@@ -609,11 +637,13 @@ const Mix = ({debounceApiCalls = 250}) => {
 
                     const onOffsetUpdated = offset => {
                         track.recordingOffset = offset + (parseFloat(songOffset) - config.songs[song].offset);
+                        setBusy(true);
                         setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
                     };
 
                     const onGainUpdated = gain => {
                         track.gain = gain;
+                        setBusy(true);
                         setPendingApiCall({"setFor": id, "gain": track.gain});
                     };
 
