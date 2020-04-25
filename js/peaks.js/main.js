@@ -1,10 +1,3 @@
-/** How to minify manually (who needs bundlers anyway?):
- * - download https://requirejs.org/docs/release/2.3.6/r.js
- * - run "node r.js -o baseUrl=. name=main out=peaks.js optimize=none" in this directory
- * - uglify online: https://skalman.github.io/UglifyJS-online/
- * - add to lib.js
- */
-
 /**
  * @file
  *
@@ -14,7 +7,7 @@
  */
 
 define([
-  './eventemitter2',
+  'eventemitter2',
   './waveform-points',
   './player',
   './marker-factories',

@@ -7,7 +7,7 @@
  */
 
 define([
-  './waveform-data',
+  'waveform-data',
   './utils'
 ], function(
     WaveformData,

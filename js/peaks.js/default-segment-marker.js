@@ -8,7 +8,7 @@
 
 define([
   './utils',
-  './konva'
+  'konva'
 ], function(
     Utils,
     Konva) {

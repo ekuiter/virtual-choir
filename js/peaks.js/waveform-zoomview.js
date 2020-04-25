@@ -11,7 +11,7 @@ define([
   './points-layer',
   './waveform-shape',
   './utils',
-  './konva'
+  'konva'
 ], function(
     MouseDragHandler,
     PointsLayer,

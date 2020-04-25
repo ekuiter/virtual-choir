@@ -9,7 +9,7 @@
 define([
   './point-marker',
   './utils',
-  './konva'
+  'konva'
 ], function(
     PointMarker,
     Utils,

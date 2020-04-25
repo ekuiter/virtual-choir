@@ -53,12 +53,19 @@ function do_reset() {
     array_map("unlink", array_filter((array) glob("../mixes/*")));
 }
 
+$songs = array_filter((array) glob("../songs/*.mp3"));
+foreach ($songs as $song) {
+    $song = basename($song, ".mp3");
+    if (!file_exists("../songs/$song.json"))
+        shell_exec(audiowaveform() . " -b 8 -i \"../songs/$song.mp3\" -o \"../songs/$song.json\"");
+}
+
 if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
     $tmp_name = $_FILES["file"]["tmp_name"];
     $md5 = md5_file($tmp_name);
     @mkdir("../tracks");
-    shell_exec(ffmpeg() . " -i $tmp_name \"../tracks/$md5.ogg\"");
-    shell_exec(audiowaveform() . " -b 8 -i \"../tracks/$md5.ogg\" -o \"../tracks/$md5.dat\"");
+    shell_exec(ffmpeg() . " -i $tmp_name \"../tracks/$md5.mp3\"");
+    shell_exec(audiowaveform() . " -b 8 -i \"../tracks/$md5.mp3\" -o \"../tracks/$md5.json\"");
     DB::query("INSERT INTO tracks (name, register, song, songOffset, recordingOffset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
         $_POST["name"], $_POST["register"], $_POST["song"], $_POST["songOffset"], $_POST["recordingOffset"], $_POST["gain"], $_POST["date"], $md5);
     die;
@@ -101,7 +108,7 @@ if ($_REQUEST) {
         if ($playback)
             $command .= " -i \"../songs/$song.mp3\"";
         foreach ($tracks as $track)
-            $command .= " -i \"../tracks/$track[md5].ogg\"";
+            $command .= " -i \"../tracks/$track[md5].mp3\"";
         $command .= " -filter_complex \"";
         foreach ($tracks as $idx => $track) {
             if ($playback)
@@ -154,8 +161,8 @@ if ($_REQUEST) {
         if ($count === 0)
             die("no tracks found");
         foreach ($tracks as $idx => $track) {
-            unlink("../tracks/$track[md5].ogg");
-            unlink("../tracks/$track[md5].dat");
+            unlink("../tracks/$track[md5].mp3");
+            unlink("../tracks/$track[md5].json");
         }
         DB::query("DELETE FROM tracks WHERE %l", $where);
     }
@@ -185,10 +192,10 @@ if ($_REQUEST) {
             if (!file_exists("$tempdir/dump.sql"))
                 die("no database dump found");
             do_reset();
-            $tracks = array_filter((array) glob("$tempdir/tracks/*.ogg"));
+            $tracks = array_filter((array) glob("$tempdir/tracks/*.mp3"));
             foreach ($tracks as $track)
                 rename($track, "../tracks/" . basename($track));
-            $tracks = array_filter((array) glob("$tempdir/tracks/*.dat"));
+            $tracks = array_filter((array) glob("$tempdir/tracks/*.json"));
             foreach ($tracks as $track)
                 rename($track, "../tracks/" . basename($track));
             $mixes = array_filter((array) glob("$tempdir/mixes/*.mp3"));

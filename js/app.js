@@ -135,7 +135,10 @@ const setLanguage = language => {
 const navigation = [
     {title: t`record`, href: "index.html"},
     {title: t`mix`, href: "mix.html"},
-    {title: t`listen`, href: "listen.html"},
+    {title: t`listen`, href: "listen.html"}
+];
+
+const sideNavigation = [
     {title: "π", href: "admin.html"}
 ];
 
@@ -222,6 +225,13 @@ const Navigation = ({activeHref}) => html`
                     </li>
                 `)}
             </ul>
+            <ul class="navbar-nav" style="margin-right: 12px;">
+                ${sideNavigation.map(({title, href}) => html`
+                    <li class="nav-item ${activeHref.endsWith(href) ? "active" : ""}">
+                        <a class=nav-link href=${href}>${title}</a>
+                    </li>
+                `)}
+            </ul>
             <form class="form-inline my-2 my-lg-0">
                 <select class=custom-select class="form-control mr-sm-2" onchange=${e => setLanguage(e.target.value)} title=${t`language`}>
                     ${Object.keys(translationMap).map(_language => html`
@@ -253,7 +263,7 @@ const PlayButton = ({isPlaying, onClick, ...props}) =>
         ? html`<${IconButton} icon="img/stop.svg" onClick=${onClick} minWidth=120 ...${props}>${t`stop`}<//>`
         : html`<${IconButton} icon="img/play.svg" onClick=${onClick} minWidth=120 ...${props}>${t`play`}<//>`;
 
-const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
+const Track = ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true,
     gainMin = 0.01, gainMax = 2, height = 140, margin = 8, topDiff = 35}) => {
     const [peaks, setPeaks] = useState();
@@ -277,24 +287,23 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
         } else
             gainNodeRef.current.connect(ctx.destination);
 
-        fetchAudioBuffer(ctx, src).then(audioBuffer => {
+        (dataUri ? Promise.resolve() : fetchAudioBuffer(ctx, src)).then(audioBuffer => {
             const options = {
                 editable: !!onOffsetUpdated,
                 containers: {
                     zoomview: zoomviewRef.current
                 },
                 mediaElement: audioRef.current,
-                webAudio: {
-                    audioContext: ctx,
-                    audioBuffer
-                },
-                zoomLevels: [1],
+                dataUri,
+                zoomLevels: [256],
                 points: [{
                     id: "offset",
                     time: offset >= 0 ? offset : 0,
                     editable: false
                 }]
             };
+            if (!dataUri)
+                options.webAudio = {audioContext: ctx, audioBuffer};
             Peaks.init(options, (err, peaks) => {
                 if (!err) {
                     peaks.views.getView("zoomview").setZoom({seconds: displaySeconds});
@@ -496,7 +505,8 @@ const Record = ({recordingTimeout = 500}) => {
             <audio src="songs/${song}.mp3" ref=${playbackRef} />
         `}
         ${recordingUri && html`
-            <${Track} title=${song} src="songs/${song}.mp3" offset=${getSongTrackOffset()} gain=${songTrackGain}
+            <${Track} title=${song} src="songs/${song}.mp3" dataUri="songs/${song}.json"
+                offset=${getSongTrackOffset()} gain=${songTrackGain}
                 onOffsetUpdated=${setSongTrackOffset} onGainUpdated=${setSongTrackGain}
                 isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
                 onReady=${() => setIsSongTrackReady(true)} margin=20 />
@@ -653,7 +663,8 @@ const Mix = ({debounceApiCalls = 500}) => {
                         <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
                     </div>
                 </div>
-                <${Track} key=${song} title=${song} src="songs/${song}.mp3" offset=${config.songs[song].offset}
+                <${Track} src="songs/${song}.mp3" dataUri="songs/${song}.json"
+                    key=${song} title=${song} offset=${config.songs[song].offset}
                     gain=${songTrackGain} gainMin=0 gainMax=5 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === song}
                     onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && song)}
                     onReady=${() => setSongTrackReady(song)} />
@@ -674,7 +685,8 @@ const Mix = ({debounceApiCalls = 500}) => {
 
                     return html`
                         <${Track} key=${id} title=${getName(name, register)}
-                            src="tracks/${md5}.ogg"
+                            src="tracks/${md5}.mp3"
+                            dataUri="tracks/${md5}.json"
                             offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
                             gain=${parseFloat(gain)} gainMin=0 gainMax=5
                             onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}

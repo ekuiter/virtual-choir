@@ -21,6 +21,7 @@
     "worker-loader": "^2.0.0"
   },
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "watch": "webpack --watch"
   }
 }

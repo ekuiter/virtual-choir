@@ -7,7 +7,7 @@
  */
 
 define([
-  './konva'
+  'konva'
 ], function(Konva) {
   'use strict';
 

@@ -9,7 +9,7 @@
 define([
   './default-point-marker',
   './default-segment-marker',
-  './konva'
+  'konva'
 ], function(
     DefaultPointMarker,
     DefaultSegmentMarker,

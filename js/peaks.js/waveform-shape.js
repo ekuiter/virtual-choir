@@ -6,7 +6,7 @@
  * @module waveform-shape
  */
 
-define(['./utils', './konva'], function(Utils, Konva) {
+define(['./utils', 'konva'], function(Utils, Konva) {
   'use strict';
 
   /**
