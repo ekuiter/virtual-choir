@@ -8,6 +8,7 @@ const snippetDuration = 25;
 // localization
 const translationMap = {
     en: {
+        title: "Virtual Choir",
         language: "Language",
         en: "English",
         de: "Deutsch",
@@ -45,6 +46,7 @@ const translationMap = {
         confirmClose: "There are unsaved changes.",
     },
     de: {
+        title: "Virtueller Chor",
         language: "Sprache",
         en: "English",
         de: "Deutsch",
@@ -175,7 +177,7 @@ const useDebounce = (value, delay) => {
 // React components
 const Navigation = ({activeHref}) => html`
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class=navbar-brand href=index.html>Virtueller Chor</a>
+        <a class=navbar-brand href=index.html>${config.title || t`title`}</a>
         <button class=navbar-toggler type=button data-toggle=collapse data-target=#navbarSupportedContent
             aria-controls=navbarSupportedContent aria-expanded=false aria-label="Toggle navigation">
             <span class=navbar-toggler-icon />
@@ -672,4 +674,5 @@ const App = () => html`
     </div>
 `;
 
+document.title = config.title || t`title`;
 render(html`<${App} />`, document.body);
