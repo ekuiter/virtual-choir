@@ -1,8 +1,7 @@
 import "bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import {h, render} from "preact";
+import {h, Fragment, render} from "preact";
 import {useState, useEffect, useRef} from "preact/hooks";
-import htm from "htm";
 import Peaks from "./peaks.js/main";
 import OpusMediaRecorder from "opus-media-recorder";
 import EncoderWorker from "opus-media-recorder/encoderWorker.js";
@@ -12,7 +11,6 @@ import RecordRTC from "recordrtc";
 
 window.RR = RecordRTC;
 
-const html = htm.bind(h);
 const snippetDuration = 25;
 
 // localization
@@ -210,58 +208,60 @@ const useDebounce = (value, delay) => {
   }
 
 // React components
-const Navigation = ({activeHref}) => html`
+const Navigation = ({activeHref}) => (
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class=navbar-brand href=index.html>${config.title || t`title`}</a>
-        <button class=navbar-toggler type=button data-toggle=collapse data-target=#navbarSupportedContent
-            aria-controls=navbarSupportedContent aria-expanded=false aria-label="Toggle navigation">
-            <span class=navbar-toggler-icon />
+        <a class="navbar-brand" href="index.html">{config.title || t`title`}</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon" />
         </button>
-        <div class="collapse navbar-collapse" id=navbarSupportedContent>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
-                ${navigation.map(({title, href}) => html`
-                    <li class="nav-item ${activeHref.endsWith(href) ? "active" : ""}">
-                        <a class=nav-link href=${href}>${title}</a>
+                {navigation.map(({title, href}) => (
+                    <li class={`nav-item ${activeHref.endsWith(href) ? "active" : ""}`}>
+                        <a class="nav-link" href={href}>{title}</a>
                     </li>
-                `)}
+                ))}
             </ul>
             <ul class="navbar-nav" style="margin-right: 12px;">
-                ${sideNavigation.map(({title, href}) => html`
-                    <li class="nav-item ${activeHref.endsWith(href) ? "active" : ""}">
-                        <a class=nav-link href=${href}>${title}</a>
+                {sideNavigation.map(({title, href}) => (
+                    <li class={`nav-item ${activeHref.endsWith(href) ? "active" : ""}`}>
+                        <a class="nav-link" href={href}>{title}</a>
                     </li>
-                `)}
+                ))}
             </ul>
             <form class="form-inline my-2 my-lg-0">
-                <select class=custom-select class="form-control mr-sm-2" onchange=${e => setLanguage(e.target.value)} title=${t`language`}>
-                    ${Object.keys(translationMap).map(_language => html`
-                        <option value=${_language} selected=${language === _language}>
-                            ${t(_language)}
+                <select class="custom-select" class="form-control mr-sm-2" onchange={e => setLanguage(e.target.value)} title={t`language`}>
+                    {Object.keys(translationMap).map(_language => (
+                        <option value={_language} selected={language === _language}>
+                            {t(_language)}
                         </option>
-                    `)}
+                    ))}
                 </select>
             </form>
         </div>
     </nav>
-`;
+);
 
 const IconButton = ({onClick, icon, children, minWidth, isVisible = true, style = "height: 38px;", margin = "6px 6px 6px 0",
-        invisibleMargin = "6px 0", className = "", ...props}) => html `
-    <button class="btn btn-light ${className}" onclick=${onClick}
-        style="${style} ${isVisible ?
+        invisibleMargin = "6px 0", className = "", ...props}) => (
+    <button class={`btn btn-light ${className}`} onclick={onClick}
+        style={`${style} ${isVisible ?
             `visibility: visible; min-width: ${minWidth}px; padding: 0 12px 0 6px; margin: ${margin};`
-            : `visibility: hidden; width: 0; padding: 0; margin: ${invisibleMargin};`}" ...${props}>
-        ${isVisible && html`
-            <img src=${icon} width="24" height="24" style="float: left; padding: 0 3px 0 0;" />
-            ${children}
-        `}
+            : `visibility: hidden; width: 0; padding: 0; margin: ${invisibleMargin};`}`} {...props}>
+        {isVisible && (
+            <>
+                <img src={icon} width="24" height="24" style="float: left; padding: 0 3px 0 0;" />
+                {children}
+            </>
+        )}
     </button>
-`;
+);
 
 const PlayButton = ({isPlaying, onClick, ...props}) =>
     isPlaying
-        ? html`<${IconButton} icon="img/stop.svg" onClick=${onClick} minWidth=120 ...${props}>${t`stop`}<//>`
-        : html`<${IconButton} icon="img/play.svg" onClick=${onClick} minWidth=120 ...${props}>${t`play`}<//>`;
+        ? <IconButton icon="img/stop.svg" onClick={onClick} minWidth={120} {...props}>{t`stop`}</IconButton>
+        : <IconButton icon="img/play.svg" onClick={onClick} minWidth={120} {...props}>{t`play`}</IconButton>;
 
 const Track = ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true,
@@ -345,29 +345,29 @@ const Track = ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5.
         }
     };
 
-    return html`
-        <div style="position: relative; border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 6px; margin: ${margin}px 0;">
-            <div style=${peaks ? "display: none;" : "position: absolute; left: calc(50% - 50px);"}>
+    return (
+        <div style={`position: relative; border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 6px; margin: ${margin}px 0;`}>
+            <div style={peaks ? "display: none;" : "position: absolute; left: calc(50% - 50px);"}>
                 <img src="img/loading.gif" width="100" height="100" style="margin-top: 20px;" />
             </div>
-            <audio src=${src} ref=${audioRef} onended=${() => onSetIsPlaying && onSetIsPlaying(false)} />
-            <div ref=${zoomviewRef} style="height: ${height}px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}" />
-            <div style=${peaks ? `position: absolute; top: ${height - topDiff}px; width: 100%; display: flex; flex-basis: 1;`: "display: none;"}>
+            <audio src={src} ref={audioRef} onended={() => onSetIsPlaying && onSetIsPlaying(false)} />
+            <div ref={zoomviewRef} style={`height: ${height}px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}`} />
+            <div style={peaks ? `position: absolute; top: ${height - topDiff}px; width: 100%; display: flex; flex-basis: 1;`: "display: none;"}>
                 <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
-                    <strong style="padding: 0 20px 0 10px">${title}</strong>
+                    <strong style="padding: 0 20px 0 10px">{title}</strong>
                 </div>
                 <div class="form-group form-inline" style="margin-bottom: 0;">
                     <label>
-                        <span style="margin-top: -3px; padding: 0 20px 0 10px;">${t`volume`}</span>
-                        <input type=range class=custom-range min=${gainMin} max=${gainMax} step=0.01
-                            style="margin: 0 ${showPlayButton ? "20px" : "10px"} 0 0;" value=${gain} oninput=${onGainInput} />
+                        <span style="margin-top: -3px; padding: 0 20px 0 10px;">{t`volume`}</span>
+                        <input type="range" class="custom-range" min={gainMin} max={gainMax} step="0.01"
+                            style={`margin: 0 ${showPlayButton ? "20px" : "10px"} 0 0;`} value={gain} oninput={onGainInput} />
                     </label>
                 </div>
-                <${PlayButton} isPlaying=${isPlaying} isVisible=${showPlayButton} margin="0 7px 0 0" invisibleMargin="0" className=btn-sm style=""
-                    onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />
+                <PlayButton isPlaying={isPlaying} isVisible={showPlayButton} margin="0 7px 0 0" invisibleMargin="0" className="btn-sm" style=""
+                    onClick={() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />
             </div>
         </div>
-    `;
+    );
 };
 
 const Record = ({recordingTimeout = 500}) => {
@@ -465,60 +465,64 @@ const Record = ({recordingTimeout = 500}) => {
     const recordDisabled = busy || recorder || recordingUri;
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
 
-    return html`
-        <h4 style="margin-bottom: 15px;">${t`record`}</h4>
-        <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
-            <input type=text class="form-control mr-sm-2" placeholder=${t`name`} value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} title=${t`nameHelp`} />
-            <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)} title=${t`registerHelp`}>
-                <option>${t`register`}</option>
-                ${Object.keys(config.registers).map(_register => html`
-                    <option value=${typeof config.registers[_register].value !== "undefined" ? "" + config.registers[_register].value : _register} selected=${register === _register}>
-                        ${_register}
-                    </option>
-                `)}
-            </select>
-            <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setSong(e.target.value)} title=${t`songHelp`}>
-                <option>${t`song`}</option>
-                ${Object.keys(config.songs).map((_song) => html`
-                    <option value=${_song} selected=${song === _song}>${_song}</option>
-                `)}
-            </select>
-            <div class=form-check>
-                <input class=form-check-input type=checkbox id=score checked=${score} disabled=${recordDisabled || (song && config.songs[song].pdf === false)}
-                    onchange=${e => setScore(e.target.checked)} title=${t`scoreHelp`} />
-                <label class=form-check-label for=score style="margin-right: 1rem; user-select: none;" title=${t`scoreHelp`}>${t`score`}</label>
-            </div>
-            <div class=form-check>
-                <input class=form-check-input type=checkbox id=playback checked=${playback} disabled=${recordDisabled} onchange=${e => setPlayback(e.target.checked)} title=${t`playbackHelp`} />
-                <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;" title=${t`playbackHelp`}>${t`playback`}</label>
-            </div>
-            <input type=submit class="btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0" 
-                value=${recorder ? t`stopRecording` : t`startRecording`} disabled=${busy || recordingUri} />
-        </form>
-        ${song && !recordingUri && html`
-            <br />
-            ${score && config.songs[song].pdf !== false && html`
-                <iframe src=${typeof config.songs[song].pdf === "string" ? config.songs[song].pdf : `songs/${song}.pdf`}
-                    style="width: 100%; height: 100vh;" frameborder="0">
-                </iframe>
-            `}
-            <audio src="songs/${song}.mp3" ref=${playbackRef} />
-        `}
-        ${recordingUri && html`
-            <${Track} title=${song} src="songs/${song}.mp3" dataUri="songs/${song}.json"
-                offset=${getSongTrackOffset()} gain=${songTrackGain}
-                onOffsetUpdated=${setSongTrackOffset} onGainUpdated=${setSongTrackGain}
-                isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
-                onReady=${() => setIsSongTrackReady(true)} margin=20 />
-            <${Track} title=${t`recording`} src=${recordingUri} offset=${getRecordingTrackOffset()} gain=${recordingTrackGain}
-                onOffsetUpdated=${setRecordingTrackOffset} onGainUpdated=${setRecordingTrackGain}
-                isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
-                onReady=${() => setIsRecordingTrackReady(true)} margin=20 />
-            <${PlayButton} isPlaying=${isPlaying} onClick=${() => setIsPlaying(!isPlaying)} disabled=${uploadDisabled} />
-            <button class="btn btn-outline-success" style="margin-right: 6px;" disabled=${uploadDisabled} onclick=${onUploadClick}>${t`upload`}</button>
-            <button class="btn btn-outline-danger" onclick=${onDiscardClick}>${t`discard`}</button>
-        `}
-    `;
+    return (
+        <>
+            <h4 style="margin-bottom: 15px;">{t`record`}</h4>
+            <form class="form form-inline my-2 my-lg-0" onsubmit={onRecordSubmit}>
+                <input type="text" class="form-control mr-sm-2" placeholder={t`name`} value={name} disabled={recordDisabled} onchange={e => setName(e.target.value)} title={t`nameHelp`} />
+                <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setRegister(e.target.value)} title={t`registerHelp`}>
+                    <option>{t`register`}</option>
+                    {Object.keys(config.registers).map(_register => (
+                        <option value={typeof config.registers[_register].value !== "undefined" ? "" + config.registers[_register].value : _register} selected={register === _register}>
+                            {_register}
+                        </option>
+                    ))}
+                </select>
+                <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setSong(e.target.value)} title={t`songHelp`}>
+                    <option>{t`song`}</option>
+                    {Object.keys(config.songs).map((_song) => <option value={_song} selected={song === _song}>{_song}</option>)}
+                </select>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="score" checked={score} disabled={recordDisabled || (song && config.songs[song].pdf === false)}
+                        onchange={e => setScore(e.target.checked)} title={t`scoreHelp`} />
+                    <label class="form-check-label" for="score" style="margin-right: 1rem; user-select: none;" title={t`scoreHelp`}>{t`score`}</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="playback" checked={playback} disabled={recordDisabled} onchange={e => setPlayback(e.target.checked)} title={t`playbackHelp`} />
+                    <label class="form-check-label" for="playback" style="margin-right: 1rem; user-select: none;" title={t`playbackHelp`}>{t`playback`}</label>
+                </div>
+                <input type="submit" class={`btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0`} 
+                    value={recorder ? t`stopRecording` : t`startRecording`} disabled={busy || recordingUri} />
+            </form>
+            {song && !recordingUri && (
+                <>
+                    <br />
+                    {score && config.songs[song].pdf !== false && (
+                        <iframe src={typeof config.songs[song].pdf === "string" ? config.songs[song].pdf : `songs/${song}.pdf`}
+                            style="width: 100%; height: 100vh;" frameborder="0">
+                        </iframe>
+                    )}
+                    <audio src={`songs/${song}.mp3`} ref={playbackRef} />
+                </>
+            )}
+            {recordingUri && (
+                <>
+                    <Track title={song} src={`songs/${song}.mp3`} dataUri={`songs/${song}.json`}
+                        offset={getSongTrackOffset()} gain={songTrackGain}
+                        onOffsetUpdated={setSongTrackOffset} onGainUpdated={setSongTrackGain}
+                        isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}
+                        onReady={() => setIsSongTrackReady(true)} margin={20} />
+                    <Track title={t`recording`} src={recordingUri} offset={getRecordingTrackOffset()} gain={recordingTrackGain}
+                        onOffsetUpdated={setRecordingTrackOffset} onGainUpdated={setRecordingTrackGain}
+                        isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}
+                        onReady={() => setIsRecordingTrackReady(true)} margin={20} />
+                    <PlayButton isPlaying={isPlaying} onClick={() => setIsPlaying(!isPlaying)} disabled={uploadDisabled} />
+                    <button class="btn btn-outline-success" style="margin-right: 6px;" disabled={uploadDisabled} onclick={onUploadClick}>{t`upload`}</button>
+                    <button class="btn btn-outline-danger" onclick={onDiscardClick}>{t`discard`}</button>
+                </>
+            )}
+        </>
+    );
 };
 
 const Mix = ({debounceApiCalls = 500}) => {
@@ -563,7 +567,7 @@ const Mix = ({debounceApiCalls = 500}) => {
     const addReadyTrack = id => () => setReadyTrackIds(readyTrackIds => [...readyTrackIds, id]);
     const addPendingApiCall = pendingApiCall => setPendingApiCalls(pendingApiCalls => [...pendingApiCalls, pendingApiCall]);
     const getHash = (_song = song, _selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify([_song, _selectedTrackIds]));
-    const getName = (name, register) => register !== "null" ? html`<span>${name}, <em>${register}</em></span>` : html`<span>${name}</span>`;
+    const getName = (name, register) => register !== "null" ? <span>{name}, <em>{register}</em></span> : <span>{name}</span>;
 
     const setPlayingTrack = id => isPlaying => setPlayingTrackIds(playingTrackIds => {
         if (isPlaying)
@@ -619,84 +623,91 @@ const Mix = ({debounceApiCalls = 500}) => {
             });
     };
 
-    return html`
-        <h4 style="margin-bottom: 15px;">${t`mix`}</h4>
-        <form class=form-inline>
-            <select class=custom-select class="form-control mr-sm-2" name=song onchange=${onSongSelected}>
-                <option>${t`song`}</option>
-                ${Object.keys(config.songs).map((_song) => html`
-                    <option value=${_song} selected=${song === _song}>${_song}</option>
-                `)}
-            </select>
-            <button class="btn btn-outline-danger" style=${selectedTrackIds.length > 0 ? "" : "visibility: hidden;"} onclick=${onDeleteSelectedClick}>
-                ${t`deleteSelected`}
-            </button>
-        </form>
-        ${song && config.songs.hasOwnProperty(song) && html`
-            <select class=custom-select multiple style="clear: both; margin: 15px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
-                ${tracks
-                    .filter(track => track.song === song)
-                    .map(({id, name, register, date}) =>
-                    html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)}</strong> | ${getName(name, register)}</option>`)}
-            </select>
-            ${selectedTrackIds.length > 0 && html`
-                <div style="display: flex; flex-basis: 1;">
-                    <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
-                        <form action=php/app.php method=post class=form-inline>
-                            <input type=hidden name=mix value=${getHash()} />
-                            <label class=form-check-label style="margin: 2px 5px 0 0;" title=${t`playbackHelp`}>
-                                <input class="form-check-input" type="checkbox" name="playback" />
-                                <span>${t`playback`}</span>
-                            </label>
-                            <label style="margin-top: 6px;">
-                                <span style="margin-top: -5px; padding: 0 20px 0 10px;">${t`volume`}</span>
-                                <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=3 style="margin: 0 20px 0 0;" />
-                            </label>
-                            <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
-                            <button class="btn btn-outline-primary" style=${pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
-                                onclick=${onSaveChangesClick} disabled=${busy}>
-                                ${t`saveChanges`}
-                            </button>
-                        </form>
-                    </div>
-                    <div class="form-group form-inline" style="margin-bottom: 0;">
-                        <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
-                    </div>
-                </div>
-                <${Track} src="songs/${song}.mp3" dataUri="songs/${song}.json"
-                    key=${song} title=${song} offset=${config.songs[song].offset}
-                    gain=${songTrackGain} gainMin=0 gainMax=5 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === song}
-                    onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && song)}
-                    onReady=${() => setSongTrackReady(song)} />
-                ${getSelectedTracks(selectedTrackIds).map(track => {
-                    const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
+    return (
+        <>
+            <h4 style="margin-bottom: 15px;">{t`mix`}</h4>
+            <form class="form-inline">
+                <select class="custom-select" class="form-control mr-sm-2" name="song" onchange={onSongSelected}>
+                    <option>{t`song`}</option>
+                    {Object.keys(config.songs).map((_song) => <option value={_song} selected={song === _song}>{_song}</option>)}
+                </select>
+                <button class="btn btn-outline-danger" style={selectedTrackIds.length > 0 ? "" : "visibility: hidden;"} onclick={onDeleteSelectedClick}>
+                    {t`deleteSelected`}
+                </button>
+            </form>
+            {song && config.songs.hasOwnProperty(song) && (
+                <>
+                    <select class="custom-select" multiple style="clear: both; margin: 15px 0;" size={selectedTrackIds.length > 0 ? 6 : 20} onchange={onTracksSelected}>
+                        {tracks
+                            .filter(track => track.song === song)
+                            .map(({id, name, register, date}) => (
+                                <option value={id} selected={selectedTrackIds.indexOf(id) !== -1}>
+                                    <strong>{formatDate(date)}</strong> | {getName(name, register)}
+                                </option>
+                            ))}
+                    </select>
+                    {selectedTrackIds.length > 0 && (
+                        <>
+                            <div style="display: flex; flex-basis: 1;">
+                                <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
+                                    <form action="php/app.php" method="post" class="form-inline">
+                                        <input type="hidden" name="mix" value={getHash()} />
+                                        <label class="form-check-label" style="margin: 2px 5px 0 0;" title={t`playbackHelp`}>
+                                            <input class="form-check-input" type="checkbox" name="playback" />
+                                            <span>{t`playback`}</span>
+                                        </label>
+                                        <label style="margin-top: 6px;">
+                                            <span style="margin-top: -5px; padding: 0 20px 0 10px;">{t`volume`}</span>
+                                            <input type="range" class="custom-range" name="gain" min="0" max="10" step="0.01" value="3" style="margin: 0 20px 0 0;" />
+                                        </label>
+                                        <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value={t`mix`} />
+                                        <button class="btn btn-outline-primary" style={pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
+                                            onclick={onSaveChangesClick} disabled={busy}>
+                                            {t`saveChanges`}
+                                        </button>
+                                    </form>
+                                </div>
+                                <div class="form-group form-inline" style="margin-bottom: 0;">
+                                    <PlayButton isPlaying={isPlaying} onClick={onPlayClick} disabled={!isReady} />
+                                </div>
+                            </div>
+                            <Track src={`songs/${song}.mp3`} dataUri={`songs/${song}.json`}
+                                key={song} title={song} offset={config.songs[song].offset}
+                                gain={songTrackGain} gainMin={0} gainMax={5} onGainUpdated={setSongTrackGain} isPlaying={songTrackPlaying === song}
+                                onSetIsPlaying={isPlaying => setSongTrackPlaying(isPlaying && song)}
+                                onReady={() => setSongTrackReady(song)} />
+                            {getSelectedTracks(selectedTrackIds).map(track => {
+                                const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
 
-                    const onOffsetUpdated = offset => {
-                        track.recordingOffset = offset + (parseFloat(songOffset) - config.songs[song].offset);
-                        setBusy(true);
-                        setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
-                    };
+                                const onOffsetUpdated = offset => {
+                                    track.recordingOffset = offset + (parseFloat(songOffset) - config.songs[song].offset);
+                                    setBusy(true);
+                                    setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
+                                };
 
-                    const onGainUpdated = gain => {
-                        track.gain = gain;
-                        setBusy(true);
-                        setPendingApiCall({"setFor": id, "gain": track.gain});
-                    };
+                                const onGainUpdated = gain => {
+                                    track.gain = gain;
+                                    setBusy(true);
+                                    setPendingApiCall({"setFor": id, "gain": track.gain});
+                                };
 
-                    return html`
-                        <${Track} key=${id} title=${getName(name, register)}
-                            src="tracks/${md5}.mp3"
-                            dataUri="tracks/${md5}.json"
-                            offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
-                            gain=${parseFloat(gain)} gainMin=0 gainMax=5
-                            onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}
-                            isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
-                            onReady=${addReadyTrack(id)} />
-                    `;
-                })}
-            `}
-        `}
-    `
+                                return (
+                                    <Track key={id} title={getName(name, register)}
+                                        src={`tracks/${md5}.mp3`}
+                                        dataUri={`tracks/${md5}.json`}
+                                        offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
+                                        gain={parseFloat(gain)} gainMin="0" gainMax="5"
+                                        onOffsetUpdated={onOffsetUpdated} onGainUpdated={onGainUpdated}
+                                        isPlaying={playingTrackIds.indexOf(id) !== -1} onSetIsPlaying={setPlayingTrack(id)}
+                                        onReady={addReadyTrack(id)} />
+                                );
+                            })}
+                        </>
+                    )}
+                </>
+            )}
+        </>
+    );
 };
 
 const Listen = () => {
@@ -720,24 +731,25 @@ const Listen = () => {
             post({deleteMix: btoa(mix)}).then(() => location.href = "listen.html");
     };
 
-    return html`
-        <h4 style="margin-bottom: 15px;">${t`listen`}</h4>
-        <select style="margin-bottom: 15px;" class=custom-select size=20 onchange=${onMixChanged}>
-            ${mixes.map(_mix =>
-                html`<option value=${_mix} selected=${mix === _mix}>${_mix}</option>`)}
-        </select>
-        ${mix && html`
-            <div style="display: flex; align-items: center;">
-                <audio src="mixes/${mix}.mp3" controls style="margin-right: 6px;" />
-                <button class="btn btn-outline-success" style="height: 40px; margin-right: 6px;" onclick=${() => location.href = `mixes/${mix}.mp3`}>
-                    ${t`download`}
-                </button>
-                <button class="btn btn-outline-danger" style="height: 40px;" onclick=${onDeleteClick}>
-                    ${t`delete`}
-                </button>
-            </div>
-        `}
-    `;
+    return (
+        <>
+            <h4 style="margin-bottom: 15px;">{t`listen`}</h4>
+            <select style="margin-bottom: 15px;" class="custom-select" size="20" onchange={onMixChanged}>
+                {mixes.map(_mix => <option value={_mix} selected={mix === _mix}>{_mix}</option>)}
+            </select>
+            {mix && (
+                <div style="display: flex; align-items: center;">
+                    <audio src={`mixes/${mix}.mp3`} controls style="margin-right: 6px;" />
+                    <button class="btn btn-outline-success" style="height: 40px; margin-right: 6px;" onclick={() => location.href = `mixes/${mix}.mp3`}>
+                        {t`download`}
+                    </button>
+                    <button class="btn btn-outline-danger" style="height: 40px;" onclick={onDeleteClick}>
+                        {t`delete`}
+                    </button>
+                </div>
+            )}
+        </>
+    );
 };
 
 const Admin = () => {
@@ -761,50 +773,54 @@ const Admin = () => {
             post({reset: true}).then(() => location.href = "admin.html");
     };
 
-    return html`
-        <h4 style="margin-bottom: 15px;">
-            ${t`admin`}
-            <span style="font-size: 1rem; padding-left: 10px;"><a href="https://www.youtube.com/watch?v=pXPXMxsXT28">π</a></span>
-        </h4>
-        <p>
-            <strong>Version</strong><br />
-            <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> ${formatDate(version)}
-        </p>
-        <p>
-            <strong>${t`browserSupport`}</strong><br />
-            ✔ Firefox 65-75, Chrome 79-81 (Windows 10, Ubuntu 18, macOS 14)<br />
-            ✔ Chrome 81 (Android 7)<br />
-            ✖ Internet Explorer, Edge 44 (Windows 10)<br />
-            ✖ Safari (macOS 14)
-        </p>
-        <p>
-            <strong>${t`microphoneSettings`}</strong> <button class="btn btn-outline-primary btn-sm" onclick=${onTestClick} style="padding: 0.15rem 0.4rem; margin: -0.3rem 0 0 0.6rem;">${t`testPermission`}</button><br />
-            Chrome: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">chrome://settings/content/microphone</span><br />
-            Firefox: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">about:preferences#privacy</span>
-        </p>
-        <strong>${t`backupSection`}</strong>
-        <form enctype=multipart/form-data action=php/app.php method=post class=form-inline>
-            <input type=hidden name=backup />
-            <input type=file name=restore accept=.zip style="margin: 0 12px 0 0;" onChange=${e => setHasFile(e.target.files.length > 0)} />
-            <input type=submit class="btn btn-outline-danger" style="margin-right: 6px;" onclick=${onRestoreClick} value=${hasFile ? t`restore` : t`backup`} />
-            <button class="btn btn-outline-danger" onclick=${onResetClick}>${t`reset`}</button>
-        </form>
-    `;
+    return (
+        <>
+            <h4 style="margin-bottom: 15px;">
+                {t`admin`}
+                <span style="font-size: 1rem; padding-left: 10px;"><a href="https://www.youtube.com/watch?v=pXPXMxsXT28">π</a></span>
+            </h4>
+            <p>
+                <strong>Version</strong><br />
+                <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> {formatDate(version)}
+            </p>
+            <p>
+                <strong>{t`browserSupport`}</strong><br />
+                ✔ Firefox 65-75, Chrome 79-81 (Windows 10, Ubuntu 18, macOS 14)<br />
+                ✔ Chrome 81 (Android 7)<br />
+                ✖ Internet Explorer, Edge 44 (Windows 10)<br />
+                ✖ Safari (macOS 14)
+            </p>
+            <p>
+                <strong>{t`microphoneSettings`}</strong> <button class="btn btn-outline-primary btn-sm" onclick={onTestClick} style="padding: 0.15rem 0.4rem; margin: -0.3rem 0 0 0.6rem;">{t`testPermission`}</button><br />
+                Chrome: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">chrome://settings/content/microphone</span><br />
+                Firefox: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">about:preferences#privacy</span>
+            </p>
+            <strong>{t`backupSection`}</strong>
+            <form enctype="multipart/form-data" action="php/app.php" method="post" class="form-inline">
+                <input type="hidden" name="backup" />
+                <input type="file" name="restore" accept=".zip" style="margin: 0 12px 0 0;" onChange={e => setHasFile(e.target.files.length > 0)} />
+                <input type="submit" class="btn btn-outline-danger" style="margin-right: 6px;" onclick={onRestoreClick} value={hasFile ? t`restore` : t`backup`} />
+                <button class="btn btn-outline-danger" onclick={onResetClick}>{t`reset`}</button>
+            </form>
+        </>
+    );
 };
 
-const App = () => html`
-    <${Navigation} activeHref=${location.pathname.indexOf(".") !== -1 ? location.pathname : "index.html"} />
-    <div class=container style="margin-bottom: 20px;">
-        <br />
-        ${location.pathname.indexOf("mix.html") !== -1
-            ? html`<${Mix} />`
-            : location.pathname.indexOf("listen.html") !== -1
-                ? html`<${Listen} />`
-                : location.pathname.indexOf("admin.html") !== -1
-                    ? html`<${Admin} />`
-                    : html`<${Record} />`}
-    </div>
-`;
+const App = () => (
+    <>
+        <Navigation activeHref={location.pathname.indexOf(".") !== -1 ? location.pathname : "index.html"} />
+        <div class="container" style="margin-bottom: 20px;">
+            <br />
+            {location.pathname.indexOf("mix.html") !== -1
+                ? <Mix />
+                : location.pathname.indexOf("listen.html") !== -1
+                    ? <Listen />
+                    : location.pathname.indexOf("admin.html") !== -1
+                        ? <Admin />
+                        : <Record />}
+        </div>
+    </>
+);
 
 document.title = config.title || t`title`;
-render(html`<${App} />`, document.body);
+render(<App />, document.body);
