@@ -41,7 +41,7 @@ if ($_REQUEST) {
     if (isset($_REQUEST["mix"])) {
         $config = json_decode(file_get_contents("../config.json"));
         $playback = isset($_REQUEST["playback"]);
-        $track_ids = json_decode(base64_decode($_REQUEST["mix"]));
+        $track_ids = json_decode(base64_decode($_REQUEST["mix"]))[1];
         if (!$track_ids)
             die("no tracks given");
         $where = new WhereClause("or");
@@ -52,7 +52,24 @@ if ($_REQUEST) {
         if ($count === 0)
             die("no tracks found");
         $song = $tracks[0]["song"];
-        $mixfile = "../mixes/" . date("Y-m-d-H-i-s") . "-$song.mp3";
+        $register_counts = array();
+        if (!file_exists("../songs/$song.mp3"))
+            die("invalid song");
+        $mixfile = "../mixes/" . date("Y-m-d-H-i-s") . " $song (";
+        foreach ($tracks as $idx => $track) {
+            if (!@$config->registers->{$track["register"]})
+                die("invalid register");
+            if (!is_numeric($track["recordingOffset"]) || !is_numeric($track["songOffset"]) || !is_numeric($track["gain"]))
+                die("invalid offset/gain");
+            if (array_key_exists($track["register"], $register_counts))
+                $register_counts[$track["register"]]++;
+            else
+                $register_counts[$track["register"]] = 1;
+        }
+        foreach ($register_counts as $register => $_count)
+            $mixfile .= "$_count $register, ";
+        $mixfile = substr($mixfile, 0, -2);
+        $mixfile .= ").mp3";
         if (strlen(shell_exec("ffmpeg -version")))
             $ffmpeg = "ffmpeg";
         else if (strlen(shell_exec("./ffmpeg -version")))
@@ -96,7 +113,8 @@ if ($_REQUEST) {
         $command .= "amix=inputs=$count:duration=longest,volume=$gain\" \"$mixfile\"";
         @mkdir("../mixes");
         shell_exec($command);
-        header("Location: $mixfile");
+        $mixfile = base64_encode(basename($mixfile, ".mp3"));
+        header("Location: ../listen.html#$mixfile");
         die;
     }
 
@@ -114,6 +132,15 @@ if ($_REQUEST) {
         foreach ($tracks as $idx => $track)
             unlink("../tracks/$track[md5].dat");
         DB::query("DELETE FROM tracks WHERE %l", $where);
+    }
+
+    if (isset($_REQUEST["deleteMix"])) {
+        $mix = base64_decode($_REQUEST["deleteMix"]);
+        if (!$mix)
+            die("no mix given");
+        if (!file_exists("../mixes/$mix.mp3") || strpos(realpath("../mixes/$mix.mp3"), realpath("../mixes/")) !== 0)
+            die("invalid mix");
+        unlink("../mixes/$mix.mp3");
     }
 
     if (isset($_REQUEST["reset"])) {

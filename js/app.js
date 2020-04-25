@@ -33,7 +33,9 @@ const translationMap = {
         upload: "Upload",
         discard: "Discard",
         singleSong: "Please choose only recordings of a single song.",
+        delete: "Delete",
         deleteSelected: "Delete selected",
+        confirmDelete: "Sure? This will delete the recording.",
         confirmDeleteSelected: "Sure? This will delete the selected recordings.",
         microphoneSettings: "Microphone settings",
         browserSupport: "Browser Support",
@@ -44,6 +46,7 @@ const translationMap = {
         playbackHelp: "Plays the song in the background while recording.",
         saveChanges: "Save changes",
         confirmClose: "There are unsaved changes.",
+        download: "Download",
     },
     de: {
         title: "Virtueller Chor",
@@ -71,7 +74,9 @@ const translationMap = {
         upload: "Hochladen",
         discard: "Verwerfen",
         singleSong: "Bitte nur Aufnahmen eines einzelnen Songs wählen.",
+        delete: "Löschen",
         deleteSelected: "Auswahl löschen",
+        confirmDelete: "Sicher? Dies löscht die Aufnahme.",
         confirmDeleteSelected: "Sicher? Dies löscht alle ausgewählten Aufnahmen.",
         microphoneSettings: "Mikrofon-Einstellungen",
         browserSupport: "Browser-Unterstützung",
@@ -82,6 +87,7 @@ const translationMap = {
         playbackHelp: "Spielt den Song bei der Aufnahme im Hintergrund ab.",
         saveChanges: "Änderungen speichern",
         confirmClose: "Nicht alle Änderungen wurden gespeichert.",
+        download: "Herunterladen",
     }
 };
 
@@ -101,6 +107,7 @@ const setLanguage = language => {
 const navigation = [
     {title: t`record`, href: "index.html"},
     {title: t`mix`, href: "mix.html"},
+    {title: t`listen`, href: "listen.html"},
     {title: "GitHub", href: "https://github.com/ekuiter/virtual-choir"}
 ];
 
@@ -332,7 +339,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
     `;
 };
 
-const Index = ({recordingTimeout = 500}) => {
+const Record = ({recordingTimeout = 500}) => {
     const [showInfo, setShowInfo] = useState(false);
     const [name, setName] = useState(localStorage.getItem("name"));
     const [register, setRegister] = useState(localStorage.getItem("register"));
@@ -514,6 +521,15 @@ const Mix = ({debounceApiCalls = 500}) => {
     const debouncedPendingApiCall = useDebounce(pendingApiCall, debounceApiCalls);
 
     useEffect(() => {
+        const onHashChange = () => {
+            setSong(JSON.parse(atob(location.hash.substr(1)))[0]);
+            setSelectedTrackIds(JSON.parse(atob(location.hash.substr(1)))[1]);
+        }
+        window.addEventListener("hashchange", onHashChange);
+        return () => window.removeEventListener("hashchange", onHashChange);
+    }, []);
+
+    useEffect(() => {
         if (debouncedPendingApiCall) {
             setBusy(false);
             addPendingApiCall(debouncedPendingApiCall);
@@ -620,7 +636,7 @@ const Mix = ({debounceApiCalls = 500}) => {
                                 <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=5 style="margin: 0 20px 0 0;" />
                             </label>
                             <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
-                            <button class="btn btn-outline-danger" style=${pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
+                            <button class="btn btn-outline-success" style=${pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
                                 onclick=${onSaveChangesClick} disabled=${busy}>
                                 ${t`saveChanges`}
                             </button>
@@ -664,13 +680,56 @@ const Mix = ({debounceApiCalls = 500}) => {
     `
 };
 
+const Listen = () => {
+    const [mix, setMix] = useState(location.hash ? atob(location.hash.substr(1)) : null);
+
+    useEffect(() => {
+        const onHashChange = () => setMix(atob(location.hash.substr(1)));
+        window.addEventListener("hashchange", onHashChange);
+        return () => window.removeEventListener("hashchange", onHashChange);
+    }, []);
+
+    const onMixChanged = e => {
+        const newMix = e.target.value;
+        setMix(newMix);
+        location.hash = btoa(newMix);
+    };
+
+    const onDeleteClick = e => {
+        e.preventDefault();
+        if (confirm(t`confirmDelete`))
+            post({deleteMix: btoa(mix)}).then(() => location.href = "listen.html");
+    };
+
+    return html`
+        <h4 style="margin-bottom: 15px;">${t`listen`}</h4>
+        <select style="margin-bottom: 15px;" class=custom-select size=20 onchange=${onMixChanged}>
+            ${mixes.map(_mix =>
+                html`<option value=${_mix} selected=${mix === _mix}>${_mix}</option>`)}
+        </select>
+        ${mix && html`
+            <div style="display: flex; align-items: center;">
+                <audio src="mixes/${mix}.mp3" controls style="margin-right: 6px;" />
+                <button class="btn btn-outline-success" style="height: 40px; margin-right: 6px;" onclick=${() => location.href = `mixes/${mix}.mp3`}>
+                    ${t`download`}
+                </button>
+                <button class="btn btn-outline-danger" style="height: 40px;" onclick=${onDeleteClick}>
+                    ${t`delete`}
+                </button>
+            </div>
+        `}
+    `
+};
+
 const App = () => html`
     <${Navigation} activeHref=${location.pathname.indexOf(".") !== -1 ? location.pathname : "index.html"} />
     <div class=container style="margin-bottom: 20px;">
         <br />
         ${location.pathname.indexOf("mix.html") !== -1
             ? html`<${Mix} path=/mix.html />`
-            : html`<${Index} />`}
+            : location.pathname.indexOf("listen.html") !== -1
+                ? html`<${Listen} path=/listen.html />`
+                : html`<${Record} />`}
     </div>
 `;
 
