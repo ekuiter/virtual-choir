@@ -197,9 +197,11 @@ const Navigation = ({activeHref}) => html`
     </nav>
 `;
 
-const IconButton = ({onClick, icon, children, ...props}) => html `
-    <button className="btn btn-light" onclick=${onClick}
-        style="height: 38px; padding: 0 12px 0 6px; margin: 6px 6px 6px 0;" ...${props}>
+const IconButton = ({onClick, icon, children, minWidth, isVisible = true, style = "height: 38px;", margin = "6px 6px 6px 0", className = "", ...props}) => html `
+    <button class="btn btn-light ${className}" onclick=${onClick}
+        style="${style} ${isVisible ?
+            `visibility: visible; min-width: ${minWidth}px; padding: 0 12px 0 6px; margin: ${margin};`
+            : "visibility: hidden; width: 0; padding: 0; margin: 6px 0;"}" ...${props}>
         <img src=${icon} width="24" height="24" style="float: left; padding: 0 3px 0 0;" />
         ${children}
     </button>
@@ -207,12 +209,12 @@ const IconButton = ({onClick, icon, children, ...props}) => html `
 
 const PlayButton = ({isPlaying, onClick, ...props}) =>
     isPlaying
-        ? html`<${IconButton} icon="img/stop.svg" onClick=${onClick} ...${props}>${t`stop`}<//>`
-        : html`<${IconButton} icon="img/play.svg" onClick=${onClick} ...${props}>${t`play`}<//>`;
+        ? html`<${IconButton} icon="img/stop.svg" onClick=${onClick} minWidth=120 ...${props}>${t`stop`}<//>`
+        : html`<${IconButton} icon="img/play.svg" onClick=${onClick} minWidth=120 ...${props}>${t`play`}<//>`;
 
 const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true,
-    gainMin = 0.01, gainMax = 2}) => {
+    gainMin = 0.01, gainMax = 2, height = 140, margin = 8}) => {
     const [peaks, setPeaks] = useState();
     const audioRef = useRef();
     const zoomviewRef = useRef();
@@ -297,20 +299,25 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
     };
 
     return html`
-        <h5 style="margin-top: 20px;">${title}</h5>
-        <div style=${peaks ? "display: none;" : "position: absolute; left: calc(50% - 50px);"}>
-            <img src="img/loading.gif" width="100" height="100" style="margin-top: 20px;" />
-        </div>
-        <audio src=${src} ref=${audioRef} onended=${() => onSetIsPlaying && onSetIsPlaying(false)} />
-        <div ref=${zoomviewRef} style="height: 140px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}" />
-        <div style=${peaks ? "display: flex;" : "display: none;"}>
-            ${showPlayButton && html`<${PlayButton} isPlaying=${isPlaying} onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />`}
-            <div class="form-group form-inline">
-                <label style="margin-top: 6px;">
-                    <span style="margin-top: -3px; padding: 0 20px 0 10px;">${t`volume`}</span>
-                    <input type=range class=custom-range min=${gainMin} max=${gainMax} step=0.01
-                        style="margin: 10px 0;" value=${gain} oninput=${onGainInput} />
-                </label>
+        <div style="position: relative; border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 6px; margin: ${margin}px 0;">
+            <div style=${peaks ? "display: none;" : "position: absolute; left: calc(50% - 50px);"}>
+                <img src="img/loading.gif" width="100" height="100" style="margin-top: 20px;" />
+            </div>
+            <audio src=${src} ref=${audioRef} onended=${() => onSetIsPlaying && onSetIsPlaying(false)} />
+            <div ref=${zoomviewRef} style="height: ${height}px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}" />
+            <div style=${peaks ? `position: absolute; top: ${height - 35}px; width: 100%; display: flex; flex-basis: 1;`: "display: none;"}>
+                <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
+                    <strong style="padding: 0 20px 0 10px">${title}</strong>
+                </div>
+                <div class="form-group form-inline" style="margin-bottom: 0;">
+                    <label>
+                        <span style="margin-top: -3px; padding: 0 20px 0 10px;">${t`volume`}</span>
+                        <input type=range class=custom-range min=${gainMin} max=${gainMax} step=0.01
+                            style="margin: 0 ${showPlayButton ? "20px" : "10px"} 0 0;" value=${gain} oninput=${onGainInput} />
+                    </label>
+                </div>
+                <${PlayButton} isPlaying=${isPlaying} isVisible=${showPlayButton} margin="0 7px 0 0" className=btn-sm style=""
+                    onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />
             </div>
         </div>
     `;
@@ -456,19 +463,19 @@ const Index = () => {
         </form>
         ${song && !recordingUri && html`
             <br />
-            <iframe src="songs/${song}.pdf" style="width: 100%; height: 100vh;" frameborder="0"></iframe>
+            ${config.songs[song].pdf !== false &&
+                html`<iframe src="songs/${song}.pdf" style="width: 100%; height: 100vh;" frameborder="0"></iframe>`}
             <audio src="songs/${song}.mp3" ref=${playbackRef} />
         `}
         ${recordingUri && html`
             <${Track} title=${song} src="songs/${song}.mp3" offset=${getSongTrackOffset()} gain=${songTrackGain}
                 onOffsetUpdated=${setSongTrackOffset} onGainUpdated=${setSongTrackGain}
                 isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
-                onReady=${() => setIsSongTrackReady(true)} />
+                onReady=${() => setIsSongTrackReady(true)} margin=20 />
             <${Track} title=${t`recording`} src=${recordingUri} offset=${getRecordingTrackOffset()} gain=${recordingTrackGain}
                 onOffsetUpdated=${setRecordingTrackOffset} onGainUpdated=${setRecordingTrackGain}
                 isPlaying=${isPlaying} onSetIsPlaying=${setIsPlaying} showPlayButton=${false}
-                onReady=${() => setIsRecordingTrackReady(true)} />
-            <p />
+                onReady=${() => setIsRecordingTrackReady(true)} margin=20 />
             <${PlayButton} isPlaying=${isPlaying} onClick=${() => setIsPlaying(!isPlaying)} disabled=${uploadDisabled} />
             <button class="btn btn-outline-success" style="margin-right: 6px;" disabled=${uploadDisabled} onclick=${onUploadClick}>${t`upload`}</button>
             <button class="btn btn-outline-danger" onclick=${onDiscardClick}>${t`discard`}</button>
@@ -558,53 +565,61 @@ const Mix = ({debounceApiCalls = 250}) => {
                 ${t`deleteSelected`}
             </button>
         </form>
-        <select class=custom-select multiple style="clear: both; margin: 15px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
-            ${tracks
-                .filter(track => track.song === song)
-                .map(({id, name, register, date}) =>
-                html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)}</strong> | ${getName(name, register)}</option>`)}
-        </select>
-        ${selectedTrackIds.length > 0 && song && config.songs.hasOwnProperty(song) && html`
-            <form action=php/app.php method=post class=form-inline style="margin: 10px 0.3rem;">
-                <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
-                <input type=hidden name=mix value=${getHash()} />
-                <label class=form-check-label style="margin: 0 15px;">
-                    <input class="form-check-input" type="checkbox" name="playback" />
-                    <span>${t`playback`}</span>
-                </label>
-                <label style="margin-top: 6px;">
-                    <span style="margin-top: -5px; padding: 0 20px 0 10px;">${t`volume`}</span>
-                    <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=5 style="margin: 0 20px 0 0;" />
-                </label>
-                <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
-            </form>
-            <${Track} key=${song} title=${song} src="songs/${song}.mp3" offset=${config.songs[song].offset}
-                gain=${songTrackGain} gainMin=0 gainMax=5 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === song}
-                onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && song)}
-                onReady=${() => setSongTrackReady(song)} />
-            ${getSelectedTracks(selectedTrackIds).map(track => {
-                const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
+        ${song && config.songs.hasOwnProperty(song) && html`
+            <select class=custom-select multiple style="clear: both; margin: 15px 0;" size=${selectedTrackIds.length > 0 ? 6 : 20} onchange=${onTracksSelected}>
+                ${tracks
+                    .filter(track => track.song === song)
+                    .map(({id, name, register, date}) =>
+                    html`<option value=${id} selected=${selectedTrackIds.indexOf(id) !== -1}><strong>${formatDate(date)}</strong> | ${getName(name, register)}</option>`)}
+            </select>
+            ${selectedTrackIds.length > 0 && html`
+                <div style="display: flex; flex-basis: 1;">
+                        <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
+                            <form action=php/app.php method=post class=form-inline>
+                                <input type=hidden name=mix value=${getHash()} />
+                                <label class=form-check-label style="margin: 2px 5px 0 0;" title=${t`playbackHelp`}>
+                                    <input class="form-check-input" type="checkbox" name="playback" />
+                                    <span>${t`playback`}</span>
+                                </label>
+                                <label style="margin-top: 6px;">
+                                    <span style="margin-top: -5px; padding: 0 20px 0 10px;">${t`volume`}</span>
+                                    <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=5 style="margin: 0 20px 0 0;" />
+                                </label>
+                                <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
+                            </form>
+                        </div>
+                        <div class="form-group form-inline" style="margin-bottom: 0;">
+                            <${PlayButton} isPlaying=${isPlaying} onClick=${onPlayClick} disabled=${!isReady} />
+                        </div>
+                </div>
+                <${Track} key=${song} title=${song} src="songs/${song}.mp3" offset=${config.songs[song].offset}
+                    gain=${songTrackGain} gainMin=0 gainMax=5 onGainUpdated=${setSongTrackGain} isPlaying=${songTrackPlaying === song}
+                    onSetIsPlaying=${isPlaying => setSongTrackPlaying(isPlaying && song)}
+                    onReady=${() => setSongTrackReady(song)} />
+                ${getSelectedTracks(selectedTrackIds).map(track => {
+                    const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
 
-                const onOffsetUpdated = offset => {
-                    track.recordingOffset = offset + (parseFloat(songOffset) - config.songs[song].offset);
-                    setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
-                };
+                    const onOffsetUpdated = offset => {
+                        track.recordingOffset = offset + (parseFloat(songOffset) - config.songs[song].offset);
+                        setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
+                    };
 
-                const onGainUpdated = gain => {
-                    track.gain = gain;
-                    setPendingApiCall({"setFor": id, "gain": track.gain});
-                };
+                    const onGainUpdated = gain => {
+                        track.gain = gain;
+                        setPendingApiCall({"setFor": id, "gain": track.gain});
+                    };
 
-                return html`
-                    <${Track} key=${id} title=${getName(name, register)}
-                        src="tracks/${md5}.dat"
-                        offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
-                        gain=${parseFloat(gain)} gainMin=0 gainMax=5
-                        onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}
-                        isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
-                        onReady=${addReadyTrack(id)} />
-                `;
-            })}
+                    return html`
+                        <${Track} key=${id} title=${getName(name, register)}
+                            src="tracks/${md5}.dat"
+                            offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
+                            gain=${parseFloat(gain)} gainMin=0 gainMax=5
+                            onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}
+                            isPlaying=${playingTrackIds.indexOf(id) !== -1} onSetIsPlaying=${setPlayingTrack(id)}
+                            onReady=${addReadyTrack(id)} />
+                    `;
+                })}
+            `}
         `}
     `
 };
