@@ -27,7 +27,7 @@ $sql = <<<SQL
 SQL;
 DB::query($sql);
 
-if ($_FILES) {
+if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
     $tmp_name = $_FILES["file"]["tmp_name"];
     $md5 = md5_file($tmp_name);
     @mkdir("../tracks");
@@ -143,10 +143,48 @@ if ($_REQUEST) {
         unlink("../mixes/$mix.mp3");
     }
 
-    if (isset($_REQUEST["reset"])) {
-        DB::query("DROP TABLE tracks");
-        array_map("unlink", array_filter((array) glob("../tracks/*")));
-        array_map("unlink", array_filter((array) glob("../mixes/*")));
+    if (isset($_REQUEST["backup"])) {
+        @mkdir("../tracks");
+        @mkdir("../mixes");
+        if ($_FILES && isset($_FILES["restore"]) && $_FILES["restore"]["error"] === 0) {
+            $tempdir = tempnam(sys_get_temp_dir(), "");
+            if (file_exists($tempdir))
+                unlink($tempdir);
+            mkdir($tempdir);
+            $zip = new ZipArchive();
+            if (!$zip->open($_FILES["restore"]["tmp_name"]))
+                die("invalid zip file given");
+            $zip->extractTo($tempdir);
+            $zip->close();
+            if (!file_exists("$tempdir/dump.sql"))
+                die("no database dump found");
+            array_map("unlink", array_filter((array) glob("../tracks/*")));
+            array_map("unlink", array_filter((array) glob("../mixes/*")));
+            $tracks = array_filter((array) glob("$tempdir/tracks//*.dat"));
+            foreach ($tracks as $track)
+                rename($track, "../tracks/" . basename($track));
+            $mixes = array_filter((array) glob("$tempdir/mixes//*.mp3"));
+            foreach ($mixes as $mix)
+                rename($mix, "../mixes/" . basename($mix));
+            DB::query("DROP TABLE tracks");
+            shell_exec("mysql -h " . DB::$host . " -u " . DB::$user . " -p" . DB::$password . " " . DB::$dbName . " < $tempdir/dump.sql");
+            header("Location: ../admin.html");
+        } else {
+            $zipfile = "../backups/backup-" . date("Y-m-d-H-i-s") . ".zip";
+            $zip = new ZipArchive();
+            if (!$zip->open($zipfile, ZipArchive::CREATE))
+                die("could not open ZIP file");
+            $sql = shell_exec("mysqldump -h " . DB::$host . " -u " . DB::$user . " -p" . DB::$password . " " . DB::$dbName);
+            $zip->addFromString("dump.sql", $sql);
+            $tracks = array_filter((array) glob("../tracks/*"));
+            foreach ($tracks as $track)
+                $zip->addFile($track, "tracks/" . basename($track));
+            $mixes = array_filter((array) glob("../mixes/*"));
+            foreach ($mixes as $mix)
+                $zip->addFile($mix, "mixes/" . basename($mix));
+            $zip->close();
+            header("Location: $zipfile");
+        }
     }
 
     if (isset($_REQUEST["setFor"]) && isset($_REQUEST["songOffset"]))

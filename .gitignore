@@ -1,6 +1,8 @@
 _stuff
 mixes
 !mixes/.htaccess
+backups
+!backups/.htaccess
 songs
 tracks
 .elasticbeanstalk/*

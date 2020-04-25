@@ -3,6 +3,8 @@
 _stuff
 mixes
 !mixes/.htaccess
+backups
+!backups/.htaccess
 tracks
 README.md
 LICENSE.txt

@@ -15,6 +15,7 @@ const translationMap = {
         record: "Record",
         mix: "Mix",
         listen: "Listen",
+        admin: "Admin",
         stop: "Stop",
         play: "Play",
         volume: "Volume",
@@ -38,7 +39,7 @@ const translationMap = {
         confirmDelete: "Sure? This will delete the recording.",
         confirmDeleteSelected: "Sure? This will delete the selected recordings.",
         microphoneSettings: "Microphone settings",
-        browserSupport: "Browser Support",
+        browserSupport: "Browser support",
         info: "Info",
         nameHelp: "Your name so that you can identify your own recording.",
         registerHelp: "Determines your voice's balance when mixing to simulate a choir arrangement.",
@@ -47,6 +48,10 @@ const translationMap = {
         saveChanges: "Save changes",
         confirmClose: "There are unsaved changes.",
         download: "Download",
+        backupSection: "Backup & restore data",
+        backup: "Backup",
+        restore: "Restore",
+        confirmRestore: "Sure? This will replace all recordings.",
     },
     de: {
         title: "Virtueller Chor",
@@ -56,6 +61,7 @@ const translationMap = {
         record: "Aufnehmen",
         mix: "Abmischen",
         listen: "Anhören",
+        admin: "Admin",
         stop: "Stoppen",
         play: "Abspielen",
         volume: "Lautstärke",
@@ -88,11 +94,15 @@ const translationMap = {
         saveChanges: "Änderungen speichern",
         confirmClose: "Nicht alle Änderungen wurden gespeichert.",
         download: "Herunterladen",
+        backupSection: "Daten sichern & wiederherstellen",
+        backup: "Sichern",
+        restore: "Wiederherstellen",
+        confirmRestore: "Sicher? Dies ersetzt alle Aufnahmen.",
     }
 };
 
 const language = localStorage.getItem("language") || config.defaultLanguage || "en";
-const t = key => translationMap[language][key];
+const t = key => translationMap[language][key] || translationMap.en[key];
 
 const formatDate = (date, sep = " ") => ("0" + date.getDate()).slice(-2) + "." + ("0" + (date.getMonth() + 1)).slice(-2) + "." +
     sep + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
@@ -108,7 +118,7 @@ const navigation = [
     {title: t`record`, href: "index.html"},
     {title: t`mix`, href: "mix.html"},
     {title: t`listen`, href: "listen.html"},
-    {title: "GitHub", href: "https://github.com/ekuiter/virtual-choir"}
+    {title: "π", href: "admin.html"}
 ];
 
 // API
@@ -340,7 +350,6 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
 };
 
 const Record = ({recordingTimeout = 500}) => {
-    const [showInfo, setShowInfo] = useState(false);
     const [name, setName] = useState(localStorage.getItem("name"));
     const [register, setRegister] = useState(localStorage.getItem("register"));
     const [song, setSong] = useState(localStorage.getItem("song"));
@@ -361,13 +370,6 @@ const Record = ({recordingTimeout = 500}) => {
         ((config.songs[song].registerOffsets && config.songs[song].registerOffsets[register]) || config.songs[song].offset);
     const getRecordingTrackOffset = () => recordingTrackOffset ||
         ((config.songs[song].registerOffsets && config.songs[song].registerOffsets[register]) || config.songs[song].offset);
-
-    const onTestClick = e => {
-        e.preventDefault();
-        navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(
-            stream => window.alert("permission granted: " + stream),
-            err => window.alert("permission denied: " + err));
-    };
 
     const onRecordSubmit = e => {
         e.preventDefault();
@@ -437,25 +439,7 @@ const Record = ({recordingTimeout = 500}) => {
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
 
     return html`
-        <h4 style="margin-bottom: 15px;">${t`record`} <span style="padding-left: 5px; cursor: pointer; font-size: 0.8rem; color: #007bff;" onclick=${() => setShowInfo(prev => !prev)}>${t`info`}</span></h4>
-        <div style="font-size: 0.8rem; color: #555; ${showInfo ? "" : "display: none;"}">
-            <p>
-                <strong>Version</strong><br />
-                <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> ${formatDate(version)}
-            </p>
-            <p>
-                <strong>${t`browserSupport`}</strong><br />
-                ✔ Firefox 65-75, Chrome 79-81 (Windows 10, Ubuntu 18, macOS 14)<br />
-                ✔ Chrome 81 (Android 7)<br />
-                ✖ Internet Explorer, Edge 44 (Windows 10)<br />
-                ✖ Safari (macOS 14)
-            </p>
-            <p>
-                <strong>${t`microphoneSettings`}</strong> <button class="btn btn-outline-primary btn-sm" onclick=${onTestClick} style="padding: 0.15rem 0.4rem; margin: -0.3rem 0 0 0.6rem;">${t`testPermission`}</button><br />
-                Chrome: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">chrome://settings/content/microphone</span><br />
-                Firefox: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">about:preferences#privacy</span>
-            </p>
-        </div>
+        <h4 style="margin-bottom: 15px;">${t`record`}</h4>
         <form class="form form-inline my-2 my-lg-0" onsubmit=${onRecordSubmit}>
             <input type=text class="form-control mr-sm-2" placeholder=${t`name`} value=${name} disabled=${recordDisabled} onchange=${e => setName(e.target.value)} title=${t`nameHelp`} />
             <select class=custom-select class="form-control mr-sm-2" disabled=${recordDisabled} onchange=${e => setRegister(e.target.value)} title=${t`registerHelp`}>
@@ -633,10 +617,10 @@ const Mix = ({debounceApiCalls = 500}) => {
                             </label>
                             <label style="margin-top: 6px;">
                                 <span style="margin-top: -5px; padding: 0 20px 0 10px;">${t`volume`}</span>
-                                <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=5 style="margin: 0 20px 0 0;" />
+                                <input type=range class=custom-range name=gain min=0 max=10 step=0.01 value=3 style="margin: 0 20px 0 0;" />
                             </label>
                             <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value=${t`mix`} />
-                            <button class="btn btn-outline-success" style=${pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
+                            <button class="btn btn-outline-primary" style=${pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
                                 onclick=${onSaveChangesClick} disabled=${busy}>
                                 ${t`saveChanges`}
                             </button>
@@ -718,7 +702,52 @@ const Listen = () => {
                 </button>
             </div>
         `}
-    `
+    `;
+};
+
+const Admin = () => {
+    const [hasFile, setHasFile] = useState();
+
+    const onTestClick = e => {
+        e.preventDefault();
+        navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(
+            stream => window.alert("permission granted: " + stream),
+            err => window.alert("permission denied: " + err));
+    };
+
+    const onRestoreClick = e => {
+        if (hasFile && !confirm(t`confirmRestore`))
+            e.preventDefault();
+    };
+
+    return html`
+        <h4 style="margin-bottom: 15px;">
+            ${t`admin`}
+            <span style="font-size: 1rem; padding-left: 10px;"><a href="https://www.youtube.com/watch?v=pXPXMxsXT28">π</a></span>
+        </h4>
+        <p>
+            <strong>Version</strong><br />
+            <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> ${formatDate(version)}
+        </p>
+        <p>
+            <strong>${t`browserSupport`}</strong><br />
+            ✔ Firefox 65-75, Chrome 79-81 (Windows 10, Ubuntu 18, macOS 14)<br />
+            ✔ Chrome 81 (Android 7)<br />
+            ✖ Internet Explorer, Edge 44 (Windows 10)<br />
+            ✖ Safari (macOS 14)
+        </p>
+        <p>
+            <strong>${t`microphoneSettings`}</strong> <button class="btn btn-outline-primary btn-sm" onclick=${onTestClick} style="padding: 0.15rem 0.4rem; margin: -0.3rem 0 0 0.6rem;">${t`testPermission`}</button><br />
+            Chrome: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">chrome://settings/content/microphone</span><br />
+            Firefox: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">about:preferences#privacy</span>
+        </p>
+        <strong>${t`backupSection`}</strong>
+        <form enctype=multipart/form-data action=php/app.php method=post class=form-inline>
+            <input type=hidden name=backup />
+            <input type=file name=restore accept=.zip style="margin: 0 12px 0 0;" onChange=${e => setHasFile(e.target.files.length > 0)} />
+            <input type=submit class="btn btn-outline-danger" onclick=${onRestoreClick} value=${hasFile ? t`restore` : t`backup`} />
+        </form>
+    `;
 };
 
 const App = () => html`
@@ -726,10 +755,12 @@ const App = () => html`
     <div class=container style="margin-bottom: 20px;">
         <br />
         ${location.pathname.indexOf("mix.html") !== -1
-            ? html`<${Mix} path=/mix.html />`
+            ? html`<${Mix} />`
             : location.pathname.indexOf("listen.html") !== -1
-                ? html`<${Listen} path=/listen.html />`
-                : html`<${Record} />`}
+                ? html`<${Listen} />`
+                : location.pathname.indexOf("admin.html") !== -1
+                    ? html`<${Admin} />`
+                    : html`<${Record} />`}
     </div>
 `;
 
