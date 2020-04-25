@@ -197,13 +197,16 @@ const Navigation = ({activeHref}) => html`
     </nav>
 `;
 
-const IconButton = ({onClick, icon, children, minWidth, isVisible = true, style = "height: 38px;", margin = "6px 6px 6px 0", className = "", ...props}) => html `
+const IconButton = ({onClick, icon, children, minWidth, isVisible = true, style = "height: 38px;", margin = "6px 6px 6px 0",
+        invisibleMargin = "6px 0", className = "", ...props}) => html `
     <button class="btn btn-light ${className}" onclick=${onClick}
         style="${style} ${isVisible ?
             `visibility: visible; min-width: ${minWidth}px; padding: 0 12px 0 6px; margin: ${margin};`
-            : "visibility: hidden; width: 0; padding: 0; margin: 6px 0;"}" ...${props}>
-        <img src=${icon} width="24" height="24" style="float: left; padding: 0 3px 0 0;" />
-        ${children}
+            : `visibility: hidden; width: 0; padding: 0; margin: ${invisibleMargin};`}" ...${props}>
+        ${isVisible && html`
+            <img src=${icon} width="24" height="24" style="float: left; padding: 0 3px 0 0;" />
+            ${children}
+        `}
     </button>
 `;
 
@@ -214,7 +217,7 @@ const PlayButton = ({isPlaying, onClick, ...props}) =>
 
 const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true,
-    gainMin = 0.01, gainMax = 2, height = 140, margin = 8}) => {
+    gainMin = 0.01, gainMax = 2, height = 140, margin = 8, topDiff = 35}) => {
     const [peaks, setPeaks] = useState();
     const audioRef = useRef();
     const zoomviewRef = useRef();
@@ -305,7 +308,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
             </div>
             <audio src=${src} ref=${audioRef} onended=${() => onSetIsPlaying && onSetIsPlaying(false)} />
             <div ref=${zoomviewRef} style="height: ${height}px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}" />
-            <div style=${peaks ? `position: absolute; top: ${height - 35}px; width: 100%; display: flex; flex-basis: 1;`: "display: none;"}>
+            <div style=${peaks ? `position: absolute; top: ${height - topDiff}px; width: 100%; display: flex; flex-basis: 1;`: "display: none;"}>
                 <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
                     <strong style="padding: 0 20px 0 10px">${title}</strong>
                 </div>
@@ -316,14 +319,14 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
                             style="margin: 0 ${showPlayButton ? "20px" : "10px"} 0 0;" value=${gain} oninput=${onGainInput} />
                     </label>
                 </div>
-                <${PlayButton} isPlaying=${isPlaying} isVisible=${showPlayButton} margin="0 7px 0 0" className=btn-sm style=""
+                <${PlayButton} isPlaying=${isPlaying} isVisible=${showPlayButton} margin="0 7px 0 0" invisibleMargin="0" className=btn-sm style=""
                     onClick=${() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />
             </div>
         </div>
     `;
 };
 
-const Index = () => {
+const Index = ({recordingTimeout = 500}) => {
     const [showInfo, setShowInfo] = useState(false);
     const [name, setName] = useState(localStorage.getItem("name"));
     const [register, setRegister] = useState(localStorage.getItem("register"));
@@ -375,8 +378,10 @@ const Index = () => {
                         playbackRef.current.currentTime = 0;
                         playbackRef.current.play();
                     }
-                    setBusy(false);
-                    setRecorder(recorder);
+                    window.setTimeout(() => {
+                        setBusy(false);
+                        setRecorder(recorder);
+                    }, recordingTimeout);
                 }, () => {
                     setBusy(false);
                     window.alert(t`permissionMissing`);
@@ -463,8 +468,11 @@ const Index = () => {
         </form>
         ${song && !recordingUri && html`
             <br />
-            ${config.songs[song].pdf !== false &&
-                html`<iframe src="songs/${song}.pdf" style="width: 100%; height: 100vh;" frameborder="0"></iframe>`}
+            ${config.songs[song].pdf !== false && html`
+                <iframe src=${typeof config.songs[song].pdf === "string" ? config.songs[song].pdf : `songs/${song}.pdf`}
+                    style="width: 100%; height: 100vh;" frameborder="0">
+                </iframe>
+            `}
             <audio src="songs/${song}.mp3" ref=${playbackRef} />
         `}
         ${recordingUri && html`
