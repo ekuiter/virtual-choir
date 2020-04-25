@@ -27,11 +27,38 @@ $sql = <<<SQL
 SQL;
 DB::query($sql);
 
+function ffmpeg() {
+    if (strlen(shell_exec("ffmpeg -version")))
+        $ffmpeg = "ffmpeg";
+    else if (strlen(shell_exec("./ffmpeg -version")))
+        $ffmpeg = "./ffmpeg";
+    else
+        die("no ffmpeg found");
+    return $ffmpeg;
+}
+
+function audiowaveform() {
+    if (strlen(shell_exec("audiowaveform --version")))
+        $audiowaveform = "audiowaveform";
+    else if (strlen(shell_exec("./audiowaveform --version")))
+        $audiowaveform = "./audiowaveform";
+    else
+        die("no audiowaveform found");
+    return $audiowaveform;
+}
+
+function do_reset() {
+    DB::query("DROP TABLE tracks");
+    array_map("unlink", array_filter((array) glob("../tracks/*")));
+    array_map("unlink", array_filter((array) glob("../mixes/*")));
+}
+
 if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
     $tmp_name = $_FILES["file"]["tmp_name"];
     $md5 = md5_file($tmp_name);
     @mkdir("../tracks");
-    move_uploaded_file($tmp_name, "../tracks/" . $md5 . ".dat");
+    shell_exec(ffmpeg() . " -i $tmp_name \"../tracks/$md5.ogg\"");
+    shell_exec(audiowaveform() . " -b 8 -i \"../tracks/$md5.ogg\" -o \"../tracks/$md5.dat\"");
     DB::query("INSERT INTO tracks (name, register, song, songOffset, recordingOffset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
         $_POST["name"], $_POST["register"], $_POST["song"], $_POST["songOffset"], $_POST["recordingOffset"], $_POST["gain"], $_POST["date"], $md5);
     die;
@@ -70,17 +97,11 @@ if ($_REQUEST) {
             $mixfile .= "$_count $register, ";
         $mixfile = substr($mixfile, 0, -2);
         $mixfile .= ").mp3";
-        if (strlen(shell_exec("ffmpeg -version")))
-            $ffmpeg = "ffmpeg";
-        else if (strlen(shell_exec("./ffmpeg -version")))
-            $ffmpeg = "./ffmpeg";
-        else
-            die("no ffmpeg found");
-        $command = "$ffmpeg -y";
+        $command = ffmpeg() . " -y";
         if ($playback)
             $command .= " -i \"../songs/$song.mp3\"";
         foreach ($tracks as $track)
-            $command .= " -i \"../tracks/$track[md5].dat\"";
+            $command .= " -i \"../tracks/$track[md5].ogg\"";
         $command .= " -filter_complex \"";
         foreach ($tracks as $idx => $track) {
             if ($playback)
@@ -118,6 +139,9 @@ if ($_REQUEST) {
         die;
     }
 
+    if (isset($_REQUEST["reset"]))
+        do_reset();
+
     if (isset($_REQUEST["deleteSelected"])) {
         $track_ids = json_decode(base64_decode($_REQUEST["deleteSelected"]));
         if (!$track_ids)
@@ -129,8 +153,10 @@ if ($_REQUEST) {
         $count = count($tracks);
         if ($count === 0)
             die("no tracks found");
-        foreach ($tracks as $idx => $track)
+        foreach ($tracks as $idx => $track) {
+            unlink("../tracks/$track[md5].ogg");
             unlink("../tracks/$track[md5].dat");
+        }
         DB::query("DELETE FROM tracks WHERE %l", $where);
     }
 
@@ -158,15 +184,16 @@ if ($_REQUEST) {
             $zip->close();
             if (!file_exists("$tempdir/dump.sql"))
                 die("no database dump found");
-            array_map("unlink", array_filter((array) glob("../tracks/*")));
-            array_map("unlink", array_filter((array) glob("../mixes/*")));
-            $tracks = array_filter((array) glob("$tempdir/tracks//*.dat"));
+            do_reset();
+            $tracks = array_filter((array) glob("$tempdir/tracks/*.ogg"));
             foreach ($tracks as $track)
                 rename($track, "../tracks/" . basename($track));
-            $mixes = array_filter((array) glob("$tempdir/mixes//*.mp3"));
+            $tracks = array_filter((array) glob("$tempdir/tracks/*.dat"));
+            foreach ($tracks as $track)
+                rename($track, "../tracks/" . basename($track));
+            $mixes = array_filter((array) glob("$tempdir/mixes/*.mp3"));
             foreach ($mixes as $mix)
                 rename($mix, "../mixes/" . basename($mix));
-            DB::query("DROP TABLE tracks");
             shell_exec("mysql -h " . DB::$host . " -u " . DB::$user . " -p" . DB::$password . " " . DB::$dbName . " < $tempdir/dump.sql");
             header("Location: ../admin.html");
         } else {

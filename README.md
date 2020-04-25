@@ -6,7 +6,7 @@ Coordinates voice recordings and synchronized mixes in virtual choirs.
 
 ### XAMPP setup instructions
 
-This works out of the box with XAMPP by accessing `http://[::1]/` in the browser (make sure `ffmpeg`, `mysql`, and `mysqldump` are installed).
+This works out of the box with XAMPP by accessing `http://[::1]/` in the browser (make sure `audiowaveform`, `ffmpeg`, `mysql`, and `mysqldump` are installed).
 
 ### AWS setup instructions
 

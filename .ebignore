@@ -17,3 +17,4 @@ ab.txt
 .cache
 migrate.bat
 *.zip
+php/audiowaveform.exe

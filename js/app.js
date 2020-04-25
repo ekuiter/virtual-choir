@@ -54,6 +54,8 @@ const translationMap = {
         backup: "Backup",
         restore: "Restore",
         confirmRestore: "Sure? This will replace all recordings.",
+        reset: "Reset",
+        confirmReset: "Sure? This will delete all recordings.",
     },
     de: {
         title: "Virtueller Chor",
@@ -102,6 +104,8 @@ const translationMap = {
         backup: "Sichern",
         restore: "Wiederherstellen",
         confirmRestore: "Sicher? Dies ersetzt alle Aufnahmen.",
+        reset: "Zurücksetzen",
+        confirmReset: "Sicher? Dies löscht alle Aufnahmen.",
     }
 };
 
@@ -666,7 +670,7 @@ const Mix = ({debounceApiCalls = 500}) => {
 
                     return html`
                         <${Track} key=${id} title=${getName(name, register)}
-                            src="tracks/${md5}.dat"
+                            src="tracks/${md5}.ogg"
                             offset=${parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
                             gain=${parseFloat(gain)} gainMin=0 gainMax=5
                             onOffsetUpdated=${onOffsetUpdated} onGainUpdated=${onGainUpdated}
@@ -735,6 +739,12 @@ const Admin = () => {
             e.preventDefault();
     };
 
+    const onResetClick = e => {
+        e.preventDefault();
+        if (confirm(t`confirmReset`))
+            post({reset: true}).then(() => location.href = "admin.html");
+    };
+
     return html`
         <h4 style="margin-bottom: 15px;">
             ${t`admin`}
@@ -760,7 +770,8 @@ const Admin = () => {
         <form enctype=multipart/form-data action=php/app.php method=post class=form-inline>
             <input type=hidden name=backup />
             <input type=file name=restore accept=.zip style="margin: 0 12px 0 0;" onChange=${e => setHasFile(e.target.files.length > 0)} />
-            <input type=submit class="btn btn-outline-danger" onclick=${onRestoreClick} value=${hasFile ? t`restore` : t`backup`} />
+            <input type=submit class="btn btn-outline-danger" style="margin-right: 6px;" onclick=${onRestoreClick} value=${hasFile ? t`restore` : t`backup`} />
+            <button class="btn btn-outline-danger" onclick=${onResetClick}>${t`reset`}</button>
         </form>
     `;
 };
