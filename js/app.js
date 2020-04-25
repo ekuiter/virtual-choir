@@ -22,6 +22,7 @@ const translationMap = {
         name: "Your name",
         register: "Your register",
         song: "Which song?",
+        score: "Score",
         playback: "Playback",
         nameMissing: "Please type in a name!",
         registerMissing: "Please choose a register!",
@@ -44,6 +45,7 @@ const translationMap = {
         nameHelp: "Your name so that you can identify your own recording.",
         registerHelp: "Determines your voice's balance when mixing to simulate a choir arrangement.",
         songHelp: "Choose the song you want to sing. This makes it easier to synchronize your recording.",
+        scoreHelp: "Shows the song's sheet music while recording.",
         playbackHelp: "Plays the song in the background while recording.",
         saveChanges: "Save changes",
         confirmClose: "There are unsaved changes.",
@@ -68,6 +70,7 @@ const translationMap = {
         name: "Dein Name",
         register: "Deine Stimmlage",
         song: "Welcher Song?",
+        score: "Noten",
         playback: "Playback",
         nameMissing: "Bitte einen Namen eingeben!",
         registerMissing: "Bitte eine Stimmlage auswählen!",
@@ -90,7 +93,8 @@ const translationMap = {
         nameHelp: "Dein Name, damit du die Aufnahme später wiederfinden kannst.",
         registerHelp: "Bestimmt die Balance deiner Stimme beim Abmischen, um eine Choraufstellung zu simulieren.",
         songHelp: "Wähle den Song aus, den du singen möchtest, um das Synchronisieren deiner Aufnahme zu erleichtern.",
-        playbackHelp: "Spielt den Song bei der Aufnahme im Hintergrund ab.",
+        scoreHelp: "Zeigt die Noten während der Aufnahme an.",
+        playbackHelp: "Spielt den Song während der Aufnahme im Hintergrund ab.",
         saveChanges: "Änderungen speichern",
         confirmClose: "Nicht alle Änderungen wurden gespeichert.",
         download: "Herunterladen",
@@ -353,6 +357,7 @@ const Record = ({recordingTimeout = 500}) => {
     const [name, setName] = useState(localStorage.getItem("name"));
     const [register, setRegister] = useState(localStorage.getItem("register"));
     const [song, setSong] = useState(localStorage.getItem("song"));
+    const [score, setScore] = useState(localStorage.getItem("score") !== "false");
     const [playback, setPlayback] = useState(localStorage.getItem("playback") !== "false");
     const [busy, setBusy] = useState();
     const [recorder, setRecorder] = useState();
@@ -384,6 +389,7 @@ const Record = ({recordingTimeout = 500}) => {
                 localStorage.setItem("name", name);
                 localStorage.setItem("register", register);
                 localStorage.setItem("song", song);
+                localStorage.setItem("score", score ? "true" : "false");
                 localStorage.setItem("playback", playback ? "true" : "false");
                 setBusy(true);
                 navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
@@ -457,6 +463,11 @@ const Record = ({recordingTimeout = 500}) => {
                 `)}
             </select>
             <div class=form-check>
+                <input class=form-check-input type=checkbox id=score checked=${score} disabled=${recordDisabled || (song && config.songs[song].pdf === false)}
+                    onchange=${e => setScore(e.target.checked)} title=${t`scoreHelp`} />
+                <label class=form-check-label for=score style="margin-right: 1rem; user-select: none;" title=${t`scoreHelp`}>${t`score`}</label>
+            </div>
+            <div class=form-check>
                 <input class=form-check-input type=checkbox id=playback checked=${playback} disabled=${recordDisabled} onchange=${e => setPlayback(e.target.checked)} title=${t`playbackHelp`} />
                 <label class=form-check-label for=playback style="margin-right: 1rem; user-select: none;" title=${t`playbackHelp`}>${t`playback`}</label>
             </div>
@@ -465,7 +476,7 @@ const Record = ({recordingTimeout = 500}) => {
         </form>
         ${song && !recordingUri && html`
             <br />
-            ${config.songs[song].pdf !== false && html`
+            ${score && config.songs[song].pdf !== false && html`
                 <iframe src=${typeof config.songs[song].pdf === "string" ? config.songs[song].pdf : `songs/${song}.pdf`}
                     style="width: 100%; height: 100vh;" frameborder="0">
                 </iframe>
