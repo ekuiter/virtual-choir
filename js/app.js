@@ -1,8 +1,18 @@
-// can be bundled with something like:
-// parcel build js\app.js --out-dir js --out-file app.min.js --experimental-scope-hoisting
-// this d Microsoft Edge
+import "bootstrap";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import {h, render} from "preact";
+import {useState, useEffect, useRef} from "preact/hooks";
+import htm from "htm";
+import Peaks from "./peaks.js/main";
+import OpusMediaRecorder from "opus-media-recorder";
+import EncoderWorker from "opus-media-recorder/encoderWorker.js";
+import OggOpusEncoder from "opus-media-recorder/OggOpusEncoder.wasm";
+import WebMOpusEncoder from "opus-media-recorder/WebMOpusEncoder.wasm";
+import RecordRTC from "recordrtc";
 
-const {html, render, useState, useEffect, useRef} = window.htmPreact;
+window.RR = RecordRTC;
+
+const html = htm.bind(h);
 const snippetDuration = 25;
 
 // localization
@@ -147,18 +157,15 @@ const uploadTrack = (blobUri, name, register, song, songOffset, recordingOffset,
         }));
 
 // opus codec initialization
-class MyRecorder extends OpusMediaRecorder {
+window.MediaRecorder = class extends OpusMediaRecorder {
     constructor(stream, options) {
-        const path = location.href.substr(0, location.href.lastIndexOf("/") + 1);
-        const workerOptions = {
-            OggOpusEncoderWasmPath: path + "js/OggOpusEncoder.wasm",
-            WebMOpusEncoderWasmPath: path + "js/WebMOpusEncoder.wasm"
-        };
-        super(stream, options, workerOptions);
+        super(stream, options, {
+            encoderWorkerFactory: _ => new EncoderWorker(),
+            OggOpusEncoderWasmPath: OggOpusEncoder,
+            WebMOpusEncoderWasmPath: WebMOpusEncoder
+        });
     }
-}
-
-window.MediaRecorder = MyRecorder;
+};
 
 // audio buffer preparation for peaks.js
 const fetchAudioBuffer = (duration => {
@@ -270,10 +277,7 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
         } else
             gainNodeRef.current.connect(ctx.destination);
 
-        Promise.all([
-            new Promise(resolve => require(["main"], resolve)),
-            fetchAudioBuffer(ctx, src)
-        ]).then(([Peaks, audioBuffer]) => {
+        fetchAudioBuffer(ctx, src).then(audioBuffer => {
             const options = {
                 editable: !!onOffsetUpdated,
                 containers: {

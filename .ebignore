@@ -12,9 +12,13 @@ LICENSE.txt
 img/screenshot.png
 php/local.php
 config.template.json
-js/peaks
+js/peaks.js
 ab.txt
 .cache
 migrate.bat
 *.zip
 php/audiowaveform.exe
+node_modules
+package-lock.json
+package.json
+webpack.config.js

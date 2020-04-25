@@ -16,3 +16,4 @@ favicon.ico
 migrate.bat
 *.zip
 php/audiowaveform.exe
+node_modules
