@@ -13,3 +13,5 @@ php/local.php
 config.json
 .cache
 favicon.ico
+migrate.bat
+*.zip

@@ -26,6 +26,7 @@ A custom domain is required because `MediaDevices.getUserMedia()` only works wit
 - You may need to press `y` and `Enter` after installing dependencies. Then agree to the terms and IP logging.
 - Take note of the `TXT` field, create according `CNAME` and `TXT` DNS records for your custom domain, wait a few seconds to minutes for the DNS update, and press `Enter`.
 - Restart Apache with `eb deploy`.
+- For subsequent deploys, you can migrate existing data with `curl -L --user <user>:<password> https://<custom-domain>/php/app.php?backup --output backup.zip && eb deploy && curl -F "restore=@backup.zip" --user <user>:<password> https://<custom-domain>/php/app.php?backup`.
 
 ### Benchmarking
 

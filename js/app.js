@@ -354,6 +354,10 @@ const Track = ({title, src, offset = 0.5, gain = 1, displaySeconds = 5.0, onRead
 };
 
 const Record = ({recordingTimeout = 500}) => {
+    if (localStorage.getItem("song") && !config.songs[localStorage.getItem("song")] ||
+        localStorage.getItem("register") && !config.registers[localStorage.getItem("register")])
+        localStorage.clear();
+
     const [name, setName] = useState(localStorage.getItem("name"));
     const [register, setRegister] = useState(localStorage.getItem("register"));
     const [song, setSong] = useState(localStorage.getItem("song"));

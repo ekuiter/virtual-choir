@@ -15,3 +15,5 @@ config.template.json
 js/peaks
 ab.txt
 .cache
+migrate.bat
+*.zip
