@@ -13,7 +13,7 @@ app/dist/*
 app/php/local.php
 app/php/audiowaveform.exe
 app/.htpasswd
-app/config.json
 app/favicon.ico
+config.json
 migrate.bat
 *.zip

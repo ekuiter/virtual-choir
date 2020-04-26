@@ -1,17 +1,42 @@
 import {h, Fragment} from "preact";
 import {t, getLanguages, getLanguage, setLanguage} from "../i18n";
 
-const navigation = () => [
-    {title: t`record`, href: "/"},
-    {title: t`mix`, href: "/mix"},
-    {title: t`listen`, href: "/listen"}
-];
+const navigation = metaNavigation => {
+    let nav = [
+        {title: t`record`, path: "/"},
+        {title: t`mix`, path: "/mix"},
+        {title: t`listen`, path: "/listen"}
+    ];
+    if (metaNavigation)
+        nav = nav.concat(metaNavigation);
+    return nav;
+};
 
 const sideNavigation = () => [
-    {title: "π", href: "/admin"}
+    {title: "π", path: "/admin"}
 ];
 
-export default ({config: {title}, path}) => (
+const itemToNode = path => item => {
+    if (item.dropdown)
+        return (
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    {item.dropdown}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    {item.items.map(item => <a class="dropdown-item" href={item.path} target={item.target}>{item.title}</a>)}
+                </div>
+            </li>
+        );
+    else
+        return (
+            <li class={`nav-item ${(item.path === "/" ? path === item.path : path.startsWith(item.path)) ? "active" : ""}`}>
+                <a class="nav-link" href={item.path} target={item.target}>{item.title}</a>
+            </li>
+        );
+};
+
+export default ({config: {title, metaNavigation}, path}) => (
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="/">{title || t`title`}</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
@@ -20,18 +45,10 @@ export default ({config: {title}, path}) => (
         </button>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav mr-auto">
-                {navigation().map(({title, href}) => (
-                    <li class={`nav-item ${(href === "/" ? path === href : path.startsWith(href)) ? "active" : ""}`}>
-                        <a class="nav-link" href={href}>{title}</a>
-                    </li>
-                ))}
+                {navigation(metaNavigation).map(itemToNode(path))}
             </ul>
             <ul class="navbar-nav" style="margin-right: 12px;">
-                {sideNavigation().map(({title, href}) => (
-                    <li class={`nav-item ${(href === "/" ? path === href : path.startsWith(href)) ? "active" : ""}`}>
-                        <a class="nav-link" href={href}>{title}</a>
-                    </li>
-                ))}
+                {sideNavigation().map(itemToNode(path))}
             </ul>
             <form class="form-inline my-2 my-lg-0">
                 <select class="custom-select" class="form-control mr-sm-2" onchange={e => setLanguage(e.target.value)} title={t`language`}>

@@ -10,5 +10,4 @@ app/tracks/*
 app/js/*
 app/php/local.php
 app/php/audiowaveform.exe
-app/config.template.json
 *.zip

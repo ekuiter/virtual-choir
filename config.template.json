@@ -1,6 +1,7 @@
 {
     "title": "Virtual Choir",
     "defaultLanguage": "en",
+    "metaNavigation": [],
     "songs": {
         "SomeSong": {
             "offset": 3.81,

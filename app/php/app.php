@@ -77,7 +77,7 @@ if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
 
 if (isset($_REQUEST["config"])) {
     header("Content-Type: application/json");
-    $config = json_decode(file_get_contents("../config.json"));
+    $config = json_decode(file_get_contents("../../config.json"));
     $config->version = filemtime("..") * 1000;
     echo json_encode($config);
 }
@@ -95,7 +95,7 @@ if (isset($_REQUEST["tracks"])) {
 }
 
 if (isset($_REQUEST["mix"])) {
-    $config = json_decode(file_get_contents("../config.json"));
+    $config = json_decode(file_get_contents("../../config.json"));
     $playback = isset($_REQUEST["playback"]);
     $track_ids = json_decode($_REQUEST["mix"]);
     if (!$track_ids)
