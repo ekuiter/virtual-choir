@@ -1,11 +1,8 @@
 import {h, Fragment} from "preact";
 import Router from "preact-router";
 import Match from "preact-router/match";
+import AsyncRoute from "preact-async-route";
 import Navigation from "./Navigation";
-import Mix from "./Mix";
-import Listen from "./Listen";
-import Admin from "./Admin";
-import Record from "./Record";
 import Loading from "./Loading";
 import NotFound from "./NotFound";
 import {useLocalStorage} from "../helpers";
@@ -36,10 +33,17 @@ export default ({config}) => {
                     </Match>
                     <div class="container" style="padding-top: 25px; margin-bottom: 20px;">
                         <Router>
-                            <Mix path="/mix/:encodedSong?/:encodedTrackIds?" config={config} defaultSong={song} />
-                            <Listen path="/listen/:encodedMix?" />
-                            <Admin path="/admin" config={config} />
-                            <Record path="/" config={config} song={song} setSong={setSong} />
+                            <AsyncRoute path="/"
+                                getComponent={() => import("./Record").then(module => module.default)}
+                                config={config} song={song} setSong={setSong} />
+                            <AsyncRoute path="/mix/:encodedSong?/:encodedTrackIds?"
+                                getComponent={() => import("./Mix").then(module => module.default)}
+                                config={config} defaultSong={song} />
+                            <AsyncRoute path="/listen/:encodedMix?"
+                                getComponent={() => import("./Listen").then(module => module.default)} />
+                            <AsyncRoute path="/admin"
+                                getComponent={() => import("./Admin").then(module => module.default)}
+                                config={config} />
                             <NotFound default />
                         </Router>
                     </div>
