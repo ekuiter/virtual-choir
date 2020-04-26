@@ -3,7 +3,7 @@ import {useState} from "preact/hooks";
 import {t, formatDate} from "../i18n";
 import {post} from "../api";
 
-export default () => {
+export default ({config: {version}}) => {
     const [hasFile, setHasFile] = useState();
 
     const onTestClick = e => {
@@ -21,7 +21,7 @@ export default () => {
     const onResetClick = e => {
         e.preventDefault();
         if (confirm(t`confirmReset`))
-            post({reset: true}).then(() => location.href = "admin.html");
+            post({reset: true}).then(() => location.href = "/admin");
     };
 
     return (
@@ -32,7 +32,7 @@ export default () => {
             </h4>
             <p>
                 <strong>Version</strong><br />
-                <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> {formatDate(server.version)}
+                <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> {formatDate(new Date(version))}
             </p>
             <p>
                 <strong>{t`browserSupport`}</strong><br />
@@ -47,7 +47,7 @@ export default () => {
                 Firefox: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">about:preferences#privacy</span>
             </p>
             <strong>{t`backupSection`}</strong>
-            <form enctype="multipart/form-data" action="php/app.php" method="post" class="form-inline">
+            <form enctype="multipart/form-data" action="/php/app.php" method="post" class="form-inline">
                 <input type="hidden" name="backup" />
                 <input type="file" name="restore" accept=".zip" style="margin: 0 12px 0 0;" onChange={e => setHasFile(e.target.files.length > 0)} />
                 <input type="submit" class="btn btn-outline-danger" style="margin-right: 6px;" onclick={onRestoreClick} value={hasFile ? t`restore` : t`backup`} />

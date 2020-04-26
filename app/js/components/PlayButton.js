@@ -18,5 +18,5 @@ const IconButton = ({onClick, icon, children, minWidth, isVisible = true, style 
 
 export default ({isPlaying, onClick, ...props}) =>
     isPlaying
-        ? <IconButton icon="img/stop.svg" onClick={onClick} minWidth={120} {...props}>{t`stop`}</IconButton>
-        : <IconButton icon="img/play.svg" onClick={onClick} minWidth={120} {...props}>{t`play`}</IconButton>;
+        ? <IconButton icon="/img/stop.svg" onClick={onClick} minWidth={120} {...props}>{t`stop`}</IconButton>
+        : <IconButton icon="/img/play.svg" onClick={onClick} minWidth={120} {...props}>{t`play`}</IconButton>;

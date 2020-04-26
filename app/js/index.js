@@ -6,8 +6,9 @@ import OpusMediaRecorder from "opus-media-recorder";
 import EncoderWorker from "opus-media-recorder/encoderWorker.js";
 import OggOpusEncoder from "opus-media-recorder/OggOpusEncoder.wasm";
 import WebMOpusEncoder from "opus-media-recorder/WebMOpusEncoder.wasm";
-import {t} from "./i18n";
+import {t, setDefaultLanguage} from "./i18n";
 import App from "./components/App";
+import {fetchJson} from "./api";
 
 window.addEventListener("error", err =>
     "Error: " + window.alert(err.message));
@@ -25,5 +26,10 @@ window.MediaRecorder = class extends OpusMediaRecorder {
     }
 };
 
-document.title = server.config.title || t`title`;
 render(<App />, document.body);
+
+fetchJson({config: true}).then(config => {
+    setDefaultLanguage(config.defaultLanguage);
+    document.title = config.title || t`title`;
+    render(<App config={config} />, document.body);
+});

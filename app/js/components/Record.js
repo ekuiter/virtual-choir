@@ -6,10 +6,7 @@ import {uploadTrack} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
 
-const songs = server.config.songs;
-const registers = server.config.registers;
-
-export default ({recordingTimeout = 500}) => {
+export default ({config: {songs, registers}, recordingTimeout = 500}) => {
     if (localStorage.getItem("song") && ![localStorage.getItem("song")] ||
         localStorage.getItem("register") && !registers[localStorage.getItem("register")])
         localStorage.clear();
@@ -137,16 +134,16 @@ export default ({recordingTimeout = 500}) => {
                 <>
                     <br />
                     {score && songs[song].pdf !== false && (
-                        <iframe src={typeof songs[song].pdf === "string" ? songs[song].pdf : `songs/${song}.pdf`}
+                        <iframe src={typeof songs[song].pdf === "string" ? songs[song].pdf : `/songs/${song}.pdf`}
                             style="width: 100%; height: 100vh;" frameborder="0">
                         </iframe>
                     )}
-                    <audio src={`songs/${song}.mp3`} ref={playbackRef} />
+                    <audio src={`/songs/${song}.mp3`} ref={playbackRef} />
                 </>
             )}
             {recordingUri && (
                 <>
-                    <Track title={song} src={`songs/${song}.mp3`} dataUri={`songs/${song}.json`}
+                    <Track title={song} src={`/songs/${song}.mp3`} dataUri={`/songs/${song}.json`}
                         offset={getSongTrackOffset()} gain={songTrackGain}
                         onOffsetUpdated={setSongTrackOffset} onGainUpdated={setSongTrackGain}
                         isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}

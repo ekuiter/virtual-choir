@@ -1,12 +1,11 @@
 import {h, Fragment} from "preact";
 import {useState, useEffect} from "preact/hooks";
 import {t, formatDate} from "../i18n";
-import {post} from "../api";
+import {post, fetchJson} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
-
-const songs = server.config.songs;
-const tracks = server.tracks;
+import Loading from "./Loading";
+import {decode, route} from "../helpers";
 
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -20,13 +19,10 @@ const useDebounce = (value, delay) => {
     return debouncedValue;
 };
 
-export default ({debounceApiCalls = 500}) => {
-    const initialSong = location.hash ? JSON.parse(atob(location.hash.substr(1)))[0] : [];
-    const initialSelectedTrackIds = location.hash ? JSON.parse(atob(location.hash.substr(1)))[1] : [];
-
+export default ({config: {songs}, encodedSong, encodedTrackIds, debounceApiCalls = 500}) => {
+    const [loading, setLoading] = useState(true);
+    const [tracks, setTracks] = useState([]);
     const [busy, setBusy] = useState(false);
-    const [song, setSong] = useState(initialSong);
-    const [selectedTrackIds, setSelectedTrackIds] = useState(initialSelectedTrackIds);
     const [readyTrackIds, setReadyTrackIds] = useState([]);
     const [playingTrackIds, setPlayingTrackIds] = useState([]);
     const [songTrackPlaying, setSongTrackPlaying] = useState();
@@ -37,12 +33,10 @@ export default ({debounceApiCalls = 500}) => {
     const debouncedPendingApiCall = useDebounce(pendingApiCall, debounceApiCalls);
 
     useEffect(() => {
-        const onHashChange = () => {
-            setSong(JSON.parse(atob(location.hash.substr(1)))[0]);
-            setSelectedTrackIds(JSON.parse(atob(location.hash.substr(1)))[1]);
-        }
-        window.addEventListener("hashchange", onHashChange);
-        return () => window.removeEventListener("hashchange", onHashChange);
+        fetchJson({tracks: true})
+            .then(tracks => tracks.map(({date, ...track}) => ({date: new Date(date), ...track})))
+            .then(setTracks)
+            .then(() => setLoading(false));
     }, []);
 
     useEffect(() => {
@@ -56,12 +50,13 @@ export default ({debounceApiCalls = 500}) => {
         window.onbeforeunload = pendingApiCalls.length > 0 && (() => t`confirmClose`);
     }, [pendingApiCalls]);
 
+    const song = decode(encodedSong);
+    const selectedTrackIds = decode(encodedTrackIds, true) || [];
     const isReady = songTrackReady === song && selectedTrackIds.length === readyTrackIds.length;
     const isPlaying = songTrackPlaying === song || playingTrackIds.length > 0;
     const getSelectedTracks = selectedTrackIds => selectedTrackIds.map(id => tracks.find(track => track.id === id));
     const addReadyTrack = id => () => setReadyTrackIds(readyTrackIds => [...readyTrackIds, id]);
     const addPendingApiCall = pendingApiCall => setPendingApiCalls(pendingApiCalls => [...pendingApiCalls, pendingApiCall]);
-    const getHash = (_song = song, _selectedTrackIds = selectedTrackIds) => btoa(JSON.stringify([_song, _selectedTrackIds]));
     const getName = (name, register) => register !== "null" ? <span>{name}, <em>{register}</em></span> : <span>{name}</span>;
 
     const setPlayingTrack = id => isPlaying => setPlayingTrackIds(playingTrackIds => {
@@ -72,13 +67,10 @@ export default ({debounceApiCalls = 500}) => {
     });
 
     const onSongSelected = e => {
-        const newSong = e.target.value;
-        setSong(newSong);
         setReadyTrackIds([]);
         setPlayingTrackIds([]);
         setSongTrackPlaying(null);
-        setSelectedTrackIds([]);
-        location.hash = getHash(newSong, []);
+        route("/mix", e.target.value);
     };
 
     const onTracksSelected = e => {
@@ -86,14 +78,13 @@ export default ({debounceApiCalls = 500}) => {
         setReadyTrackIds(readyTrackIds => readyTrackIds.filter(id => newSelectedTrackIds.indexOf(id) !== -1));
         setPlayingTrackIds([]);
         setSongTrackPlaying(null);
-        setSelectedTrackIds(newSelectedTrackIds);
-        location.hash = getHash(song, newSelectedTrackIds);
+        route("/mix", song, JSON.stringify(newSelectedTrackIds));
     };
 
     const onDeleteSelectedClick = e => {
         e.preventDefault();
         if (confirm(t`confirmDeleteSelected`))
-            post({deleteSelected: getHash()}).then(() => location.href = "mix.html");
+            post({deleteSelected: JSON.stringify(selectedTrackIds)}).then(() => location.href = "/mix");
     };
 
     const onPlayClick = e => {
@@ -131,75 +122,79 @@ export default ({debounceApiCalls = 500}) => {
                 </button>
             </form>
             {song && songs.hasOwnProperty(song) && (
-                <>
-                    <select class="custom-select" multiple style="clear: both; margin: 15px 0;" size={selectedTrackIds.length > 0 ? 6 : 20} onchange={onTracksSelected}>
-                        {tracks
-                            .filter(track => track.song === song)
-                            .map(({id, name, register, date}) => (
-                                <option value={id} selected={selectedTrackIds.indexOf(id) !== -1}>
-                                    <strong>{formatDate(date)}</strong> | {getName(name, register)}
-                                </option>
-                            ))}
-                    </select>
-                    {selectedTrackIds.length > 0 && (
-                        <>
-                            <div style="display: flex; flex-basis: 1;">
-                                <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
-                                    <form action="php/app.php" method="post" class="form-inline">
-                                        <input type="hidden" name="mix" value={getHash()} />
-                                        <label class="form-check-label" style="margin: 2px 5px 0 0;" title={t`playbackHelp`}>
-                                            <input class="form-check-input" type="checkbox" name="playback" />
-                                            <span>{t`playback`}</span>
-                                        </label>
-                                        <label style="margin-top: 6px;">
-                                            <span style="margin-top: -5px; padding: 0 20px 0 10px;">{t`volume`}</span>
-                                            <input type="range" class="custom-range" name="gain" min="0" max="10" step="0.01" value="3" style="margin: 0 20px 0 0;" />
-                                        </label>
-                                        <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value={t`mix`} />
-                                        <button class="btn btn-outline-primary" style={pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
-                                            onclick={onSaveChangesClick} disabled={busy}>
-                                            {t`saveChanges`}
-                                        </button>
-                                    </form>
+                loading
+                ? <Loading />
+                : (
+                    <>
+                        <select class="custom-select" multiple style="clear: both; margin: 15px 0;" size={selectedTrackIds.length > 0 ? 6 : 20} onchange={onTracksSelected}>
+                            {tracks
+                                .filter(track => track.song === song)
+                                .map(({id, name, register, date}) => (
+                                    <option value={id} selected={selectedTrackIds.indexOf(id) !== -1}>
+                                        <strong>{formatDate(date)}</strong> | {getName(name, register)}
+                                    </option>
+                                ))}
+                        </select>
+                        {selectedTrackIds.length > 0 && (
+                            <>
+                                <div style="display: flex; flex-basis: 1;">
+                                    <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
+                                        <form action="/php/app.php" method="post" class="form-inline">
+                                            <input type="hidden" name="mix" value={JSON.stringify(selectedTrackIds)} />
+                                            <label class="form-check-label" style="margin: 2px 5px 0 0;" title={t`playbackHelp`}>
+                                                <input class="form-check-input" type="checkbox" name="playback" />
+                                                <span>{t`playback`}</span>
+                                            </label>
+                                            <label style="margin-top: 6px;">
+                                                <span style="margin-top: -5px; padding: 0 20px 0 10px;">{t`volume`}</span>
+                                                <input type="range" class="custom-range" name="gain" min="0" max="10" step="0.01" value="3" style="margin: 0 20px 0 0;" />
+                                            </label>
+                                            <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value={t`mix`} />
+                                            <button class="btn btn-outline-primary" style={pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
+                                                onclick={onSaveChangesClick} disabled={busy}>
+                                                {t`saveChanges`}
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div class="form-group form-inline" style="margin-bottom: 0;">
+                                        <PlayButton isPlaying={isPlaying} onClick={onPlayClick} disabled={!isReady} />
+                                    </div>
                                 </div>
-                                <div class="form-group form-inline" style="margin-bottom: 0;">
-                                    <PlayButton isPlaying={isPlaying} onClick={onPlayClick} disabled={!isReady} />
-                                </div>
-                            </div>
-                            <Track src={`songs/${song}.mp3`} dataUri={`songs/${song}.json`}
-                                key={song} title={song} offset={songs[song].offset}
-                                gain={songTrackGain} gainMin={0} gainMax={5} onGainUpdated={setSongTrackGain} isPlaying={songTrackPlaying === song}
-                                onSetIsPlaying={isPlaying => setSongTrackPlaying(isPlaying && song)}
-                                onReady={() => setSongTrackReady(song)} />
-                            {getSelectedTracks(selectedTrackIds).map(track => {
-                                const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
+                                <Track src={`/songs/${song}.mp3`} dataUri={`/songs/${song}.json`}
+                                    key={song} title={song} offset={songs[song].offset}
+                                    gain={songTrackGain} gainMin={0} gainMax={5} onGainUpdated={setSongTrackGain} isPlaying={songTrackPlaying === song}
+                                    onSetIsPlaying={isPlaying => setSongTrackPlaying(isPlaying && song)}
+                                    onReady={() => setSongTrackReady(song)} />
+                                {getSelectedTracks(selectedTrackIds).map(track => {
+                                    const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
 
-                                const onOffsetUpdated = offset => {
-                                    track.recordingOffset = offset + (parseFloat(songOffset) - songs[song].offset);
-                                    setBusy(true);
-                                    setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
-                                };
+                                    const onOffsetUpdated = offset => {
+                                        track.recordingOffset = offset + (parseFloat(songOffset) - songs[song].offset);
+                                        setBusy(true);
+                                        setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
+                                    };
 
-                                const onGainUpdated = gain => {
-                                    track.gain = gain;
-                                    setBusy(true);
-                                    setPendingApiCall({"setFor": id, "gain": track.gain});
-                                };
+                                    const onGainUpdated = gain => {
+                                        track.gain = gain;
+                                        setBusy(true);
+                                        setPendingApiCall({"setFor": id, "gain": track.gain});
+                                    };
 
-                                return (
-                                    <Track key={id} title={getName(name, register)}
-                                        src={`tracks/${md5}.mp3`}
-                                        dataUri={`tracks/${md5}.json`}
-                                        offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)}
-                                        gain={parseFloat(gain)} gainMin="0" gainMax="5"
-                                        onOffsetUpdated={onOffsetUpdated} onGainUpdated={onGainUpdated}
-                                        isPlaying={playingTrackIds.indexOf(id) !== -1} onSetIsPlaying={setPlayingTrack(id)}
-                                        onReady={addReadyTrack(id)} />
-                                );
-                            })}
-                        </>
-                    )}
-                </>
+                                    return (
+                                        <Track key={id} title={getName(name, register)}
+                                            src={`/tracks/${md5}.mp3`}
+                                            dataUri={`/tracks/${md5}.json`}
+                                            offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)}
+                                            gain={parseFloat(gain)} gainMin="0" gainMax="5"
+                                            onOffsetUpdated={onOffsetUpdated} onGainUpdated={onGainUpdated}
+                                            isPlaying={playingTrackIds.indexOf(id) !== -1} onSetIsPlaying={setPlayingTrack(id)}
+                                            onReady={addReadyTrack(id)} />
+                                    );
+                                })}
+                            </>
+                        )}
+                    </>
+                )
             )}
         </>
     );

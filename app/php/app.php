@@ -53,6 +53,10 @@ function do_reset() {
     array_map("unlink", array_filter((array) glob("../mixes/*")));
 }
 
+function basenameMp3($mix) {
+    return basename($mix, ".mp3");
+}
+
 $songs = array_filter((array) glob("../songs/*.mp3"));
 foreach ($songs as $song) {
     $song = basename($song, ".mp3");
@@ -71,162 +75,179 @@ if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
     die;
 }
 
-if ($_REQUEST) {
-    if (isset($_REQUEST["mix"])) {
-        $config = json_decode(file_get_contents("../config.json"));
-        $playback = isset($_REQUEST["playback"]);
-        $track_ids = json_decode(base64_decode($_REQUEST["mix"]))[1];
-        if (!$track_ids)
-            die("no tracks given");
-        $where = new WhereClause("or");
-        foreach ($track_ids as $track_id)
-            $where->add("id=%i", (int) $track_id);
-        $tracks = DB::query("SELECT * FROM tracks WHERE %l", $where);
-        $count = count($tracks);
-        if ($count === 0)
-            die("no tracks found");
-        $song = $tracks[0]["song"];
-        $register_counts = array();
-        if (!file_exists("../songs/$song.mp3"))
-            die("invalid song");
-        $mixfile = "../mixes/" . date("Y-m-d-H-i-s") . " $song (";
-        foreach ($tracks as $idx => $track) {
-            if (!@$config->registers->{$track["register"]})
-                die("invalid register");
-            if (!is_numeric($track["recordingOffset"]) || !is_numeric($track["songOffset"]) || !is_numeric($track["gain"]))
-                die("invalid offset/gain");
-            if (array_key_exists($track["register"], $register_counts))
-                $register_counts[$track["register"]]++;
-            else
-                $register_counts[$track["register"]] = 1;
-        }
-        foreach ($register_counts as $register => $_count)
-            $mixfile .= "$_count $register, ";
-        $mixfile = substr($mixfile, 0, -2);
-        $mixfile .= ").mp3";
-        $command = ffmpeg() . " -y";
-        if ($playback)
-            $command .= " -i \"../songs/$song.mp3\"";
-        foreach ($tracks as $track)
-            $command .= " -i \"../tracks/$track[md5].mp3\"";
-        $command .= " -filter_complex \"";
-        foreach ($tracks as $idx => $track) {
-            if ($playback)
-                $idx++;
-            $offset = ((float) $track["recordingOffset"]) - ((float) $track["songOffset"]);
-            if ($offset >= 0) {
-                $offset = number_format($offset, 4, ".", "");
-                $offset = "atrim=start=$offset";
-            } else {
-                $offset *= -1;
-                $offset = (int) ($offset * 1000);
-                $offset = "adelay=delays=${offset}|${offset}";
-            }
-            $gain = number_format((float) $track["gain"], 4, ".", "");
-            $balance = @$config->registers->{$track["register"]}->balance;
-            if (!$balance)
-                $balance = 0;
-            $command .= "[$idx]aresample=44100,aformat=channel_layouts=stereo,stereotools=balance_out=$balance,volume=${gain},${offset}[${idx}_out];";
-        }
-        if ($playback)
-            $command .= "[0]";
-        foreach ($tracks as $idx => $track) {
-            if ($playback)
-                $idx++;
-            $command .= "[${idx}_out]";
-        }
-        if ($playback)
-            $count++;
-        $gain = isset($_REQUEST["gain"]) ? $_REQUEST["gain"] : 1;
-        $command .= "amix=inputs=$count:duration=longest,volume=$gain\" \"$mixfile\"";
-        @mkdir("../mixes");
-        shell_exec($command);
-        $mixfile = base64_encode(basename($mixfile, ".mp3"));
-        header("Location: ../listen.html#$mixfile");
-        die;
-    }
-
-    if (isset($_REQUEST["reset"]))
-        do_reset();
-
-    if (isset($_REQUEST["deleteSelected"])) {
-        $track_ids = json_decode(base64_decode($_REQUEST["deleteSelected"]))[1];
-        if (!$track_ids)
-            die("no tracks given");
-        $where = new WhereClause("or");
-        foreach ($track_ids as $track_id)
-            $where->add("id=%i", (int) $track_id);
-        $tracks = DB::query("SELECT * FROM tracks WHERE %l", $where);
-        $count = count($tracks);
-        if ($count === 0)
-            die("no tracks found");
-        foreach ($tracks as $idx => $track) {
-            unlink("../tracks/$track[md5].mp3");
-            unlink("../tracks/$track[md5].json");
-        }
-        DB::query("DELETE FROM tracks WHERE %l", $where);
-    }
-
-    if (isset($_REQUEST["deleteMix"])) {
-        $mix = base64_decode($_REQUEST["deleteMix"]);
-        if (!$mix)
-            die("no mix given");
-        if (!file_exists("../mixes/$mix.mp3") || strpos(realpath("../mixes/$mix.mp3"), realpath("../mixes/")) !== 0)
-            die("invalid mix");
-        unlink("../mixes/$mix.mp3");
-    }
-
-    if (isset($_REQUEST["backup"])) {
-        @mkdir("../tracks");
-        @mkdir("../mixes");
-        if ($_FILES && isset($_FILES["restore"]) && $_FILES["restore"]["error"] === 0) {
-            $tempdir = tempnam(sys_get_temp_dir(), "");
-            if (file_exists($tempdir))
-                unlink($tempdir);
-            mkdir($tempdir);
-            $zip = new ZipArchive();
-            if (!$zip->open($_FILES["restore"]["tmp_name"]))
-                die("invalid zip file given");
-            $zip->extractTo($tempdir);
-            $zip->close();
-            if (!file_exists("$tempdir/dump.sql"))
-                die("no database dump found");
-            do_reset();
-            $tracks = array_filter((array) glob("$tempdir/tracks/*.mp3"));
-            foreach ($tracks as $track)
-                rename($track, "../tracks/" . basename($track));
-            $tracks = array_filter((array) glob("$tempdir/tracks/*.json"));
-            foreach ($tracks as $track)
-                rename($track, "../tracks/" . basename($track));
-            $mixes = array_filter((array) glob("$tempdir/mixes/*.mp3"));
-            foreach ($mixes as $mix)
-                rename($mix, "../mixes/" . basename($mix));
-            shell_exec("mysql -h " . DB::$host . " -u " . DB::$user . " -p" . DB::$password . " " . DB::$dbName . " < $tempdir/dump.sql");
-            header("Location: ../admin.html");
-        } else {
-            $zipfile = "../backups/backup-" . date("Y-m-d-H-i-s") . ".zip";
-            $zip = new ZipArchive();
-            if (!$zip->open($zipfile, ZipArchive::CREATE))
-                die("could not open ZIP file");
-            $sql = shell_exec("mysqldump -h " . DB::$host . " -u " . DB::$user . " -p" . DB::$password . " " . DB::$dbName);
-            $zip->addFromString("dump.sql", $sql);
-            $tracks = array_filter((array) glob("../tracks/*"));
-            foreach ($tracks as $track)
-                $zip->addFile($track, "tracks/" . basename($track));
-            $mixes = array_filter((array) glob("../mixes/*"));
-            foreach ($mixes as $mix)
-                $zip->addFile($mix, "mixes/" . basename($mix));
-            $zip->close();
-            header("Location: $zipfile");
-        }
-    }
-
-    if (isset($_REQUEST["setFor"]) && isset($_REQUEST["songOffset"]))
-        DB::query("UPDATE tracks SET songOffset = %s WHERE id = %i", $_REQUEST["songOffset"], (int) $_REQUEST["setFor"]);
-    if (isset($_REQUEST["setFor"]) && isset($_REQUEST["recordingOffset"]))
-        DB::query("UPDATE tracks SET recordingOffset = %s WHERE id = %i", $_REQUEST["recordingOffset"], (int) $_REQUEST["setFor"]);
-    if (isset($_REQUEST["setFor"]) && isset($_REQUEST["gain"]))
-        DB::query("UPDATE tracks SET gain = %s WHERE id = %i", $_REQUEST["gain"], (int) $_REQUEST["setFor"]);
+if (isset($_REQUEST["config"])) {
+    header("Content-Type: application/json");
+    $config = json_decode(file_get_contents("../config.json"));
+    $config->version = filemtime("..") * 1000;
+    echo json_encode($config);
 }
+
+if (isset($_REQUEST["mixes"])) {
+    header("Content-Type: application/json");
+    $mixes = file_exists("../mixes") ? array_map("basenameMp3", array_filter((array) glob("../mixes/*"))) : array();
+    rsort($mixes);
+    echo json_encode($mixes);
+}
+
+if (isset($_REQUEST["tracks"])) {
+    header("Content-Type: application/json");
+    echo json_encode(DB::query("SELECT * FROM tracks ORDER BY date DESC"));
+}
+
+if (isset($_REQUEST["mix"])) {
+    $config = json_decode(file_get_contents("../config.json"));
+    $playback = isset($_REQUEST["playback"]);
+    $track_ids = json_decode($_REQUEST["mix"]);
+    if (!$track_ids)
+        die("no tracks given");
+    $where = new WhereClause("or");
+    foreach ($track_ids as $track_id)
+        $where->add("id=%i", (int) $track_id);
+    $tracks = DB::query("SELECT * FROM tracks WHERE %l", $where);
+    $count = count($tracks);
+    if ($count === 0)
+        die("no tracks found");
+    $song = $tracks[0]["song"];
+    $register_counts = array();
+    if (!file_exists("../songs/$song.mp3"))
+        die("invalid song");
+    $mixfile = "../mixes/" . date("Y-m-d-H-i-s") . " $song (";
+    foreach ($tracks as $idx => $track) {
+        if (!@$config->registers->{$track["register"]})
+            die("invalid register");
+        if (!is_numeric($track["recordingOffset"]) || !is_numeric($track["songOffset"]) || !is_numeric($track["gain"]))
+            die("invalid offset/gain");
+        if (array_key_exists($track["register"], $register_counts))
+            $register_counts[$track["register"]]++;
+        else
+            $register_counts[$track["register"]] = 1;
+    }
+    foreach ($register_counts as $register => $_count)
+        $mixfile .= "$_count $register, ";
+    $mixfile = substr($mixfile, 0, -2);
+    $mixfile .= ").mp3";
+    $command = ffmpeg() . " -y";
+    if ($playback)
+        $command .= " -i \"../songs/$song.mp3\"";
+    foreach ($tracks as $track)
+        $command .= " -i \"../tracks/$track[md5].mp3\"";
+    $command .= " -filter_complex \"";
+    foreach ($tracks as $idx => $track) {
+        if ($playback)
+            $idx++;
+        $offset = ((float) $track["recordingOffset"]) - ((float) $track["songOffset"]);
+        if ($offset >= 0) {
+            $offset = number_format($offset, 4, ".", "");
+            $offset = "atrim=start=$offset";
+        } else {
+            $offset *= -1;
+            $offset = (int) ($offset * 1000);
+            $offset = "adelay=delays=${offset}|${offset}";
+        }
+        $gain = number_format((float) $track["gain"], 4, ".", "");
+        $balance = @$config->registers->{$track["register"]}->balance;
+        if (!$balance)
+            $balance = 0;
+        $command .= "[$idx]aresample=44100,aformat=channel_layouts=stereo,stereotools=balance_out=$balance,volume=${gain},${offset}[${idx}_out];";
+    }
+    if ($playback)
+        $command .= "[0]";
+    foreach ($tracks as $idx => $track) {
+        if ($playback)
+            $idx++;
+        $command .= "[${idx}_out]";
+    }
+    if ($playback)
+        $count++;
+    $gain = isset($_REQUEST["gain"]) ? $_REQUEST["gain"] : 1;
+    $command .= "amix=inputs=$count:duration=longest,volume=$gain\" \"$mixfile\"";
+    @mkdir("../mixes");
+    shell_exec($command);
+    $mixfile = base64_encode(basename($mixfile, ".mp3"));
+    header("Location: ../listen/$mixfile");
+    die;
+}
+
+if (isset($_REQUEST["reset"]))
+    do_reset();
+
+if (isset($_REQUEST["deleteSelected"])) {
+    $track_ids = json_decode($_REQUEST["deleteSelected"]);
+    if (!$track_ids)
+        die("no tracks given");
+    $where = new WhereClause("or");
+    foreach ($track_ids as $track_id)
+        $where->add("id=%i", (int) $track_id);
+    $tracks = DB::query("SELECT * FROM tracks WHERE %l", $where);
+    $count = count($tracks);
+    if ($count === 0)
+        die("no tracks found");
+    foreach ($tracks as $idx => $track) {
+        unlink("../tracks/$track[md5].mp3");
+        unlink("../tracks/$track[md5].json");
+    }
+    DB::query("DELETE FROM tracks WHERE %l", $where);
+}
+
+if (isset($_REQUEST["deleteMix"])) {
+    $mix = $_REQUEST["deleteMix"];
+    if (!$mix)
+        die("no mix given");
+    if (!file_exists("../mixes/$mix.mp3") || strpos(realpath("../mixes/$mix.mp3"), realpath("../mixes/")) !== 0)
+        die("invalid mix");
+    unlink("../mixes/$mix.mp3");
+}
+
+if (isset($_REQUEST["backup"])) {
+    @mkdir("../tracks");
+    @mkdir("../mixes");
+    if ($_FILES && isset($_FILES["restore"]) && $_FILES["restore"]["error"] === 0) {
+        $tempdir = tempnam(sys_get_temp_dir(), "");
+        if (file_exists($tempdir))
+            unlink($tempdir);
+        mkdir($tempdir);
+        $zip = new ZipArchive();
+        if (!$zip->open($_FILES["restore"]["tmp_name"]))
+            die("invalid zip file given");
+        $zip->extractTo($tempdir);
+        $zip->close();
+        if (!file_exists("$tempdir/dump.sql"))
+            die("no database dump found");
+        do_reset();
+        $tracks = array_filter((array) glob("$tempdir/tracks/*.mp3"));
+        foreach ($tracks as $track)
+            rename($track, "../tracks/" . basename($track));
+        $tracks = array_filter((array) glob("$tempdir/tracks/*.json"));
+        foreach ($tracks as $track)
+            rename($track, "../tracks/" . basename($track));
+        $mixes = array_filter((array) glob("$tempdir/mixes/*.mp3"));
+        foreach ($mixes as $mix)
+            rename($mix, "../mixes/" . basename($mix));
+        shell_exec("mysql -h " . DB::$host . " -u " . DB::$user . " -p" . DB::$password . " " . DB::$dbName . " < $tempdir/dump.sql");
+        header("Location: ../admin");
+    } else {
+        $zipfile = "../backups/backup-" . date("Y-m-d-H-i-s") . ".zip";
+        $zip = new ZipArchive();
+        if (!$zip->open($zipfile, ZipArchive::CREATE))
+            die("could not open ZIP file");
+        $sql = shell_exec("mysqldump -h " . DB::$host . " -u " . DB::$user . " -p" . DB::$password . " " . DB::$dbName);
+        $zip->addFromString("dump.sql", $sql);
+        $tracks = array_filter((array) glob("../tracks/*"));
+        foreach ($tracks as $track)
+            $zip->addFile($track, "tracks/" . basename($track));
+        $mixes = array_filter((array) glob("../mixes/*"));
+        foreach ($mixes as $mix)
+            $zip->addFile($mix, "mixes/" . basename($mix));
+        $zip->close();
+        header("Location: $zipfile");
+    }
+}
+
+if (isset($_REQUEST["setFor"]) && isset($_REQUEST["songOffset"]))
+    DB::query("UPDATE tracks SET songOffset = %s WHERE id = %i", $_REQUEST["songOffset"], (int) $_REQUEST["setFor"]);
+if (isset($_REQUEST["setFor"]) && isset($_REQUEST["recordingOffset"]))
+    DB::query("UPDATE tracks SET recordingOffset = %s WHERE id = %i", $_REQUEST["recordingOffset"], (int) $_REQUEST["setFor"]);
+if (isset($_REQUEST["setFor"]) && isset($_REQUEST["gain"]))
+    DB::query("UPDATE tracks SET gain = %s WHERE id = %i", $_REQUEST["gain"], (int) $_REQUEST["setFor"]);
 
 ?>

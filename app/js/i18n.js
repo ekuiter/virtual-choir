@@ -48,6 +48,7 @@ const translationMap = {
         confirmRestore: "Sure? This will replace all recordings.",
         reset: "Reset",
         confirmReset: "Sure? This will delete all recordings.",
+        notFound: "404 Not Found",
     },
     de: {
         title: "Virtueller Chor",
@@ -98,14 +99,24 @@ const translationMap = {
         confirmRestore: "Sicher? Dies ersetzt alle Aufnahmen.",
         reset: "Zurücksetzen",
         confirmReset: "Sicher? Dies löscht alle Aufnahmen.",
+        notFound: "404 Nicht gefunden",
     }
+};
+
+let defaultLanguage;
+
+export const setDefaultLanguage = language => defaultLanguage = language;
+
+export const setLanguage = language => {
+    localStorage.setItem("language", language);
+    location.reload();
 };
 
 export const getLanguages = () =>
     Object.keys(translationMap);
 
 export const getLanguage = () =>
-    localStorage.getItem("language") || server.config.defaultLanguage || "en";
+    localStorage.getItem("language") || defaultLanguage || "en";
 
 export const t = key =>
     translationMap[getLanguage()][key] || translationMap.en[key];
@@ -113,8 +124,3 @@ export const t = key =>
 export const formatDate = (date, sep = " ") =>
     ("0" + date.getDate()).slice(-2) + "." + ("0" + (date.getMonth() + 1)).slice(-2) + "." +
         sep + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
-
-export const setLanguage = language => {
-    localStorage.setItem("language", language);
-    location.reload();
-};

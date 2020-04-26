@@ -114,7 +114,7 @@ export default ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5
     return (
         <div style={`position: relative; border: 1px solid rgba(200, 200, 200, 0.5); border-radius: 6px; margin: ${margin}px 0;`}>
             <div style={peaks ? "display: none;" : "position: absolute; left: calc(50% - 50px);"}>
-                <img src="img/loading.gif" width="100" height="100" style="margin-top: 20px;" />
+                <img src="/img/loading.gif" width="100" height="100" style="margin-top: 20px;" />
             </div>
             <audio src={src} ref={audioRef} onended={() => onSetIsPlaying && onSetIsPlaying(false)} />
             <div ref={zoomviewRef} style={`height: ${height}px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}`} />
