@@ -1,5 +1,6 @@
 import "bootstrap";
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './index.css';
 import {h, Fragment, render} from "preact";
 import OpusMediaRecorder from "opus-media-recorder";
 import EncoderWorker from "opus-media-recorder/encoderWorker.js";
