@@ -5,7 +5,7 @@ import {post, fetchJson} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
 import Loading from "./Loading";
-import {decode, route, useDebounce} from "../helpers";
+import {decode, route, useDebounce, useRepeat} from "../helpers";
 
 export default ({config: {songs}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
     const [loading, setLoading] = useState(true);
@@ -20,12 +20,13 @@ export default ({config: {songs}, encodedSong, encodedTrackIds, defaultSong, deb
     const [pendingApiCall, setPendingApiCall] = useState();
     const debouncedPendingApiCall = useDebounce(pendingApiCall, debounceApiCalls);
 
-    useEffect(() => {
+    const updateTracks = () =>
         fetchJson({tracks: true})
             .then(tracks => tracks.map(({date, ...track}) => ({date: new Date(date), ...track})))
             .then(setTracks)
             .then(() => setLoading(false));
-    }, []);
+
+    useRepeat(updateTracks);
 
     useEffect(() => {
         if (debouncedPendingApiCall) {
@@ -72,7 +73,7 @@ export default ({config: {songs}, encodedSong, encodedTrackIds, defaultSong, deb
     const onDeleteSelectedClick = e => {
         e.preventDefault();
         if (confirm(t`confirmDeleteSelected`))
-            post({deleteSelected: JSON.stringify(selectedTrackIds)}).then(() => location.href = "/mix");
+            post({deleteSelected: JSON.stringify(selectedTrackIds)}).then(() => route("/mix")).then(updateTracks);
     };
 
     const onPlayClick = e => {

@@ -2,25 +2,26 @@ import {h, Fragment} from "preact";
 import {useState, useEffect} from "preact/hooks";
 import {t} from "../i18n";
 import {post, fetchJson} from "../api";
-import {route, decode} from "../helpers";
+import {route, decode, useRepeat} from "../helpers";
 import Loading from "./Loading";
 
 export default ({encodedMix}) => {
     const [loading, setLoading] = useState(true);
     const [mixes, setMixes] = useState([]);
 
-    useEffect(() => {
+    const updateMixes = () =>
         fetchJson({mixes: true})
             .then(setMixes)
             .then(() => setLoading(false));
-    }, []);
+
+    useRepeat(updateMixes);
 
     const mix = decode(encodedMix);
 
     const onDeleteClick = e => {
         e.preventDefault();
         if (confirm(t`confirmDelete`))
-            post({deleteMix: mix}).then(() => location.href = "/listen");
+            post({deleteMix: mix}).then(updateMixes).then(() => route("/listen"));
     };
 
     return (
