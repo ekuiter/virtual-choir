@@ -6,9 +6,12 @@ import {uploadTrack} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
 
+const songs = server.config.songs;
+const registers = server.config.registers;
+
 export default ({recordingTimeout = 500}) => {
-    if (localStorage.getItem("song") && !config.songs[localStorage.getItem("song")] ||
-        localStorage.getItem("register") && !config.registers[localStorage.getItem("register")])
+    if (localStorage.getItem("song") && ![localStorage.getItem("song")] ||
+        localStorage.getItem("register") && !registers[localStorage.getItem("register")])
         localStorage.clear();
 
     const [name, setName] = useState(localStorage.getItem("name"));
@@ -29,9 +32,9 @@ export default ({recordingTimeout = 500}) => {
     const playbackRef = useRef();
 
     const getSongTrackOffset = () => songTrackOffset ||
-        ((config.songs[song].registerOffsets && config.songs[song].registerOffsets[register]) || config.songs[song].offset);
+        ((songs[song].registerOffsets && songs[song].registerOffsets[register]) || songs[song].offset);
     const getRecordingTrackOffset = () => recordingTrackOffset ||
-        ((config.songs[song].registerOffsets && config.songs[song].registerOffsets[register]) || config.songs[song].offset);
+        ((songs[song].registerOffsets && songs[song].registerOffsets[register]) || songs[song].offset);
 
     const onRecordSubmit = e => {
         e.preventDefault();
@@ -108,18 +111,18 @@ export default ({recordingTimeout = 500}) => {
                 <input type="text" class="form-control mr-sm-2" placeholder={t`name`} value={name} disabled={recordDisabled} onchange={e => setName(e.target.value)} title={t`nameHelp`} />
                 <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setRegister(e.target.value)} title={t`registerHelp`}>
                     <option>{t`register`}</option>
-                    {Object.keys(config.registers).map(_register => (
-                        <option value={typeof config.registers[_register].value !== "undefined" ? "" + config.registers[_register].value : _register} selected={register === _register}>
+                    {Object.keys(registers).map(_register => (
+                        <option value={typeof registers[_register].value !== "undefined" ? "" + registers[_register].value : _register} selected={register === _register}>
                             {_register}
                         </option>
                     ))}
                 </select>
                 <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setSong(e.target.value)} title={t`songHelp`}>
                     <option>{t`song`}</option>
-                    {Object.keys(config.songs).map((_song) => <option value={_song} selected={song === _song}>{_song}</option>)}
+                    {Object.keys(songs).map((_song) => <option value={_song} selected={song === _song}>{_song}</option>)}
                 </select>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="score" checked={score} disabled={recordDisabled || (song && config.songs[song].pdf === false)}
+                    <input class="form-check-input" type="checkbox" id="score" checked={score} disabled={recordDisabled || (song && songs[song].pdf === false)}
                         onchange={e => setScore(e.target.checked)} title={t`scoreHelp`} />
                     <label class="form-check-label" for="score" style="margin-right: 1rem; user-select: none;" title={t`scoreHelp`}>{t`score`}</label>
                 </div>
@@ -133,8 +136,8 @@ export default ({recordingTimeout = 500}) => {
             {song && !recordingUri && (
                 <>
                     <br />
-                    {score && config.songs[song].pdf !== false && (
-                        <iframe src={typeof config.songs[song].pdf === "string" ? config.songs[song].pdf : `songs/${song}.pdf`}
+                    {score && songs[song].pdf !== false && (
+                        <iframe src={typeof songs[song].pdf === "string" ? songs[song].pdf : `songs/${song}.pdf`}
                             style="width: 100%; height: 100vh;" frameborder="0">
                         </iframe>
                     )}

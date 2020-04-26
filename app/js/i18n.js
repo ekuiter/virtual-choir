@@ -105,7 +105,7 @@ export const getLanguages = () =>
     Object.keys(translationMap);
 
 export const getLanguage = () =>
-    localStorage.getItem("language") || config.defaultLanguage || "en";
+    localStorage.getItem("language") || server.config.defaultLanguage || "en";
 
 export const t = key =>
     translationMap[getLanguage()][key] || translationMap.en[key];

@@ -5,6 +5,9 @@ import {post} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
 
+const songs = server.config.songs;
+const tracks = server.tracks;
+
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
     useEffect(
@@ -121,13 +124,13 @@ export default ({debounceApiCalls = 500}) => {
             <form class="form-inline">
                 <select class="custom-select" class="form-control mr-sm-2" name="song" onchange={onSongSelected}>
                     <option>{t`song`}</option>
-                    {Object.keys(config.songs).map((_song) => <option value={_song} selected={song === _song}>{_song}</option>)}
+                    {Object.keys(songs).map((_song) => <option value={_song} selected={song === _song}>{_song}</option>)}
                 </select>
                 <button class="btn btn-outline-danger" style={selectedTrackIds.length > 0 ? "" : "visibility: hidden;"} onclick={onDeleteSelectedClick}>
                     {t`deleteSelected`}
                 </button>
             </form>
-            {song && config.songs.hasOwnProperty(song) && (
+            {song && songs.hasOwnProperty(song) && (
                 <>
                     <select class="custom-select" multiple style="clear: both; margin: 15px 0;" size={selectedTrackIds.length > 0 ? 6 : 20} onchange={onTracksSelected}>
                         {tracks
@@ -164,7 +167,7 @@ export default ({debounceApiCalls = 500}) => {
                                 </div>
                             </div>
                             <Track src={`songs/${song}.mp3`} dataUri={`songs/${song}.json`}
-                                key={song} title={song} offset={config.songs[song].offset}
+                                key={song} title={song} offset={songs[song].offset}
                                 gain={songTrackGain} gainMin={0} gainMax={5} onGainUpdated={setSongTrackGain} isPlaying={songTrackPlaying === song}
                                 onSetIsPlaying={isPlaying => setSongTrackPlaying(isPlaying && song)}
                                 onReady={() => setSongTrackReady(song)} />
@@ -172,7 +175,7 @@ export default ({debounceApiCalls = 500}) => {
                                 const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
 
                                 const onOffsetUpdated = offset => {
-                                    track.recordingOffset = offset + (parseFloat(songOffset) - config.songs[song].offset);
+                                    track.recordingOffset = offset + (parseFloat(songOffset) - songs[song].offset);
                                     setBusy(true);
                                     setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
                                 };
@@ -187,7 +190,7 @@ export default ({debounceApiCalls = 500}) => {
                                     <Track key={id} title={getName(name, register)}
                                         src={`tracks/${md5}.mp3`}
                                         dataUri={`tracks/${md5}.json`}
-                                        offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - config.songs[song].offset)}
+                                        offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)}
                                         gain={parseFloat(gain)} gainMin="0" gainMax="5"
                                         onOffsetUpdated={onOffsetUpdated} onGainUpdated={onGainUpdated}
                                         isPlaying={playingTrackIds.indexOf(id) !== -1} onSetIsPlaying={setPlayingTrack(id)}

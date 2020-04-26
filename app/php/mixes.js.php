@@ -13,7 +13,8 @@ rsort($mixes);
 $mixes = json_encode($mixes);
 
 echo <<<JS
-    const mixes = $mixes;
+    window.server = window.server || {};
+    window.server.mixes = $mixes;
 JS;
 
 ?>

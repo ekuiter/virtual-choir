@@ -32,7 +32,7 @@ export default () => {
             </h4>
             <p>
                 <strong>Version</strong><br />
-                <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> {formatDate(version)}
+                <a href="https://github.com/ekuiter/virtual-choir">ekuiter/virtual-choir</a> {formatDate(server.version)}
             </p>
             <p>
                 <strong>{t`browserSupport`}</strong><br />

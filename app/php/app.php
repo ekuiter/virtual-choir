@@ -150,7 +150,7 @@ if ($_REQUEST) {
         do_reset();
 
     if (isset($_REQUEST["deleteSelected"])) {
-        $track_ids = json_decode(base64_decode($_REQUEST["deleteSelected"]));
+        $track_ids = json_decode(base64_decode($_REQUEST["deleteSelected"]))[1];
         if (!$track_ids)
             die("no tracks given");
         $where = new WhereClause("or");

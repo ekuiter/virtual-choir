@@ -3,6 +3,8 @@ import {useState, useEffect} from "preact/hooks";
 import {t} from "../i18n";
 import {post} from "../api";
 
+const mixes = server.mixes;
+
 export default () => {
     const [mix, setMix] = useState(location.hash ? atob(location.hash.substr(1)) : null);
 

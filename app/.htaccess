@@ -6,6 +6,6 @@
 
     AuthType Basic
     AuthName "Speak Friend And Enter"
-    AuthUserFile /var/www/html/.htpasswd
+    AuthUserFile /var/www/html/app/.htpasswd
     Require valid-user
 </If>

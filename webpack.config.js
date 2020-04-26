@@ -2,11 +2,10 @@ const path = require("path");
 
 module.exports = {
     mode: "production",
-    entry: "./js/index.js",
+    entry: "./app/js/index.js",
     output: {
-        filename: "app.min.js",
-        path: path.resolve(__dirname, "js"),
-        publicPath: "/js/"
+        path: path.resolve(__dirname, "app", "dist"),
+        publicPath: "/dist/"
     },
     module: {
         rules: [

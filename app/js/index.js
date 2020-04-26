@@ -9,6 +9,12 @@ import WebMOpusEncoder from "opus-media-recorder/WebMOpusEncoder.wasm";
 import {t} from "./i18n";
 import App from "./components/App";
 
+window.addEventListener("error", err =>
+    "Error: " + window.alert(err.message));
+
+window.addEventListener("unhandledrejection", e =>
+    "Unhandled Rejection: " + window.alert(e.reason));
+
 window.MediaRecorder = class extends OpusMediaRecorder {
     constructor(stream, options) {
         super(stream, options, {
@@ -19,5 +25,5 @@ window.MediaRecorder = class extends OpusMediaRecorder {
     }
 };
 
-document.title = config.title || t`title`;
+document.title = server.config.title || t`title`;
 render(<App />, document.body);
