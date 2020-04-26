@@ -5,21 +5,9 @@ import {post, fetchJson} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
 import Loading from "./Loading";
-import {decode, route} from "../helpers";
+import {decode, route, useDebounce} from "../helpers";
 
-const useDebounce = (value, delay) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-    useEffect(
-      () => {
-        const timeout = setTimeout(() => setDebouncedValue(value), delay);
-        return () => clearTimeout(timeout);
-      },
-      [value]
-    );
-    return debouncedValue;
-};
-
-export default ({config: {songs}, encodedSong, encodedTrackIds, debounceApiCalls = 500}) => {
+export default ({config: {songs}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
     const [loading, setLoading] = useState(true);
     const [tracks, setTracks] = useState([]);
     const [busy, setBusy] = useState(false);
@@ -50,7 +38,7 @@ export default ({config: {songs}, encodedSong, encodedTrackIds, debounceApiCalls
         window.onbeforeunload = pendingApiCalls.length > 0 && (() => t`confirmClose`);
     }, [pendingApiCalls]);
 
-    const song = decode(encodedSong);
+    const song = decode(encodedSong) || defaultSong;
     const selectedTrackIds = decode(encodedTrackIds, true) || [];
     const isReady = songTrackReady === song && selectedTrackIds.length === readyTrackIds.length;
     const isPlaying = songTrackPlaying === song || playingTrackIds.length > 0;

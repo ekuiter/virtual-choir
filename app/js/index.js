@@ -30,6 +30,9 @@ render(<App />, document.body);
 
 fetchJson({config: true}).then(config => {
     setDefaultLanguage(config.defaultLanguage);
+    if (localStorage.getItem("song") && !config.songs.hasOwnProperty(localStorage.getItem("song")) ||
+        localStorage.getItem("register") && !config.registers.hasOwnProperty(localStorage.getItem("register")))
+        localStorage.clear();
     document.title = config.title || t`title`;
     render(<App config={config} />, document.body);
 });

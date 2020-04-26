@@ -1,4 +1,25 @@
+import {useState, useEffect} from "preact/hooks";
 import {route as _route} from "preact-router";
+
+export const useDebounce = (value, delay) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(
+      () => {
+        const timeout = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(timeout);
+      },
+      [value]
+    );
+    return debouncedValue;
+};
+
+export const useLocalStorage = (key, fn = val => val, initialValue = null) => {
+    const [value, setValue] = useState(localStorage.getItem(key) !== null ? fn(localStorage.getItem(key)) : initialValue);
+    return [value, newValue => {
+        localStorage.setItem(key, newValue);
+        setValue(newValue);
+    }];
+};
 
 const encode = str => encodeURIComponent(btoa(str));
 

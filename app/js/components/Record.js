@@ -5,17 +5,13 @@ import {t} from "../i18n";
 import {uploadTrack} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
+import {useLocalStorage} from "../helpers";
 
-export default ({config: {songs, registers}, recordingTimeout = 500}) => {
-    if (localStorage.getItem("song") && ![localStorage.getItem("song")] ||
-        localStorage.getItem("register") && !registers[localStorage.getItem("register")])
-        localStorage.clear();
-
-    const [name, setName] = useState(localStorage.getItem("name"));
-    const [register, setRegister] = useState(localStorage.getItem("register"));
-    const [song, setSong] = useState(localStorage.getItem("song"));
-    const [score, setScore] = useState(localStorage.getItem("score") !== "false");
-    const [playback, setPlayback] = useState(localStorage.getItem("playback") !== "false");
+export default ({config: {songs, registers}, song, setSong, recordingTimeout = 500}) => {
+    const [name, setName] = useLocalStorage("name");
+    const [register, setRegister] = useLocalStorage("register");
+    const [score, setScore] = useLocalStorage("score", val => val === "true", true);
+    const [playback, setPlayback] = useLocalStorage("playback", val => val === "true", true);
     const [busy, setBusy] = useState();
     const [recorder, setRecorder] = useState();
     const [recordingUri, setRecordingUri] = useState();
@@ -43,11 +39,6 @@ export default ({config: {songs, registers}, recordingTimeout = 500}) => {
             else if (!song)
                 alert(t`songMissing`);
             else {
-                localStorage.setItem("name", name);
-                localStorage.setItem("register", register);
-                localStorage.setItem("song", song);
-                localStorage.setItem("score", score ? "true" : "false");
-                localStorage.setItem("playback", playback ? "true" : "false");
                 setBusy(true);
                 navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
                     const recorder = RecordRTC(stream, {type: "audio"});
