@@ -7,7 +7,7 @@ import PlayButton from "./PlayButton";
 import Track from "./Track";
 import {useLocalStorage} from "../helpers";
 
-export default ({config: {songs, registers}, song, setSong, recordingTimeout = 500}) => {
+export default ({config: {songs, registers, useAudiowaveform}, song, setSong, recordingTimeout = 500}) => {
     const [name, setName] = useLocalStorage("name");
     const [register, setRegister] = useLocalStorage("register");
     const [score, setScore] = useLocalStorage("score", val => val === "true", true);
@@ -134,7 +134,7 @@ export default ({config: {songs, registers}, song, setSong, recordingTimeout = 5
             )}
             {recordingUri && (
                 <>
-                    <Track title={song} src={`/songs/${song}.mp3`} dataUri={`/songs/${song}.json`}
+                    <Track title={song} src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}
                         offset={getSongTrackOffset()} gain={songTrackGain}
                         onOffsetUpdated={setSongTrackOffset} onGainUpdated={setSongTrackGain}
                         isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}

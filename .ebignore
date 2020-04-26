@@ -1,6 +1,7 @@
 .git
 .gitignore
 _stuff
+_kuiter.info
 node_modules
 app/mixes/*
 !app/mixes/.htaccess
@@ -11,3 +12,11 @@ app/js/*
 app/php/local.php
 app/php/audiowaveform.exe
 *.zip
+ab.txt
+config.template.json
+LICENSE.txt
+migrate.bat
+package*.json
+README.md
+screenshot.png
+webpack.config.js

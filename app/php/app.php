@@ -11,6 +11,8 @@ else {
     DB::$dbName = $_ENV["RDS_DB_NAME"];
 }
 
+$config = json_decode(file_get_contents("../../config.json"));
+
 $sql = <<<SQL
     CREATE TABLE IF NOT EXISTS `tracks` (
         `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -57,11 +59,13 @@ function basenameMp3($mix) {
     return basename($mix, ".mp3");
 }
 
-$songs = array_filter((array) glob("../songs/*.mp3"));
-foreach ($songs as $song) {
-    $song = basename($song, ".mp3");
-    if (!file_exists("../songs/$song.json"))
-        shell_exec(audiowaveform() . " -b 8 -i \"../songs/$song.mp3\" -o \"../songs/$song.json\"");
+if (@$config->useAudiowaveform) {
+    $songs = array_filter((array) glob("../songs/*.mp3"));
+    foreach ($songs as $song) {
+        $song = basename($song, ".mp3");
+        if (!file_exists("../songs/$song.json"))
+            shell_exec(audiowaveform() . " -b 8 -i \"../songs/$song.mp3\" -o \"../songs/$song.json\"");
+    }
 }
 
 if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
@@ -69,7 +73,8 @@ if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
     $md5 = md5_file($tmp_name);
     @mkdir("../tracks");
     shell_exec(ffmpeg() . " -i $tmp_name \"../tracks/$md5.mp3\"");
-    shell_exec(audiowaveform() . " -b 8 -i \"../tracks/$md5.mp3\" -o \"../tracks/$md5.json\"");
+    if (@$config->useAudiowaveform)
+        shell_exec(audiowaveform() . " -b 8 -i \"../tracks/$md5.mp3\" -o \"../tracks/$md5.json\"");
     DB::query("INSERT INTO tracks (name, register, song, songOffset, recordingOffset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
         $_POST["name"], $_POST["register"], $_POST["song"], $_POST["songOffset"], $_POST["recordingOffset"], $_POST["gain"], $_POST["date"], $md5);
     die;
@@ -77,7 +82,6 @@ if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
 
 if (isset($_REQUEST["config"])) {
     header("Content-Type: application/json");
-    $config = json_decode(file_get_contents("../../config.json"));
     $config->version = filemtime("..") * 1000;
     echo json_encode($config);
 }
@@ -95,7 +99,6 @@ if (isset($_REQUEST["tracks"])) {
 }
 
 if (isset($_REQUEST["mix"])) {
-    $config = json_decode(file_get_contents("../../config.json"));
     $playback = isset($_REQUEST["playback"]);
     $track_ids = json_decode($_REQUEST["mix"]);
     if (!$track_ids)
@@ -184,7 +187,8 @@ if (isset($_REQUEST["deleteSelected"])) {
         die("no tracks found");
     foreach ($tracks as $idx => $track) {
         unlink("../tracks/$track[md5].mp3");
-        unlink("../tracks/$track[md5].json");
+        if (@$config->useAudiowaveform)
+            unlink("../tracks/$track[md5].json");
     }
     DB::query("DELETE FROM tracks WHERE %l", $where);
 }
@@ -217,9 +221,11 @@ if (isset($_REQUEST["backup"])) {
         $tracks = array_filter((array) glob("$tempdir/tracks/*.mp3"));
         foreach ($tracks as $track)
             rename($track, "../tracks/" . basename($track));
-        $tracks = array_filter((array) glob("$tempdir/tracks/*.json"));
-        foreach ($tracks as $track)
-            rename($track, "../tracks/" . basename($track));
+        if (@$config->useAudiowaveform) {
+            $tracks = array_filter((array) glob("$tempdir/tracks/*.json"));
+            foreach ($tracks as $track)
+                rename($track, "../tracks/" . basename($track));
+        }
         $mixes = array_filter((array) glob("$tempdir/mixes/*.mp3"));
         foreach ($mixes as $mix)
             rename($mix, "../mixes/" . basename($mix));

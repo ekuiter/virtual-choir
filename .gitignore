@@ -1,4 +1,5 @@
 _stuff
+_kuiter.info
 node_modules
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml

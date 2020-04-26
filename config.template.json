@@ -2,6 +2,7 @@
     "title": "Virtual Choir",
     "defaultLanguage": "en",
     "metaNavigation": [],
+    "useAudiowaveform": true,
     "songs": {
         "SomeSong": {
             "offset": 3.81,

@@ -7,7 +7,7 @@ import Track from "./Track";
 import Loading from "./Loading";
 import {decode, route, useDebounce, useRepeat} from "../helpers";
 
-export default ({config: {songs}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
+export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
     const [loading, setLoading] = useState(true);
     const [tracks, setTracks] = useState([]);
     const [busy, setBusy] = useState(false);
@@ -149,7 +149,7 @@ export default ({config: {songs}, encodedSong, encodedTrackIds, defaultSong, deb
                                         <PlayButton isPlaying={isPlaying} onClick={onPlayClick} disabled={!isReady} />
                                     </div>
                                 </div>
-                                <Track src={`/songs/${song}.mp3`} dataUri={`/songs/${song}.json`}
+                                <Track src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}
                                     key={song} title={song} offset={songs[song].offset}
                                     gain={songTrackGain} gainMin={0} gainMax={5} onGainUpdated={setSongTrackGain} isPlaying={songTrackPlaying === song}
                                     onSetIsPlaying={isPlaying => setSongTrackPlaying(isPlaying && song)}
@@ -172,7 +172,7 @@ export default ({config: {songs}, encodedSong, encodedTrackIds, defaultSong, deb
                                     return (
                                         <Track key={id} title={getName(name, register)}
                                             src={`/tracks/${md5}.mp3`}
-                                            dataUri={`/tracks/${md5}.json`}
+                                            dataUri={useAudiowaveform && `/tracks/${md5}.json`}
                                             offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)}
                                             gain={parseFloat(gain)} gainMin="0" gainMax="5"
                                             onOffsetUpdated={onOffsetUpdated} onGainUpdated={onGainUpdated}
