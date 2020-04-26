@@ -49,6 +49,8 @@ const translationMap = {
         reset: "Reset",
         confirmReset: "Sure? This will delete all recordings.",
         notFound: "404 Not Found",
+        localStorage: "Local storage",
+        clearLocalStorage: "Clear local storage",
     },
     de: {
         title: "Virtueller Chor",
@@ -100,6 +102,8 @@ const translationMap = {
         reset: "Zurücksetzen",
         confirmReset: "Sicher? Dies löscht alle Aufnahmen.",
         notFound: "404 Nicht gefunden",
+        localStorage: "Lokaler Speicher",
+        clearLocalStorage: "Lokalen Speicher leeren",
     }
 };
 
