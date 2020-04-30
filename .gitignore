@@ -11,6 +11,7 @@ app/backups/*
 app/songs/*
 app/tracks/*
 app/dist/*
+app/index.html
 app/php/local.php
 app/php/audiowaveform.exe
 app/.htpasswd
