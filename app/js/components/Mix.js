@@ -41,6 +41,8 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
         window.onbeforeunload = pendingApiCalls.length > 0 && (() => t`confirmClose`);
     }, [pendingApiCalls]);
 
+    const [mixPlayback, setMixPlayback] = useState(false);
+    const [mixGain, setMixGain] = useState(3);
     const song = decode(encodedSong) || defaultSong;
     const selectedTrackIds = decode(encodedTrackIds, true) || [];
     const isReady = songTrackReady === song && selectedTrackIds.length === readyTrackIds.length;
@@ -89,6 +91,11 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
         }
     };
 
+    const onMixSubmit = e => {
+        e.preventDefault();
+        location.href = `/php/app.php?mix=${JSON.stringify(selectedTrackIds)}${mixPlayback ? "&playback" : ""}&gain=${mixGain}`;
+    };
+
     const onSaveChangesClick = e => {
         e.preventDefault();
         setBusy(true);
@@ -128,17 +135,17 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
                         </select>
                         {selectedTrackIds.length > 0 && (
                             <>
-                                <div style="display: flex; flex-basis: 1;">
+                                <div style="display: flex; flex-basis: 1;" onSubmit={onMixSubmit}>
                                     <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
-                                        <form action="/php/app.php" method="post" class="form-inline" onsubmit={() => setBusy(true)}>
-                                            <input type="hidden" name="mix" value={JSON.stringify(selectedTrackIds)} />
+                                        <form class="form-inline">
                                             <label class="form-check-label" style="margin: 2px 5px 0 0;" title={t`playbackHelp`}>
-                                                <input class="form-check-input" type="checkbox" name="playback" />
+                                                <input class="form-check-input" type="checkbox" checked={mixPlayback} onchange={e => setMixPlayback(e.target.checked)} />
                                                 <span>{t`playback`}</span>
                                             </label>
                                             <label style="margin-top: 6px;">
                                                 <span style="margin-top: -5px; padding: 0 20px 0 10px;">{t`volume`}</span>
-                                                <input type="range" class="custom-range" name="gain" min="0" max="10" step="0.01" value="3" style="margin: 0 20px 0 0;" />
+                                                <input type="range" class="custom-range" min="0" max="10" step="0.01" value={mixGain}
+                                                    oninput={e => setMixGain(parseFloat(e.target.value))} style="margin: 0 20px 0 0;" />
                                             </label>
                                             <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value={t`mix`} disabled={busy} />
                                             <button class="btn btn-outline-primary" style={pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
