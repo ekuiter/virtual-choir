@@ -30,6 +30,10 @@ render(<App />, document.body);
 
 fetchJson({config: true}).then(config => {
     setDefaultLanguage(config.defaultLanguage);
+    if ((window.navigator.userAgent.indexOf("MSIE ") > -1 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) ||
+        navigator.userAgent.indexOf("Edge/") > -1 ||
+        (window.navigator.userAgent.indexOf("Safari") > -1 && window.navigator.userAgent.indexOf("Chrome") === -1))
+        alert(t`browserWarning`);
     if (localStorage.getItem("song") && !config.songs.hasOwnProperty(localStorage.getItem("song")) ||
         localStorage.getItem("register") && !config.registers.hasOwnProperty(localStorage.getItem("register"))) {
         localStorage.clear();

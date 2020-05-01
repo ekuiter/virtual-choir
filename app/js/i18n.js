@@ -51,6 +51,7 @@ const translationMap = {
         notFound: "404 Not Found",
         localStorage: "Local storage",
         clearLocalStorage: "Clear local storage",
+        browserWarning: "You are using a web browser that is possibly not supported. Use at your own risk!",
     },
     de: {
         title: "Virtueller Chor",
@@ -104,6 +105,7 @@ const translationMap = {
         notFound: "404 Nicht gefunden",
         localStorage: "Lokaler Speicher",
         clearLocalStorage: "Lokalen Speicher leeren",
+        browserWarning: "Du benutzt einen Webbrowser, der möglicherweise nicht unterstützt wird. Benutzung auf eigene Gefahr!",
     }
 };
 
