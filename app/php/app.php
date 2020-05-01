@@ -59,6 +59,10 @@ function basenameMp3($mix) {
     return basename($mix, ".mp3");
 }
 
+function map($x, $in_min, $in_max, $out_min, $out_max) {
+    return ($x - $in_min) * ($out_max - $out_min) / ($in_max - $in_min) + $out_min;
+}
+
 if (@$config->useAudiowaveform) {
     $songs = array_filter((array) glob("../songs/*.mp3"));
     foreach ($songs as $song) {
@@ -111,30 +115,33 @@ if (isset($_REQUEST["mix"])) {
     if ($count === 0)
         die("no tracks found");
     $song = $tracks[0]["song"];
-    $register_counts = array();
+    $track_id_by_register = array();
     if (!file_exists("../songs/$song.mp3"))
         die("invalid song");
-    $mixfile = "../mixes/" . date("Y-m-d-H-i-s") . " $song (";
+    $mixfile = "../mixes/" . date("Y-m-d H-i-s") . " $song (";
     foreach ($tracks as $idx => $track) {
         if (!@$config->registers->{$track["register"]})
             die("invalid register");
         if (!is_numeric($track["recordingOffset"]) || !is_numeric($track["songOffset"]) || !is_numeric($track["gain"]))
             die("invalid offset/gain");
-        if (array_key_exists($track["register"], $register_counts))
-            $register_counts[$track["register"]]++;
+        if (array_key_exists($track["register"], $track_id_by_register))
+            $track_id_by_register[$track["register"]][] = (int) $track["id"];
         else
-            $register_counts[$track["register"]] = 1;
+            $track_id_by_register[$track["register"]] = array((int) $track["id"]);
     }
-    foreach ($register_counts as $register => $_count)
-        $mixfile .= "$_count $register, ";
+    ksort($track_id_by_register);
+    foreach ($track_id_by_register as $register => &$_tracks) {
+        sort($_tracks);
+        $mixfile .= count($_tracks) . "x $register, ";
+    }
     $mixfile = substr($mixfile, 0, -2);
-    $mixfile .= ").mp3";
     $command = ffmpeg() . " -y";
     if ($playback)
         $command .= " -i \"../songs/$song.mp3\"";
     foreach ($tracks as $track)
         $command .= " -i \"../tracks/$track[md5].mp3\"";
     $command .= " -filter_complex \"";
+    $balance_by_track_id_and_name = array();
     foreach ($tracks as $idx => $track) {
         if ($playback)
             $idx++;
@@ -150,8 +157,17 @@ if (isset($_REQUEST["mix"])) {
         $gain = number_format((float) $track["gain"], 4, ".", "");
         $balance = @$config->registers->{$track["register"]}->balance;
         if (!$balance)
-            $balance = 0;
-        $command .= "[$idx]aresample=44100,aformat=channel_layouts=stereo,stereotools=balance_out=$balance,volume=${gain},${offset}[${idx}_out];";
+            $balance = 0.0;
+        $variance = @$config->registers->{$track["register"]}->variance;
+        if (!$variance)
+            $variance = 0.0;
+        $num_by_register = count($track_id_by_register{$track["register"]});
+        $idx_by_register = array_search((int) $track["id"], $track_id_by_register{$track["register"]});
+        $my_balance = $num_by_register > 1
+            ? map($idx_by_register, 0, $num_by_register - 1, $balance - $variance, $balance + $variance)
+            : $balance;
+        $balance_by_track_id_and_name[$track["id"] . "," . $track["name"]] = $my_balance;
+        $command .= "[$idx]aresample=44100,aformat=channel_layouts=stereo,stereotools=balance_out=$my_balance,volume=${gain},${offset}[${idx}_out];";
     }
     if ($playback)
         $command .= "[0]";
@@ -162,9 +178,14 @@ if (isset($_REQUEST["mix"])) {
     }
     if ($playback)
         $count++;
+    @mkdir("../mixes");
+    asort($balance_by_track_id_and_name);
+    $track_ids_and_names = array_keys($balance_by_track_id_and_name);
+    foreach ($track_ids_and_names as &$id_and_name)
+        $id_and_name = preg_replace("/[^a-zA-Z0-9]+/", "", implode(",", array_slice(explode(",", $id_and_name), 1)));
+    $mixfile .= " - " . implode(", ", $track_ids_and_names) . ").mp3";
     $gain = isset($_REQUEST["gain"]) ? $_REQUEST["gain"] : 1;
     $command .= "amix=inputs=$count:duration=longest,volume=$gain\" \"$mixfile\"";
-    @mkdir("../mixes");
     shell_exec($command);
     $mixfile = base64_encode(basename($mixfile, ".mp3"));
     header("Location: ../listen/$mixfile");
