@@ -54,6 +54,9 @@ const translationMap = {
         browserWarning: "You are using a web browser that is possibly not supported. Use at your own risk!",
         setRecordingOffset: "Set recording offset manually",
         save: "Save",
+        recordingStorage: "Recording storage",
+        deleteLastRecording: "Delete last recording",
+        loadLastRecording: "Load last recording",
     },
     de: {
         title: "Virtueller Chor",
@@ -110,6 +113,9 @@ const translationMap = {
         browserWarning: "Du benutzt einen Webbrowser, der möglicherweise nicht unterstützt wird. Benutzung auf eigene Gefahr!",
         setRecordingOffset: "Aufnahmeverzögerung manuell setzen",
         save: "Speichern",
+        recordingStorage: "Aufnahme-Speicher",
+        deleteLastRecording: "Letzte Aufnahme löschen",
+        loadLastRecording: "Letzte Aufnahme laden",
     }
 };
 

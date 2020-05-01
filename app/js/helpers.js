@@ -1,5 +1,12 @@
 import {useState, useEffect} from "preact/hooks";
 import {route as _route} from "preact-router";
+import {get, set, del} from "idb-keyval";
+
+export const getRecordingArrayBuffer = () => get("recordingArrayBuffer");
+
+export const setRecordingArrayBuffer = arrayBuffer => set("recordingArrayBuffer", arrayBuffer);
+
+export const deleteRecordingArrayBuffer = () => del("recordingArrayBuffer");
 
 export const useRepeat = (fn, deps = [], delay = 5000) => {
     useEffect(

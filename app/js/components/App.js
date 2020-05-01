@@ -36,6 +36,9 @@ export default ({config}) => {
                             <AsyncRoute path="/"
                                 getComponent={() => import("./Record").then(module => module.default)}
                                 config={config} song={song} setSong={setSong} />
+                            <AsyncRoute path="/last"
+                                getComponent={() => import("./Record").then(module => module.default)}
+                                config={config} song={song} setSong={setSong} loadLastRecording={true} />
                             <AsyncRoute path="/mix/:encodedSong?/:encodedTrackIds?"
                                 getComponent={() => import("./Mix").then(module => module.default)}
                                 config={config} defaultSong={song} />

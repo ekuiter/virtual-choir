@@ -2,6 +2,7 @@ import {h, Fragment} from "preact";
 import {useState} from "preact/hooks";
 import {t, formatDate} from "../i18n";
 import {post} from "../api";
+import {route, deleteRecordingArrayBuffer} from "../helpers";
 
 export default ({config: {version}}) => {
     const [hasFile, setHasFile] = useState();
@@ -74,6 +75,16 @@ export default ({config: {version}}) => {
                 <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="setFor" name="setFor" />
                 <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="recordingOffset" name="recordingOffset" />
                 <input type="submit" class="btn btn-outline-danger btn-sm" style="padding: 0.15rem 0.4rem; margin: 0;" value={t`save`} />
+            </form>
+            <p></p>
+            <strong>{t`recordingStorage`}</strong>
+            <form class="form form-inline my-2 my-lg-0" style="padding-top: 5px;">
+            <button class="btn btn-sm btn-outline-success my-2 my-sm-0" style="padding: 0.15rem 0.4rem; margin: 0;" onClick={() => route("/last")}>
+                    {t`loadLastRecording`}
+                </button>
+                <button class="btn btn-sm btn-outline-danger my-2 my-sm-0" style="padding: 0.15rem 0.4rem; margin: 0 0 0 0.3rem;" onClick={deleteRecordingArrayBuffer}>
+                    {t`deleteLastRecording`}
+                </button>
             </form>
         </>
     );

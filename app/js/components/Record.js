@@ -1,13 +1,13 @@
 import {h, Fragment} from "preact";
-import {useState, useRef} from "preact/hooks";
+import {useState, useRef, useEffect} from "preact/hooks";
 import RecordRTC from "recordrtc";
 import {t} from "../i18n";
 import {uploadTrack} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
-import {useLocalStorage} from "../helpers";
+import {useLocalStorage, getRecordingArrayBuffer, setRecordingArrayBuffer} from "../helpers";
 
-export default ({config: {songs, registers, useAudiowaveform}, song, setSong, recordingTimeout = 500}) => {
+export default ({config: {songs, registers, useAudiowaveform}, song, setSong, recordingTimeout = 500, loadLastRecording = false}) => {
     const [name, setName] = useLocalStorage("name");
     const [register, setRegister] = useLocalStorage("register");
     const [score, setScore] = useLocalStorage("score", val => val === "true", true);
@@ -28,6 +28,12 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
         ((songs[song].registerOffsets && songs[song].registerOffsets[register]) || songs[song].offset);
     const getRecordingTrackOffset = () => recordingTrackOffset ||
         ((songs[song].registerOffsets && songs[song].registerOffsets[register]) || songs[song].offset);
+
+    useEffect(() => {
+        if (loadLastRecording)
+            getRecordingArrayBuffer().then(arrayBuffer =>
+                arrayBuffer && setRecordingUri(URL.createObjectURL(new Blob([arrayBuffer]))));
+    }, []);
 
     const onRecordSubmit = e => {
         e.preventDefault();
@@ -66,6 +72,7 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                 setBusy(false);
                 setRecorder();
                 setRecordingUri(recorder.toURL());
+                recorder.getBlob().arrayBuffer().then(setRecordingArrayBuffer);
             });
         }
     };
