@@ -52,6 +52,8 @@ const translationMap = {
         localStorage: "Local storage",
         clearLocalStorage: "Clear local storage",
         browserWarning: "You are using a web browser that is possibly not supported. Use at your own risk!",
+        setRecordingOffset: "Set recording offset manually",
+        save: "Save",
     },
     de: {
         title: "Virtueller Chor",
@@ -106,6 +108,8 @@ const translationMap = {
         localStorage: "Lokaler Speicher",
         clearLocalStorage: "Lokalen Speicher leeren",
         browserWarning: "Du benutzt einen Webbrowser, der möglicherweise nicht unterstützt wird. Benutzung auf eigene Gefahr!",
+        setRecordingOffset: "Aufnahmeverzögerung manuell setzen",
+        save: "Speichern",
     }
 };
 

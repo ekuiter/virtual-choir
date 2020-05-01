@@ -68,6 +68,13 @@ export default ({config: {version}}) => {
                 <input type="submit" class="btn btn-outline-danger btn-sm"  style="padding: 0.15rem 0.4rem; margin: 0 0 0 0.3rem;" onclick={onRestoreClick} value={hasFile ? t`restore` : t`backup`} />
                 <button class="btn btn-outline-danger btn-sm" style="padding: 0.15rem 0.4rem; margin: 0 0 0 0.3rem;" onclick={onResetClick}>{t`reset`}</button>
             </form>
+            <p></p>
+            <strong>{t`setRecordingOffset`}</strong>
+            <form action="/php/app.php" method="post" target="_blank" class="form-inline" style="margin-top: 5px;">
+                <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="setFor" name="setFor" />
+                <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="recordingOffset" name="recordingOffset" />
+                <input type="submit" class="btn btn-outline-danger btn-sm" style="padding: 0.15rem 0.4rem; margin: 0;" value={t`save`} />
+            </form>
         </>
     );
 };
