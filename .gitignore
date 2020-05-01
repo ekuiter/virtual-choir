@@ -17,5 +17,6 @@ app/php/audiowaveform.exe
 app/.htpasswd
 app/favicon.ico
 config.json
+config2.json
 migrate.bat
 *.zip

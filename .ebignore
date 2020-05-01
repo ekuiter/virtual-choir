@@ -13,6 +13,7 @@ app/php/local.php
 app/php/audiowaveform.exe
 *.zip
 ab.txt
+config2.json
 config.template.json
 LICENSE.txt
 migrate.bat

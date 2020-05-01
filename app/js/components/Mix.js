@@ -21,12 +21,14 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
     const debouncedPendingApiCall = useDebounce(pendingApiCall, debounceApiCalls);
 
     const updateTracks = () =>
-        fetchJson({tracks: true})
-            .then(tracks => tracks.map(({date, ...track}) => ({date: new Date(date), ...track})))
-            .then(setTracks)
-            .then(() => setLoading(false));
+        pendingApiCalls.length === 0
+            ? fetchJson({tracks: true})
+                .then(tracks => tracks.map(({date, ...track}) => ({date: new Date(date), ...track})))
+                .then(setTracks)
+                .then(() => setLoading(false))
+            : null;
 
-    useRepeat(updateTracks);
+    useRepeat(updateTracks, [pendingApiCalls]);
 
     useEffect(() => {
         if (debouncedPendingApiCall) {

@@ -1,14 +1,14 @@
 import {useState, useEffect} from "preact/hooks";
 import {route as _route} from "preact-router";
 
-export const useRepeat = (fn, delay = 5000) => {
+export const useRepeat = (fn, deps = [], delay = 5000) => {
     useEffect(
       () => {
         const timeout = setInterval(fn, delay);
         fn();
         return () => clearInterval(timeout);
       },
-      []
+      deps
     );
 };
 
