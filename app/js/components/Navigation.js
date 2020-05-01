@@ -19,18 +19,18 @@ const sideNavigation = () => [
 const itemToNode = path => item => {
     if (item.dropdown)
         return (
-            <li class="nav-item dropdown">
+            <li key={item.dropdown} class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     {item.dropdown}
                 </a>
                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    {item.items.map(item => <a class="dropdown-item" href={item.path} target={item.target}>{item.title}</a>)}
+                    {item.items.map(item => <a key={item.path} class="dropdown-item" href={item.path} target={item.target}>{item.title}</a>)}
                 </div>
             </li>
         );
     else
         return (
-            <li class={`nav-item ${(item.path === "/" ? path === item.path : path.startsWith(item.path)) ? "active" : ""}`}>
+            <li key={item.path} class={`nav-item ${(item.path === "/" ? path === item.path : path.startsWith(item.path)) ? "active" : ""}`}>
                 <a class="nav-link" href={item.path} target={item.target}>{item.title}</a>
             </li>
         );
@@ -53,7 +53,7 @@ export default ({config: {title, metaNavigation}, path}) => (
             <form class="form-inline my-2 my-lg-0">
                 <select class="custom-select" class="form-control mr-sm-2" onchange={e => setLanguage(e.target.value)} title={t`language`}>
                     {getLanguages().map(language => (
-                        <option value={language} selected={getLanguage() === language}>
+                        <option key={language} value={language} selected={getLanguage() === language}>
                             {t(language)}
                         </option>
                     ))}

@@ -104,7 +104,7 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
             <form class="form-inline">
                 <select class="custom-select" class="form-control mr-sm-2" name="song" onchange={onSongSelected}>
                     <option>{t`song`}</option>
-                    {Object.keys(songs).map((_song) => <option value={_song} selected={song === _song}>{_song}</option>)}
+                    {Object.keys(songs).map((_song) => <option key={_song} value={_song} selected={song === _song}>{_song}</option>)}
                 </select>
                 <button class="btn btn-outline-danger" style={selectedTrackIds.length > 0 ? "" : "visibility: hidden;"} onclick={onDeleteSelectedClick}>
                     {t`deleteSelected`}
@@ -119,7 +119,7 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
                             {tracks
                                 .filter(track => track.song === song)
                                 .map(({id, name, register, date}) => (
-                                    <option value={id} selected={selectedTrackIds.indexOf(id) !== -1}>
+                                    <option key={id} value={id} selected={selectedTrackIds.indexOf(id) !== -1}>
                                         <strong>{formatDate(date)}</strong> | {getName(name, register)}
                                     </option>
                                 ))}

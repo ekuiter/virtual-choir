@@ -33,7 +33,7 @@ export default ({encodedMix}) => {
                 <>
                     <select style="margin-bottom: 15px;" class="custom-select" size="20"
                         onchange={e => route("/listen", e.target.value)}>
-                        {mixes.map(_mix => <option value={_mix} selected={mix === _mix}>{_mix}</option>)}
+                        {mixes.map(_mix => <option key={_mix} value={_mix} selected={mix === _mix}>{_mix}</option>)}
                     </select>
                     {encodedMix && mixes.indexOf(mix) !== -1 && (
                         <div style="display: flex; align-items: center;">

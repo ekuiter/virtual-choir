@@ -100,14 +100,14 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                 <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setRegister(e.target.value)} title={t`registerHelp`}>
                     <option>{t`register`}</option>
                     {Object.keys(registers).map(_register => (
-                        <option value={typeof registers[_register].value !== "undefined" ? "" + registers[_register].value : _register} selected={register === _register}>
+                        <option key={_register} value={typeof registers[_register].value !== "undefined" ? "" + registers[_register].value : _register} selected={register === _register}>
                             {_register}
                         </option>
                     ))}
                 </select>
                 <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setSong(e.target.value)} title={t`songHelp`}>
                     <option>{t`song`}</option>
-                    {Object.keys(songs).map((_song) => <option value={_song} selected={song === _song}>{_song}</option>)}
+                    {Object.keys(songs).map((_song) => <option key={_song} value={_song} selected={song === _song}>{_song}</option>)}
                 </select>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="score" checked={score} disabled={recordDisabled || (song && songs[song].pdf === false)}
