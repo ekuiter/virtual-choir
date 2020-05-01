@@ -72,6 +72,7 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
 
     const onUploadClick = () => {
         setBusy(true);
+        setIsPlaying(false);
         const gain = !isNaN(recordingTrackGain / songTrackGain) ? recordingTrackGain / songTrackGain : 1;
         uploadTrack(recordingUri, name, register, song, getSongTrackOffset(), getRecordingTrackOffset(), gain)
             .then(onDiscardClick)

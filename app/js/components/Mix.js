@@ -128,7 +128,7 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
                             <>
                                 <div style="display: flex; flex-basis: 1;">
                                     <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
-                                        <form action="/php/app.php" method="post" class="form-inline">
+                                        <form action="/php/app.php" method="post" class="form-inline" onsubmit={() => setBusy(true)}>
                                             <input type="hidden" name="mix" value={JSON.stringify(selectedTrackIds)} />
                                             <label class="form-check-label" style="margin: 2px 5px 0 0;" title={t`playbackHelp`}>
                                                 <input class="form-check-input" type="checkbox" name="playback" />
@@ -138,7 +138,7 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
                                                 <span style="margin-top: -5px; padding: 0 20px 0 10px;">{t`volume`}</span>
                                                 <input type="range" class="custom-range" name="gain" min="0" max="10" step="0.01" value="3" style="margin: 0 20px 0 0;" />
                                             </label>
-                                            <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value={t`mix`} />
+                                            <input type="submit" class="btn btn-outline-success my-2 my-sm-0" value={t`mix`} disabled={busy} />
                                             <button class="btn btn-outline-primary" style={pendingApiCalls.length > 0 ? "margin-left: 6px;" : "display: none;"}
                                                 onclick={onSaveChangesClick} disabled={busy}>
                                                 {t`saveChanges`}
@@ -146,7 +146,7 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
                                         </form>
                                     </div>
                                     <div class="form-group form-inline" style="margin-bottom: 0;">
-                                        <PlayButton isPlaying={isPlaying} onClick={onPlayClick} disabled={!isReady} />
+                                        <PlayButton isPlaying={isPlaying} onClick={onPlayClick} disabled={!isReady || busy} />
                                     </div>
                                 </div>
                                 <Track src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}

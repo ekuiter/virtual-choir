@@ -37,7 +37,7 @@ export default ({encodedMix}) => {
                     </select>
                     {encodedMix && mixes.indexOf(mix) !== -1 && (
                         <div style="display: flex; align-items: center;">
-                            <audio src={`/mixes/${mix}.mp3`} controls style="margin-right: 6px;" />
+                            <audio src={`/mixes/${mix}.mp3`} controls style="margin-right: 6px;" autoplay />
                             <button class="btn btn-outline-success" style="height: 40px; margin-right: 6px;" onclick={() => location.href = `/mixes/${mix}.mp3`}>
                                 {t`download`}
                             </button>
