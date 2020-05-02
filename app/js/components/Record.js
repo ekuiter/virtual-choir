@@ -105,9 +105,9 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
 
     const recordDisabled = busy || recorder || recordingUri;
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
-    const hasPdf = song && !!songs[song].pdf;
+    const hasScore = song && !!songs[song].score;
     const hasMuseScore = song && !!songs[song].museScore;
-    const pdf = hasPdf && (typeof songs[song].pdf === "string" ? songs[song].pdf : `/songs/${song}.pdf`);
+    const _score = hasScore && (typeof songs[song].score === "string" ? songs[song].score : `/songs/${song}.pdf`);
     const museScore = hasMuseScore && (typeof songs[song].museScore === "string" ? songs[song].museScore : `/songs/${song}.mscz`);
 
     return (
@@ -137,7 +137,7 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                         {song && (
                             <>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="score" checked={score} disabled={recordDisabled || !hasPdf}
+                                    <input class="form-check-input" type="checkbox" id="score" checked={score} disabled={recordDisabled || !hasScore}
                                         onchange={e => setScore(e.target.checked)} title={t`scoreHelp`} />
                                     <label class="form-check-label" for="score" style="margin-right: 1rem; user-select: none;" title={t`scoreHelp`}>{t`score`}</label>
                                 </div>
@@ -155,8 +155,8 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                             <p></p>
                             <form class="form form-inline my-2 my-lg-0" onsubmit={onRecordSubmit}>
                                 <a class="btn" style="cursor: inherit;">{t`download`}</a>
-                                <a native download={`${song}.pdf`} class={`btn btn-outline-primary ${!hasPdf ? "disabled" : ""}`}
-                                    style="margin-right: 6px;" href={pdf}>{t`score`}</a>
+                                <a native download={`${song}.${_score ? _score.split(".").pop() : ""}`} class={`btn btn-outline-primary ${!hasScore ? "disabled" : ""}`}
+                                    style="margin-right: 6px;" href={_score}>{t`score`}</a>
                                 <a native download={`${song}.mp3`} class="btn btn-outline-primary"
                                     style="margin-right: 6px;" href={`/songs/${song}.mp3`}>{t`playback`}</a>
                                 {hasMuseScore && (
@@ -171,8 +171,8 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                     {song && !recordingUri && (
                         <>
                             <br />
-                            {score && hasPdf && (
-                                <iframe src={pdf}
+                            {score && hasScore && (
+                                <iframe src={_score}
                                     style="width: 100%; height: 100vh;" frameborder="0">
                                 </iframe>
                             )}
