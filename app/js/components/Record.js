@@ -1,6 +1,6 @@
 import {h, Fragment} from "preact";
 import {useState, useRef, useEffect} from "preact/hooks";
-import RecordRTC from "recordrtc";
+import RecordRTC, {invokeSaveAsDialog} from "recordrtc";
 import {t} from "../i18n";
 import {uploadTrack} from "../api";
 import PlayButton from "./PlayButton";
@@ -97,13 +97,22 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
         setRecordingTrackOffset();
     };
 
+    const onDownloadRecordingClick = () =>
+        recordingUri &&
+            fetch(recordingUri)
+                .then(res => res.blob())
+                .then(blob => invokeSaveAsDialog(blob, song));
+
     const recordDisabled = busy || recorder || recordingUri;
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
+    const hasPdf = songs[song].pdf !== false;
+    const pdf = typeof songs[song].pdf === "string" ? songs[song].pdf : `/songs/${song}.pdf`;
 
     return (
         <>
             <h4 style="margin-bottom: 15px;">{t`record`}</h4>
             <form class="form form-inline my-2 my-lg-0" onsubmit={onRecordSubmit}>
+                <a class="btn" style="cursor: inherit;">{t`aboutYou`}</a>
                 <input type="text" class="form-control mr-sm-2" placeholder={t`name`} value={name} disabled={recordDisabled} onchange={e => setName(e.target.value)} title={t`nameHelp`} />
                 <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setRegister(e.target.value)} title={t`registerHelp`}>
                     <option>{t`register`}</option>
@@ -113,49 +122,72 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                         </option>
                     ))}
                 </select>
-                <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setSong(e.target.value)} title={t`songHelp`}>
-                    <option>{t`song`}</option>
-                    {Object.keys(songs).map((_song) => <option key={_song} value={_song} selected={song === _song}>{_song}</option>)}
-                </select>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="score" checked={score} disabled={recordDisabled || (song && songs[song].pdf === false)}
-                        onchange={e => setScore(e.target.checked)} title={t`scoreHelp`} />
-                    <label class="form-check-label" for="score" style="margin-right: 1rem; user-select: none;" title={t`scoreHelp`}>{t`score`}</label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="playback" checked={playback} disabled={recordDisabled} onchange={e => setPlayback(e.target.checked)} title={t`playbackHelp`} />
-                    <label class="form-check-label" for="playback" style="margin-right: 1rem; user-select: none;" title={t`playbackHelp`}>{t`playback`}</label>
-                </div>
-                <input type="submit" class={`btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0`} 
-                    value={recorder ? t`stopRecording` : t`startRecording`} disabled={busy || recordingUri} />
             </form>
-            {song && !recordingUri && (
+            <p></p>
+            {name && register &&
                 <>
-                    <br />
-                    {score && songs[song].pdf !== false && (
-                        <iframe src={typeof songs[song].pdf === "string" ? songs[song].pdf : `/songs/${song}.pdf`}
-                            style="width: 100%; height: 100vh;" frameborder="0">
-                        </iframe>
+                <form class="form form-inline my-2 my-lg-0" onsubmit={onRecordSubmit}>
+                        <a class="btn" style="cursor: inherit;">{t`record`}</a>
+                        <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setSong(e.target.value)} title={t`songHelp`}>
+                            <option>{t`song`}</option>
+                            {Object.keys(songs).map((_song) => <option key={_song} value={_song} selected={song === _song}>{_song}</option>)}
+                        </select>
+                        {song && (
+                            <>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="score" checked={score} disabled={recordDisabled || (song && !hasPdf)}
+                                        onchange={e => setScore(e.target.checked)} title={t`scoreHelp`} />
+                                    <label class="form-check-label" for="score" style="margin-right: 1rem; user-select: none;" title={t`scoreHelp`}>{t`score`}</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="playback" checked={playback} disabled={recordDisabled} onchange={e => setPlayback(e.target.checked)} title={t`playbackHelp`} />
+                                    <label class="form-check-label" for="playback" style="margin-right: 1rem; user-select: none;" title={t`playbackHelp`}>{t`playback`}</label>
+                                </div>
+                                <input type="submit" class={`btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0`} 
+                                    value={recorder ? t`stopRecording` : t`startRecording`} disabled={busy || recordingUri} />
+                            </>
+                        )}
+                    </form>
+                    {song && (
+                        <>
+                            <p></p>
+                            <form class="form form-inline my-2 my-lg-0" onsubmit={onRecordSubmit}>
+                                <a class="btn" style="cursor: inherit;">{t`download`}</a>
+                                <a native download={`${song}.pdf`} class={`btn btn-outline-primary ${!hasPdf ? "disabled" : ""}`} style="margin-right: 6px;" href={pdf}>{t`score`}</a>
+                                <a native download={`${song}.mp3`} class="btn btn-outline-primary" style="margin-right: 6px;" href={`/songs/${song}.mp3`}>{t`playback`}</a>
+                                {recordingUri &&
+                                    <button class="btn btn-outline-primary" onclick={onDownloadRecordingClick}>{t`recording`}</button>}
+                            </form>
+                        </>
                     )}
-                    <audio src={`/songs/${song}.mp3`} ref={playbackRef} />
-                </>
-            )}
-            {recordingUri && (
-                <>
-                    <Track title={song} src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}
-                        offset={getSongTrackOffset()} gain={songTrackGain}
-                        onOffsetUpdated={setSongTrackOffset} onGainUpdated={setSongTrackGain}
-                        isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}
-                        onReady={() => setIsSongTrackReady(true)} margin={20} />
-                    <Track title={t`recording`} src={recordingUri} offset={getRecordingTrackOffset()} gain={recordingTrackGain}
-                        onOffsetUpdated={setRecordingTrackOffset} onGainUpdated={setRecordingTrackGain}
-                        isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}
-                        onReady={() => setIsRecordingTrackReady(true)} margin={20} />
-                    <PlayButton isPlaying={isPlaying} onClick={() => setIsPlaying(!isPlaying)} disabled={uploadDisabled} />
-                    <button class="btn btn-outline-success" style="margin-right: 6px;" disabled={uploadDisabled} onclick={onUploadClick}>{t`upload`}</button>
-                    <button class="btn btn-outline-danger" onclick={onDiscardClick}>{t`discard`}</button>
-                </>
-            )}
+                    {song && !recordingUri && (
+                        <>
+                            <br />
+                            {score && hasPdf && (
+                                <iframe src={pdf}
+                                    style="width: 100%; height: 100vh;" frameborder="0">
+                                </iframe>
+                            )}
+                            <audio src={`/songs/${song}.mp3`} ref={playbackRef} />
+                        </>
+                    )}
+                    {recordingUri && (
+                        <>
+                            <Track title={song} src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}
+                                offset={getSongTrackOffset()} gain={songTrackGain}
+                                onOffsetUpdated={setSongTrackOffset} onGainUpdated={setSongTrackGain}
+                                isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}
+                                onReady={() => setIsSongTrackReady(true)} margin={20} />
+                            <Track title={t`recording`} src={recordingUri} offset={getRecordingTrackOffset()} gain={recordingTrackGain}
+                                onOffsetUpdated={setRecordingTrackOffset} onGainUpdated={setRecordingTrackGain}
+                                isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}
+                                onReady={() => setIsRecordingTrackReady(true)} margin={20} />
+                            <PlayButton isPlaying={isPlaying} onClick={() => setIsPlaying(!isPlaying)} disabled={uploadDisabled} />
+                            <button class="btn btn-outline-success" style="margin-right: 6px;" disabled={uploadDisabled} onclick={onUploadClick}>{t`upload`}</button>
+                            <button class="btn btn-outline-danger" onclick={onDiscardClick}>{t`discard`}</button>
+                        </>
+                    )}
+                </>}
         </>
     );
 };

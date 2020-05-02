@@ -57,6 +57,7 @@ const translationMap = {
         recordingStorage: "Recording storage",
         deleteLastRecording: "Delete last recording",
         loadLastRecording: "Load last recording",
+        aboutYou: "About you",
     },
     de: {
         title: "Virtueller Chor",
@@ -116,6 +117,7 @@ const translationMap = {
         recordingStorage: "Aufnahme-Speicher",
         deleteLastRecording: "Letzte Aufnahme löschen",
         loadLastRecording: "Letzte Aufnahme laden",
+        aboutYou: "Über dich",
     }
 };
 
@@ -137,6 +139,6 @@ export const getLanguage = () =>
 export const t = key =>
     translationMap[getLanguage()][key] || translationMap.en[key];
 
-export const formatDate = (date, sep = " ") =>
+export const formatDate = (date = new Date(), sep = " ") =>
     ("0" + date.getDate()).slice(-2) + "." + ("0" + (date.getMonth() + 1)).slice(-2) + "." +
         sep + ("0" + date.getHours()).slice(-2) + ":" + ("0" + date.getMinutes()).slice(-2);
