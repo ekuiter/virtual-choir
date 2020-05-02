@@ -58,6 +58,7 @@ const translationMap = {
         deleteLastRecording: "Delete last recording",
         loadLastRecording: "Load last recording",
         aboutYou: "About you",
+        museScore: "MuseScore",
     },
     de: {
         title: "Virtueller Chor",
@@ -118,6 +119,7 @@ const translationMap = {
         deleteLastRecording: "Letzte Aufnahme löschen",
         loadLastRecording: "Letzte Aufnahme laden",
         aboutYou: "Über dich",
+        museScore: "MuseScore",
     }
 };
 
