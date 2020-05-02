@@ -500,7 +500,7 @@ var opt, onYouTubeIframeAPIReady, msc_credits, media_height, times_arr, offset_j
 var muziek, curmtr, curtmp, msc_svgs, msc_gs, msc_wz, offset, mediaFnm, abcSave, elmed, scoreFnm, timerId = -1;
 var ybplayer, yubchk = 0, pbrates = [], noprogress = 0, onYouTubeAPIContinue, opt_url = {}, sok = null, gFac;
 var dummyPlayer = new DummyPlayer (), TOFF = 0.01, beginVol = 0.7;
-var dottedHeight = 30, topSpace = 500, deNot, hasSmooth = 0;
+var dottedHeight = 30, topSpace = 0, deNot, hasSmooth = 0;
 var hOff = 10;  // x positions are from box outlines, add hOff to appox. real position
 opt = {};       // global options
 var optdef = {  // default values
@@ -597,9 +597,9 @@ Wijzer.prototype.setline = function (line) {
         ntop = ntop + ybalk - yrol;
     } else {
         var ymx = ntop + deNot.clientHeight - this.vmargin;    // bottom of notation area
-        if (this.line_offsets [line + 1] > ymx || this.line_offsets [line] < ntop + this.vmargin) {
+        //if (this.line_offsets [line + 1] > ymx || this.line_offsets [line] < ntop + this.vmargin) {
             ntop = this.line_offsets [line] - this.tmargin;
-        }
+        //}
     }
     return ntop;
 }
@@ -888,12 +888,12 @@ function doeRol (nleft, deTop, noAnim) {
     var fLeft = nleft != deNot.scrollLeft;
     var fTop = deTop != deNot.scrollTop;
     if (!fLeft && !fTop) return;
-    if (hasSmooth) {
+    /*if (hasSmooth) {
         deNot.style ['scroll-behavior'] = noAnim || fLeft ? 'auto' : 'smooth';
         deNot.scroll (nleft, deTop);
-    } else {
+    } else */{
         if (fLeft) deNot.scrollLeft = nleft;
-        if (fTop) $(deNot).animate ({ scrollTop: deTop });
+        if (fTop) $(deNot).animate ({ scrollTop: deTop }, 200);
     }
 }
 
@@ -1093,7 +1093,7 @@ function setPlayer (fnm, mediaSrc) {
         $elmed.on ('pause', function () { dummyPlayer.pause () });
         $elmed.on ('loadedmetadata', function () {
             setNotationHeight ();
-            elmed.currentTime = play_start;
+            elmed.currentTime = 0;
         });
         elmed.volume = beginVol;
         initPbRates (0.5, 2, 0.05);
@@ -1414,7 +1414,7 @@ function dolayout (abctxt) {
     if (opt.offset) offset = opt.offset;    // (URL) parameter takes precedence
     abcSave = abc_lines;   // keep in global for saving
     msc_wz = new Wijzer (wz_xs, wz_ymin, wz_ymax, times, tixlb, lbtix, tixbts);
-    msc_svgs.each (function () { $(this).mousedown (klik); });  // each music line gets the click handler
+    // msc_svgs.each (function () { $(this).mousedown (klik); });  // each music line gets the click handler
     if (!elmed) elmed = dummyPlayer;
     setTimeout (function () {   // wait on DOM rendering ready
         setLoop ();             // set loop markers
@@ -1637,7 +1637,6 @@ function msc_resize () {
     if (!msc_wz) return;
     var w_svg = msc_svgs[0].width.baseVal.value;    // width svg element on screen (px)
     var force = w_svg > screen.width;               // only force with small devices
-    if (!force && !opt.autscl) { alignCursor (true); return; }
     msc_wz.setSize.call (msc_wz);   // resize svg width to notation area width. Use msc_wz as "this".
     msc_wz.setScale.call (msc_wz);
     alignCursor (true);
@@ -2018,57 +2017,29 @@ function alignCursor (noAnim) {
     msc_wz.time2x (msc_wz.cursorTime, 0, noAnim);
 }
 
-window.abcweb = (function () {
-    deNot = document.getElementById ('notation');
-    hasSmooth = CSS.supports ('scroll-behavior', 'smooth');
-    $('#drpuse').prop ('checked', false);
-    if (!msc_preload ()) { resetIntf (true); }
-    $(window).resize (msc_resize);
-    $('body').keydown (keyDown);
-    $('#save').click (saveTiming);
-    $('#speed').change (function () { setSpeed (2); });
-    $('#lopctl').click (setLoop);
-    var vtxt = '<a href="http://wim.vree.org/js/">abcweb</a> (version: ' + msc_VERSION + ')</br>©Willem Vree'
-    vtxt += '<br>using:<br><a href="http://moinejf.free.fr/js/">abc2svg</a>, ©Jef Moine'
-    $('#help').prepend ('<div style="position: absolute; right: 5px;">' + vtxt + '</div>');
-    $('#helpm').click (function () { $('#help').toggleClass ('showhlp'); });
-    $('#meddiv').on ('mousedown touchstart', msc_shift);
-    $('#rollijn').on ('mousedown touchstart', lijn_shift);
-    $('#fknp').change (function () { readLocalFile ('btn', []); });
-    $('#mknp').change (function () { readMedia ('btn', []); });
-    $('#yknp').click (readMediaYub);
-    $('#yubid').keydown (function (e) { e.stopPropagation (); });   // prevent bubble up to shortcut actions
-    $('#yubuse').change (medbtnSwitch);
-    $('#drpuse').click (dropuse);
-    $('#notation').mousedown (function () {
-        if (hideMenuHelp ()) return;
-        keyDown ({key:' '});
-    });
-    $('#jump').change (checkMenu);
-    $('#impbox').change (toggleScoreBtn);
-    $('#menu * input').change (checkMenu);      // for all menu checkboxes
-    $('#menu label').toggle ();                 // hide all menu items
-    $('#mbar').click (function () {
-        if ($('#menu label').css ('display') == 'none') $('#menu label').toggle (true);
-        else hideMenu ();
-    });
-    $('#woff').change (function () { noprogress = $(this).prop ('checked'); });
-    $.event.props.push ( "dataTransfer" );          // make jQuery copy the dataTransfer attribute
-    $('body').on ('drop', doDrop);
-    $('body').on ('dragover', function (e) {   // this handler makes the element accept drops and generate drop-events
-        e.stopPropagation (); e.preventDefault ();  // the preventDefault is obligatory for drag/drop!
-        e.dataTransfer.dropEffect = 'copy';         // show a plus sign to indicate the file is copied
-    });
-    $('body').on ('dragenter dragleave', function () { $(this).toggleClass ('indrag'); });
-    $('#fscr').on ('change', setFullscreen);
-    $('body').on ('fullscreenchange webkitfullscreenchange mozfullscreenchange', function () {
-        var e = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
-        $('#fscr').prop ('checked', e != null);
-    });
-    $('body').on ('play_end', function () {
-        if (playLstIx >= play_list.length) return;   // no more files to play
-        msc_preload (play_list [playLstIx]);
-        playLstIx += 1
+window.abcwebInit = (function (musicXml, playback, offset) {
+    return new Promise(resolve => {
+        opt.offset = offset;
+        deNot = document.getElementById ('notation');
+        hasSmooth = CSS.supports ('scroll-behavior', 'smooth');
+        if (!msc_preload ()) { resetIntf (true); }
+        $(window).resize (msc_resize);
+        if (playback)
+            setPlayer ("mediaFile", playback);
+        readAbcOrXML (musicXml);
+        setTimeout(function() {
+            msc_resize();
+            resolve({
+                play: () => {
+                    if (elmed.paused)
+                        playPause2 (true, 0);
+                },
+                stop: () => {
+                    if (!elmed.paused)
+                        playPause2 (true, 0);
+                }
+            });
+        }, 0);
     });
 });
 })();
