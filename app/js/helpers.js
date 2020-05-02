@@ -59,3 +59,12 @@ export const decode = (str, parseJson = false) => {
 
 export const route = (path, ...params) =>
     _route(path + params.reduce((acc, val) => acc + "/" + encode(val), ""));
+
+export const loadScript = url =>
+    new Promise(resolve => {
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.onload = resolve;
+        script.src = url;
+        document.getElementsByTagName("head")[0].appendChild(script);
+    });

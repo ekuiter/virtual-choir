@@ -173,7 +173,7 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                             <br />
                             {score && hasScore && (
                                 <iframe src={_score}
-                                    style="width: 100%; height: 100vh;" frameborder="0">
+                                    style="width: 100%; height: 95vh;" frameborder="0">
                                 </iframe>
                             )}
                             <audio src={`/songs/${song}.mp3`} ref={playbackRef} />
