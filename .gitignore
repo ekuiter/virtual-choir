@@ -13,7 +13,6 @@ app/tracks/*
 app/dist/*
 app/index.html
 app/php/local.php
-app/php/audiowaveform.exe
 app/.htpasswd
 app/favicon.ico
 config.json

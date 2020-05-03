@@ -3,12 +3,18 @@
     "defaultLanguage": "en",
     "metaNavigation": [],
     "useAudiowaveform": true,
+    "useXml2Abc": true,
     "songs": {
-        "SomeSong": {
-            "offset": 3.81,
+        "SomeSong": {},
+        "AnotherSong": {
+            "score": true,
+            "museScore": true,
+            "abcWeb": true,
+            "abcWebOffset": 3.8,
+            "offset": 3.78,
             "registerOffsets": {
-                "Soprano": 16.55,
-                "Tenor": 15.80
+                "Sopran": 16.52,
+                "Tenor": 15.77
             }
         }
     },

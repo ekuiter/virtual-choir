@@ -49,6 +49,18 @@ function audiowaveform() {
     return $audiowaveform;
 }
 
+function xml2abc() {
+    if (strlen(shell_exec("xml2abc --version")))
+        $xml2abc = "xml2abc";
+    else if (strlen(shell_exec("./xml2abc --version")))
+        $xml2abc = "./xml2abc";
+    else if (strlen(shell_exec("python xml2abc.py --version")))
+        $xml2abc = "python xml2abc.py";
+    else
+        die("no xml2abc found");
+    return $xml2abc;
+}
+
 function do_reset() {
     DB::query("DROP TABLE tracks");
     array_map("unlink", array_filter((array) glob("../tracks/*")));
@@ -69,6 +81,15 @@ if (@$config->useAudiowaveform) {
         $song = basename($song, ".mp3");
         if (!file_exists("../songs/$song.json"))
             shell_exec(audiowaveform() . " -b 8 -i \"../songs/$song.mp3\" -o \"../songs/$song.json\"");
+    }
+}
+
+if (@$config->useXml2Abc) {
+    $songs = array_filter((array) glob("../songs/*.musicxml"));
+    foreach ($songs as $song) {
+        $song = basename($song, ".musicxml");
+        if (!file_exists("../songs/$song.abc"))
+            shell_exec(xml2abc() . " \"../songs/$song.musicxml\" > \"../songs/$song.abc\"");
     }
 }
 

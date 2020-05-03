@@ -8,7 +8,7 @@ import Track from "./Track";
 import {useLocalStorage, getRecordingArrayBuffer, setRecordingArrayBuffer} from "../helpers";
 import AbcWeb from "./AbcWeb";
 
-export default ({config: {songs, registers, useAudiowaveform}, song, setSong, recordingTimeout = 500, loadLastRecording = false}) => {
+export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song, setSong, recordingTimeout = 500, loadLastRecording = false}) => {
     const [name, setName] = useLocalStorage("name");
     const [register, setRegister] = useLocalStorage("register");
     const [score, setScore] = useState("abcWeb");
@@ -115,7 +115,7 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
     const hasAbcWeb = song && !!songs[song].abcWeb;
     const _score = hasScore && (typeof songs[song].score === "string" ? songs[song].score : `/songs/${song}.pdf`);
     const museScore = hasMuseScore && (typeof songs[song].museScore === "string" ? songs[song].museScore : `/songs/${song}.mscz`);
-    const abcWeb = hasAbcWeb && (typeof songs[song].abcWeb === "string" ? songs[song].abcWeb : `/songs/${song}.musicxml`);
+    const abcWeb = hasAbcWeb && (typeof songs[song].abcWeb === "string" ? songs[song].abcWeb : `/songs/${song}.${useXml2Abc ? "abc" : "musicXml"}`);
 
     useEffect(() => {
         if (song && hasAbcWeb)

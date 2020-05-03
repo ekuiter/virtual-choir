@@ -11,6 +11,7 @@ app/tracks/*
 app/js/*
 app/php/local.php
 app/php/audiowaveform.exe
+app/php/xml2abc.exe
 *.zip
 ab.txt
 config2.json
