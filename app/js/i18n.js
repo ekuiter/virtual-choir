@@ -17,7 +17,7 @@ const translationMap = {
         score: "Score",
         scoreNone: "No score",
         scoreScore: "Score (manual)",
-        scoreMusicXml: "Score",
+        scoreMusicXml: "Score (auto)",
         playback: "Playback",
         nameMissing: "Please type in a name!",
         registerMissing: "Please choose a register!",
@@ -60,7 +60,6 @@ const translationMap = {
         recordingStorage: "Recording storage",
         deleteLastRecording: "Delete last recording",
         loadLastRecording: "Load last recording",
-        aboutYou: "About you",
         museScore: "MuseScore",
     },
     de: {
@@ -81,7 +80,7 @@ const translationMap = {
         score: "Noten",
         scoreNone: "Keine Noten",
         scoreScore: "Noten (manuell)",
-        scoreMusicXml: "Noten",
+        scoreMusicXml: "Noten (auto)",
         playback: "Playback",
         nameMissing: "Bitte einen Namen eingeben!",
         registerMissing: "Bitte eine Stimmlage auswählen!",
@@ -124,7 +123,6 @@ const translationMap = {
         recordingStorage: "Aufnahme-Speicher",
         deleteLastRecording: "Letzte Aufnahme löschen",
         loadLastRecording: "Letzte Aufnahme laden",
-        aboutYou: "Über dich",
         museScore: "MuseScore",
     }
 };

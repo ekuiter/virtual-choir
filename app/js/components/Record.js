@@ -11,7 +11,7 @@ import AbcWeb from "./AbcWeb";
 export default ({config: {songs, registers, useAudiowaveform}, song, setSong, recordingTimeout = 500, loadLastRecording = false}) => {
     const [name, setName] = useLocalStorage("name");
     const [register, setRegister] = useLocalStorage("register");
-    const [score, setScore] = useLocalStorage("score", val => val, "musicXml");
+    const [score, setScore] = useState("musicXml");
     const [playback, setPlayback] = useLocalStorage("playback", val => val === "true", true);
     const [busy, setBusy] = useState();
     const [recorder, setRecorder] = useState();
@@ -118,15 +118,18 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
     const musicXml = hasMusicXml && (typeof songs[song].musicXml === "string" ? songs[song].musicXml : `/songs/${song}.musicxml`);
 
     useEffect(() => {
-        if (song && ((score === "score" && !hasScore) || (score === "musicXml" && !hasMusicXml)))
+        if (song && hasMusicXml)
+            setScore("musicXml");
+        else if (song && hasScore)
+            setScore("score");
+        else
             setScore("none");
-    }, [score, song]);
+    }, [song]);
 
     return (
         <>
             <h4 style="margin-bottom: 15px;">{t`record`}</h4>
             <form class="form form-inline my-2 my-lg-0" onsubmit={onRecordSubmit}>
-                <a class="btn" style="cursor: inherit;">{t`aboutYou`}</a>
                 <input type="text" class="form-control mr-sm-2" placeholder={t`name`} value={name} disabled={recordDisabled} onchange={e => setName(e.target.value)} title={t`nameHelp`} />
                 <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setRegister(e.target.value)} title={t`registerHelp`}>
                     <option>{t`register`}</option>
@@ -136,12 +139,8 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                         </option>
                     ))}
                 </select>
-            </form>
-            <p></p>
-            {name && register &&
-                <>
-                <form class="form form-inline my-2 my-lg-0" onsubmit={onRecordSubmit}>
-                        <a class="btn" style="cursor: inherit;">{t`record`}</a>
+                {name && register && (
+                    <>
                         <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setSong(e.target.value)} title={t`songHelp`}>
                             <option>{t`song`}</option>
                             {Object.keys(songs).map((_song) => <option key={_song} value={_song} selected={song === _song}>{_song}</option>)}
@@ -164,7 +163,12 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                                     disabled={busy || recordingUri || (score === "musicXml" && isAbcWebReady !== song)} />
                             </>
                         )}
-                    </form>
+                    </>
+                )}
+            </form>
+            <p></p>
+            {name && register &&
+                <>
                     {song && (
                         <>
                             <p></p>
