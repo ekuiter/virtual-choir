@@ -2018,25 +2018,29 @@ function alignCursor (noAnim) {
 }
 
 window.abcWebInit = (function (abcOrXml, playback, offset) {
-    return new Promise(resolve => {
+    return new Promise(function(resolve) {
         opt.offset = offset;
         deNot = document.getElementById ('notation');
         hasSmooth = CSS.supports ('scroll-behavior', 'smooth');
         if (!msc_preload ()) { resetIntf (true); }
         $(window).resize (msc_resize);
+        opt.lncsr = 1;
         if (playback)
             setPlayer ("mediaFile", playback);
         readAbcOrXML (abcOrXml);
         setTimeout(function() {
             msc_resize();
             resolve({
-                play: () => {
+                play: function() {
                     if (elmed.paused)
                         playPause2 (true, 0);
                 },
-                stop: () => {
+                stop: function() {
                     if (!elmed.paused)
                         playPause2 (true, 0);
+                },
+                destroy: function() {
+                    $(window).unbind("resize", msc_resize);
                 }
             });
         }, 0);

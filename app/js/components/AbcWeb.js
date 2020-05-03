@@ -19,6 +19,10 @@ export default ({score, playback, offset, isPlaying = false, onReady}) => {
     }, [score, playback, offset]);
 
     useEffect(() => {
+        return () => abcWeb && abcWeb.destroy();
+    });
+
+    useEffect(() => {
         if (abcWeb) {
             if (isPlaying)
                 abcWeb.play();
