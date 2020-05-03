@@ -8,7 +8,7 @@ import Track from "./Track";
 import {useLocalStorage, getRecordingArrayBuffer, setRecordingArrayBuffer} from "../helpers";
 import AbcWeb from "./AbcWeb";
 
-export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song, setSong, recordingTimeout = 500, loadLastRecording = false}) => {
+export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song, setSong, recordingTimeout = 1500, loadLastRecording = false}) => {
     const [name, setName] = useLocalStorage("name");
     const [register, setRegister] = useLocalStorage("register");
     const [score, setScore] = useState("abcWeb");
@@ -113,6 +113,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
         setAbcWebCursor(e.target.value);
 
     const recordDisabled = busy || recorder || recordingUri || (score === "abcWeb" && isAbcWebReady !== song);
+    const recordButtonDisabled = busy || recordingUri || (score === "abcWeb" && isAbcWebReady !== song);
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
     const hasScore = song && !!songs[song].score;
     const hasMuseScore = song && !!songs[song].museScore;
@@ -164,7 +165,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                 </div>
                                 <input type="submit" class={`btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0`} 
                                     value={recorder ? t`stopRecording` : t`startRecording`}
-                                    disabled={busy || recordingUri || (score === "abcWeb" && isAbcWebReady !== song)} />
+                                    disabled={recordButtonDisabled} />
                             </>
                         )}
                     </>
@@ -195,15 +196,22 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                     <button class="btn btn-outline-primary" onclick={onDownloadRecordingClick}>{t`recording`}</button>}
                                 {score === "abcWeb" && (
                                     <>
-                                        <a class="btn" style="cursor: inherit;">{t`cursor`}</a>
-                                        <fieldset class="form-group" disabled={busy || recordingUri || (score === "abcWeb" && isAbcWebReady !== song)} style="margin-top: 2px;">
-                                            <input type="radio" id="none" value="none" checked={abcWebCursor === "none"} onChange={onAbcWebCursorChange} style="margin-right: 5px;" />
-                                            <label for="none" style="margin-right: 12px;"> {t`cursorNone`}</label>
-                                            <input type="radio" id="normal" value="normal" checked={abcWebCursor === "normal"} onChange={onAbcWebCursorChange} style="margin-right: 5px;" />
-                                            <label for="normal" style="margin-right: 12px;"> {t`cursorNormal`}</label>
-                                            <input type="radio" id="note" value="note" checked={abcWebCursor === "note"} onChange={onAbcWebCursorChange} style="margin-right: 5px;" />
-                                            <label for="note" style="margin-right: 12px;"> {t`cursorNote`}</label>
-                                        </fieldset>
+                                        <a class="btn" style="cursor: inherit;" style="margin-left: 10px;">{t`cursor`}</a>
+                                        <div class="custom-control custom-radio" style="margin-top: 2px;">
+                                            <input type="radio" class="custom-control-input" id="none" value="none"
+                                                checked={abcWebCursor === "none"} onChange={onAbcWebCursorChange} disabled={recordButtonDisabled} />
+                                            <label for="none" class="custom-control-label" style="margin-right: 15px;"> {t`cursorNone`}</label>
+                                        </div>
+                                        <div class="custom-control custom-radio" style="margin-top: 2px;">
+                                            <input type="radio" class="custom-control-input" id="normal" value="normal"
+                                                checked={abcWebCursor === "normal"} onChange={onAbcWebCursorChange} disabled={recordButtonDisabled} />
+                                            <label for="normal" class="custom-control-label" style="margin-right: 15px;"> {t`cursorNormal`}</label>
+                                        </div>
+                                        <div class="custom-control custom-radio" style="margin-top: 2px;">
+                                            <input type="radio" class="custom-control-input" id="note" value="note"
+                                                checked={abcWebCursor === "note"} onChange={onAbcWebCursorChange} disabled={recordButtonDisabled} />
+                                            <label for="note" class="custom-control-label"> {t`cursorNote`}</label>
+                                        </div>
                                     </>
                                 )}
                             </form>
