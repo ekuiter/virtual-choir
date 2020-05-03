@@ -11,7 +11,7 @@ import AbcWeb from "./AbcWeb";
 export default ({config: {songs, registers, useAudiowaveform}, song, setSong, recordingTimeout = 500, loadLastRecording = false}) => {
     const [name, setName] = useLocalStorage("name");
     const [register, setRegister] = useLocalStorage("register");
-    const [score, setScore] = useState("musicXml");
+    const [score, setScore] = useState("abcWeb");
     const [playback, setPlayback] = useLocalStorage("playback", val => val === "true", true);
     const [busy, setBusy] = useState();
     const [recorder, setRecorder] = useState();
@@ -108,18 +108,18 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                 .then(res => res.blob())
                 .then(blob => invokeSaveAsDialog(blob, song));
 
-    const recordDisabled = busy || recorder || recordingUri || (score === "musicXml" && isAbcWebReady !== song);
+    const recordDisabled = busy || recorder || recordingUri || (score === "abcWeb" && isAbcWebReady !== song);
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
     const hasScore = song && !!songs[song].score;
     const hasMuseScore = song && !!songs[song].museScore;
-    const hasMusicXml = song && !!songs[song].musicXml;
+    const hasAbcWeb = song && !!songs[song].abcWeb;
     const _score = hasScore && (typeof songs[song].score === "string" ? songs[song].score : `/songs/${song}.pdf`);
     const museScore = hasMuseScore && (typeof songs[song].museScore === "string" ? songs[song].museScore : `/songs/${song}.mscz`);
-    const musicXml = hasMusicXml && (typeof songs[song].musicXml === "string" ? songs[song].musicXml : `/songs/${song}.musicxml`);
+    const abcWeb = hasAbcWeb && (typeof songs[song].abcWeb === "string" ? songs[song].abcWeb : `/songs/${song}.musicxml`);
 
     useEffect(() => {
-        if (song && hasMusicXml)
-            setScore("musicXml");
+        if (song && hasAbcWeb)
+            setScore("abcWeb");
         else if (song && hasScore)
             setScore("score");
         else
@@ -151,7 +151,7 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                                     onchange={e => setScore(e.target.value)} title={t`scoreHelp`}>
                                     <option value="none" selected={score === "none"}>{t`scoreNone`}</option>
                                     <option value="score" selected={score === "score"} disabled={!hasScore}>{t`scoreScore`}</option>
-                                    <option value="musicXml" selected={score === "musicXml"} disabled={!hasMusicXml}>{t`scoreMusicXml`}</option>
+                                    <option value="abcWeb" selected={score === "abcWeb"} disabled={!hasAbcWeb}>{t`scoreAbcWeb`}</option>
                                 </select>
                                 <div class="form-check" style="margin-left: 0.5rem;">
                                     <input class="form-check-input" type="checkbox" id="playback"
@@ -160,7 +160,7 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                                 </div>
                                 <input type="submit" class={`btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0`} 
                                     value={recorder ? t`stopRecording` : t`startRecording`}
-                                    disabled={busy || recordingUri || (score === "musicXml" && isAbcWebReady !== song)} />
+                                    disabled={busy || recordingUri || (score === "abcWeb" && isAbcWebReady !== song)} />
                             </>
                         )}
                     </>
@@ -200,8 +200,8 @@ export default ({config: {songs, registers, useAudiowaveform}, song, setSong, re
                                     style="width: 100%; height: 95vh;" frameborder="0">
                                 </iframe>
                             )}
-                            {score === "musicXml" && hasMusicXml && (
-                                <AbcWeb musicXml={musicXml} playback={`/songs/${song}.mp3`} offset={songs[song].musicXmlOffset || 0}
+                            {score === "abcWeb" && hasAbcWeb && (
+                                <AbcWeb score={abcWeb} playback={`/songs/${song}.mp3`} offset={songs[song].abcWebOffset || 0}
                                     isPlaying={isAbcWebReady === song && isRecording} onReady={setIsAbcWebReady(song)} />
                             )}
                             <audio src={`/songs/${song}.mp3`} ref={playbackRef} />

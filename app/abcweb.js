@@ -2017,7 +2017,7 @@ function alignCursor (noAnim) {
     msc_wz.time2x (msc_wz.cursorTime, 0, noAnim);
 }
 
-window.abcwebInit = (function (musicXml, playback, offset) {
+window.abcWebInit = (function (abcOrXml, playback, offset) {
     return new Promise(resolve => {
         opt.offset = offset;
         deNot = document.getElementById ('notation');
@@ -2026,7 +2026,7 @@ window.abcwebInit = (function (musicXml, playback, offset) {
         $(window).resize (msc_resize);
         if (playback)
             setPlayer ("mediaFile", playback);
-        readAbcOrXML (musicXml);
+        readAbcOrXML (abcOrXml);
         setTimeout(function() {
             msc_resize();
             resolve({

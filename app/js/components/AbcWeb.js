@@ -3,35 +3,35 @@ import {useState, useEffect} from "preact/hooks";
 import {loadScript} from "../helpers";
 import Loading from "./Loading";
 
-export default ({musicXml, playback, offset, isPlaying = false, onReady}) => {
-    const [abcweb, setAbcweb] = useState();
+export default ({score, playback, offset, isPlaying = false, onReady}) => {
+    const [abcWeb, setAbcWeb] = useState();
 
     useEffect(() => {
-        setAbcweb();
-        Promise.all([loadScript("/abcweb.js"), fetch(musicXml)])
-            .then(([_, xml]) => xml.text())
-            .then(xmlText => abcwebInit(xmlText, playback, offset))
-            .then(abcweb => {
-                setAbcweb(abcweb);
+        setAbcWeb();
+        Promise.all([loadScript("/abcweb.js"), fetch(score)])
+            .then(([_, res]) => res.text())
+            .then(abcOrXml => abcWebInit(abcOrXml, playback, offset))
+            .then(abcWeb => {
+                setAbcWeb(abcWeb);
                 if (onReady)
                     onReady();
             });
-    }, [musicXml, playback, offset]);
+    }, [score, playback, offset]);
 
     useEffect(() => {
-        if (abcweb) {
+        if (abcWeb) {
             if (isPlaying)
-                abcweb.play();
+                abcWeb.play();
             else
-                abcweb.stop();
+                abcWeb.stop();
         }
     }, [isPlaying]);
 
     return (
         <>
-            {!abcweb && <Loading />}
+            {!abcWeb && <Loading />}
             <audio id="aud" muted />
-            <div id="notation" style={!abcweb ? "visibility: hidden;" : ""} />
+            <div id="notation" style={!abcWeb ? "visibility: hidden;" : ""} />
         </>
     );
 };
