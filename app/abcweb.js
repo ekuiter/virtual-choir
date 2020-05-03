@@ -2024,7 +2024,7 @@ function setCursor(cursor) {
     opt.lncsr = cursor === "note" ? 1 : 0;
 }
 
-window.abcWebInit = (function (abcOrXml, playback, offset, cursor) {
+window.abcWebInit = (function (abcOrXml, playback, offset, timing, cursor) {
     return new Promise(function(resolve) {
         opt.offset = offset;
         deNot = document.getElementById ('notation');
@@ -2035,6 +2035,11 @@ window.abcWebInit = (function (abcOrXml, playback, offset, cursor) {
         if (playback)
             setPlayer ("mediaFile", playback);
         readAbcOrXML (abcOrXml);
+        if (timing) {
+            var times = flattenTimes (timing);
+            msc_wz.times = times;
+            msc_wz.times.unshift (0);
+        }
         setTimeout(function() {
             msc_resize();
             resolve({

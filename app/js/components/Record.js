@@ -218,7 +218,8 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                 </iframe>
                             )}
                             {score === "abcWeb" && hasAbcWeb && !loadLastRecording && (
-                                <AbcWeb score={abcWeb} playback={`/songs/${song}.mp3`} offset={songs[song].abcWebOffset || 0}
+                                <AbcWeb score={abcWeb} playback={`/songs/${song}.mp3`}
+                                    offset={songs[song].abcWebOffset || 0} timing={songs[song].abcWebTiming}
                                     isPlaying={isAbcWebReady === song && isRecording} onReady={setIsAbcWebReady(song)} cursor={abcWebCursor} />
                             )}
                             <audio src={`/songs/${song}.mp3`} ref={playbackRef} />

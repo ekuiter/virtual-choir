@@ -3,7 +3,7 @@ import {useState, useEffect} from "preact/hooks";
 import {loadScript} from "../helpers";
 import Loading from "./Loading";
 
-export default ({score, playback, offset, isPlaying = false, onReady, cursor = "normal"}) => {
+export default ({score, playback, offset, timing, isPlaying = false, onReady, cursor = "normal"}) => {
     const [abcWeb, setAbcWeb] = useState();
 
     useEffect(() => {
@@ -11,13 +11,13 @@ export default ({score, playback, offset, isPlaying = false, onReady, cursor = "
         if (score)
             Promise.all([loadScript("/abcweb.js"), fetch(score)])
                 .then(([_, res]) => res.text())
-                .then(abcOrXml => abcWebInit(abcOrXml, playback, offset, cursor))
+                .then(abcOrXml => abcWebInit(abcOrXml, playback, offset, timing, cursor))
                 .then(abcWeb => {
                     setAbcWeb(abcWeb);
                     if (onReady)
                         onReady();
                 });
-    }, [score, playback, offset]);
+    }, [score, playback, offset, timing]);
 
     useEffect(() => {
         return () => abcWeb && abcWeb.destroy();
