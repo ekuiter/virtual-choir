@@ -2017,14 +2017,21 @@ function alignCursor (noAnim) {
     msc_wz.time2x (msc_wz.cursorTime, 0, noAnim);
 }
 
-window.abcWebInit = (function (abcOrXml, playback, offset) {
+function setCursor(cursor) {
+    if (msc_wz)
+        msc_wz.noCursor = cursor === "none" ? 1 : 0;
+    opt.nocsr = cursor === "none" ? 1 : 0;
+    opt.lncsr = cursor === "note" ? 1 : 0;
+}
+
+window.abcWebInit = (function (abcOrXml, playback, offset, cursor) {
     return new Promise(function(resolve) {
         opt.offset = offset;
         deNot = document.getElementById ('notation');
         hasSmooth = CSS.supports ('scroll-behavior', 'smooth');
         if (!msc_preload ()) { resetIntf (true); }
         $(window).resize (msc_resize);
-        opt.lncsr = 1;
+        setCursor(cursor);
         if (playback)
             setPlayer ("mediaFile", playback);
         readAbcOrXML (abcOrXml);
@@ -2041,7 +2048,8 @@ window.abcWebInit = (function (abcOrXml, playback, offset) {
                 },
                 destroy: function() {
                     $(window).unbind("resize", msc_resize);
-                }
+                },
+                setCursor: setCursor
             });
         }, 0);
     });

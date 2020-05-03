@@ -61,6 +61,10 @@ const translationMap = {
         deleteLastRecording: "Delete last recording",
         loadLastRecording: "Load last recording",
         museScore: "MuseScore",
+        cursor: "Cursor",
+        cursorNone: "None",
+        cursorNormal: "per measure",
+        cursorNote: "per note",
     },
     de: {
         title: "Virtueller Chor",
@@ -124,6 +128,10 @@ const translationMap = {
         deleteLastRecording: "Letzte Aufnahme löschen",
         loadLastRecording: "Letzte Aufnahme laden",
         museScore: "MuseScore",
+        cursor: "Cursor",
+        cursorNone: "Ohne",
+        cursorNormal: "pro Takt",
+        cursorNote: "pro Note",
     }
 };
 

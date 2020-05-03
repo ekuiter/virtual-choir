@@ -3,24 +3,30 @@ import {useState, useEffect} from "preact/hooks";
 import {loadScript} from "../helpers";
 import Loading from "./Loading";
 
-export default ({score, playback, offset, isPlaying = false, onReady}) => {
+export default ({score, playback, offset, isPlaying = false, onReady, cursor = "normal"}) => {
     const [abcWeb, setAbcWeb] = useState();
 
     useEffect(() => {
         setAbcWeb();
-        Promise.all([loadScript("/abcweb.js"), fetch(score)])
-            .then(([_, res]) => res.text())
-            .then(abcOrXml => abcWebInit(abcOrXml, playback, offset))
-            .then(abcWeb => {
-                setAbcWeb(abcWeb);
-                if (onReady)
-                    onReady();
-            });
+        if (score)
+            Promise.all([loadScript("/abcweb.js"), fetch(score)])
+                .then(([_, res]) => res.text())
+                .then(abcOrXml => abcWebInit(abcOrXml, playback, offset, cursor))
+                .then(abcWeb => {
+                    setAbcWeb(abcWeb);
+                    if (onReady)
+                        onReady();
+                });
     }, [score, playback, offset]);
 
     useEffect(() => {
         return () => abcWeb && abcWeb.destroy();
     });
+
+    useEffect(() => {
+        if (abcWeb)
+            abcWeb.setCursor(cursor);
+    }, [cursor]);
 
     useEffect(() => {
         if (abcWeb) {

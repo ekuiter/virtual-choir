@@ -13,6 +13,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
     const [register, setRegister] = useLocalStorage("register");
     const [score, setScore] = useState("abcWeb");
     const [playback, setPlayback] = useLocalStorage("playback", val => val === "true", true);
+    const [abcWebCursor, setAbcWebCursor] = useLocalStorage("abcWebCursor", val => val, "normal");
     const [busy, setBusy] = useState();
     const [recorder, setRecorder] = useState();
     const [recordingUri, setRecordingUri] = useState();
@@ -108,6 +109,9 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                 .then(res => res.blob())
                 .then(blob => invokeSaveAsDialog(blob, song));
 
+    const onAbcWebCursorChange = e =>
+        setAbcWebCursor(e.target.value);
+
     const recordDisabled = busy || recorder || recordingUri || (score === "abcWeb" && isAbcWebReady !== song);
     const uploadDisabled = busy || !isSongTrackReady || !isRecordingTrackReady;
     const hasScore = song && !!songs[song].score;
@@ -115,7 +119,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
     const hasAbcWeb = song && !!songs[song].abcWeb;
     const _score = hasScore && (typeof songs[song].score === "string" ? songs[song].score : `/songs/${song}.pdf`);
     const museScore = hasMuseScore && (typeof songs[song].museScore === "string" ? songs[song].museScore : `/songs/${song}.mscz`);
-    const abcWeb = hasAbcWeb && (typeof songs[song].abcWeb === "string" ? songs[song].abcWeb : `/songs/${song}.${useXml2Abc ? "abc" : "musicXml"}`);
+    const abcWeb = hasAbcWeb && (typeof songs[song].abcWeb === "string" ? songs[song].abcWeb : `/songs/${song}.${useXml2Abc ? "abc" : "musicxml"}`);
 
     useEffect(() => {
         if (song && hasAbcWeb)
@@ -189,6 +193,19 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                 )}
                                 {recordingUri &&
                                     <button class="btn btn-outline-primary" onclick={onDownloadRecordingClick}>{t`recording`}</button>}
+                                {score === "abcWeb" && (
+                                    <>
+                                        <a class="btn" style="cursor: inherit;">{t`cursor`}</a>
+                                        <fieldset class="form-group" disabled={busy || recordingUri || (score === "abcWeb" && isAbcWebReady !== song)} style="margin-top: 2px;">
+                                            <input type="radio" id="none" value="none" checked={abcWebCursor === "none"} onChange={onAbcWebCursorChange} style="margin-right: 5px;" />
+                                            <label for="none" style="margin-right: 12px;"> {t`cursorNone`}</label>
+                                            <input type="radio" id="normal" value="normal" checked={abcWebCursor === "normal"} onChange={onAbcWebCursorChange} style="margin-right: 5px;" />
+                                            <label for="normal" style="margin-right: 12px;"> {t`cursorNormal`}</label>
+                                            <input type="radio" id="note" value="note" checked={abcWebCursor === "note"} onChange={onAbcWebCursorChange} style="margin-right: 5px;" />
+                                            <label for="note" style="margin-right: 12px;"> {t`cursorNote`}</label>
+                                        </fieldset>
+                                    </>
+                                )}
                             </form>
                         </>
                     )}
@@ -200,9 +217,9 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                     style="width: 100%; height: 95vh;" frameborder="0">
                                 </iframe>
                             )}
-                            {score === "abcWeb" && hasAbcWeb && (
+                            {score === "abcWeb" && hasAbcWeb && !loadLastRecording && (
                                 <AbcWeb score={abcWeb} playback={`/songs/${song}.mp3`} offset={songs[song].abcWebOffset || 0}
-                                    isPlaying={isAbcWebReady === song && isRecording} onReady={setIsAbcWebReady(song)} />
+                                    isPlaying={isAbcWebReady === song && isRecording} onReady={setIsAbcWebReady(song)} cursor={abcWebCursor} />
                             )}
                             <audio src={`/songs/${song}.mp3`} ref={playbackRef} />
                         </>
