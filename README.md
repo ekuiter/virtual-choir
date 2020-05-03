@@ -1,6 +1,6 @@
 ## Virtual Choir
 
-![Screenshot](screenshot.png)
+![Screenshot](screenshot.jpg)
 
 Coordinates voice recordings and synchronized mixes in virtual choirs.
 

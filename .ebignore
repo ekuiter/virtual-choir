@@ -20,5 +20,5 @@ LICENSE.txt
 migrate.bat
 package*.json
 README.md
-screenshot.png
+screenshot.jpg
 webpack.config.js
