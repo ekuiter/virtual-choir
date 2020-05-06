@@ -9,11 +9,11 @@ export default ({encodedMix, config: {renameMixTitle}}) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [mixes, setMixes] = useState([]);
-    const [imageError, setImageError] = useState(false);
+    const [imageStatus, setImageStatus] = useState();
     const [pendingMixName, setPendingMixName] = useState();
 
     useEffect(() => {
-        setImageError();
+        setImageStatus();
         setPendingMixName();
     }, [encodedMix]);
 
@@ -54,28 +54,32 @@ export default ({encodedMix, config: {renameMixTitle}}) => {
                     </select>
                     {encodedMix && mixes.indexOf(mix) !== -1 && (
                         <>
-                            {!imageError && (
-                                <img src={`/mixes/${mix}.png`} alt={mix}
-                                    style="padding-bottom: 10px; width: 100%;" onerror={() => setImageError(true)} />
+                            <img src={`/mixes/${mix}.png`} alt={mix}
+                                style={`padding-bottom: 10px; width: 100%; ${imageStatus === "error" ? "display: none;" : ""}`}
+                                onload={() => setImageStatus("done")}
+                                onerror={() => setImageStatus("error")} />
+                            {imageStatus && (
+                                <>
+                                    {renameMixTitle && (
+                                        <form class="form form-inline my-2 my-lg-0" style="padding-bottom: 10px;" onsubmit={onRenameSubmit}>
+                                            <input type="text" class="form-control mr-sm-2" value={pendingMixName || mix} style="width: 50%;"
+                                                onfocus={() => setIsEditing(true)}
+                                                onblur={() => setIsEditing(false)}
+                                                onchange={e => setPendingMixName(e.target.value)} />
+                                            <input type="submit" class="btn btn-outline-primary my-2 my-sm-0" value={t`rename`} />
+                                        </form>
+                                    )}
+                                    <div style="display: flex; align-items: center;">
+                                        <audio src={`/mixes/${mix}.mp3`} controls style="width: 50%; margin-right: 6px;" autoplay />
+                                        <button class="btn btn-outline-success" style="height: 40px; margin-right: 6px;" onclick={() => location.href = `/mixes/${mix}.mp3`}>
+                                            {t`download`}
+                                        </button>
+                                        <button class="btn btn-outline-danger" style="height: 40px;" onclick={onDeleteClick}>
+                                            {t`delete`}
+                                        </button>
+                                    </div>
+                                </>
                             )}
-                            {renameMixTitle && (
-                                <form class="form form-inline my-2 my-lg-0" style="padding-bottom: 10px;" onsubmit={onRenameSubmit}>
-                                    <input type="text" class="form-control mr-sm-2" value={pendingMixName || mix} style="width: 50%;"
-                                        onfocus={() => setIsEditing(true)}
-                                        onblur={() => setIsEditing(false)}
-                                        onchange={e => setPendingMixName(e.target.value)} />
-                                    <input type="submit" class="btn btn-outline-primary my-2 my-sm-0" value={t`rename`} />
-                                </form>
-                            )}
-                            <div style="display: flex; align-items: center;">
-                                <audio src={`/mixes/${mix}.mp3`} controls style="width: 50%; margin-right: 6px;" autoplay />
-                                <button class="btn btn-outline-success" style="height: 40px; margin-right: 6px;" onclick={() => location.href = `/mixes/${mix}.mp3`}>
-                                    {t`download`}
-                                </button>
-                                <button class="btn btn-outline-danger" style="height: 40px;" onclick={onDeleteClick}>
-                                    {t`delete`}
-                                </button>
-                            </div>
                         </>
                     )}
                 </>
