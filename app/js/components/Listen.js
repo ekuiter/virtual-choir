@@ -9,9 +9,11 @@ export default ({encodedMix, config: {renameMixTitle}}) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [mixes, setMixes] = useState([]);
+    const [imageError, setImageError] = useState(false);
     const [pendingMixName, setPendingMixName] = useState();
 
     useEffect(() => {
+        setImageError();
         setPendingMixName();
     }, [encodedMix]);
 
@@ -46,12 +48,16 @@ export default ({encodedMix, config: {renameMixTitle}}) => {
             ? <Loading />
             : (
                 <>
-                    <select class="custom-select" size={2} style="margin-bottom: 15px; min-height: 200px; height: calc(100vh - 350px);"
+                    <select class="custom-select" size={2} style="margin-bottom: 15px; min-height: 200px; height: calc(100vh - 550px);"
                         onchange={e => route("/listen", e.target.value)}>
                         {mixes.map(_mix => <option key={_mix} value={_mix} selected={mix === _mix}>{_mix}</option>)}
                     </select>
                     {encodedMix && mixes.indexOf(mix) !== -1 && (
                         <>
+                            {!imageError && (
+                                <img src={`/mixes/${mix}.png`} alt={mix}
+                                    style="padding-bottom: 10px; width: 100%;" onerror={() => setImageError(true)} />
+                            )}
                             {renameMixTitle && (
                                 <form class="form form-inline my-2 my-lg-0" style="padding-bottom: 10px;" onsubmit={onRenameSubmit}>
                                     <input type="text" class="form-control mr-sm-2" value={pendingMixName || mix} style="width: 50%;"

@@ -113,7 +113,7 @@ if (isset($_REQUEST["config"])) {
 
 if (isset($_REQUEST["mixes"])) {
     header("Content-Type: application/json");
-    $mixes = file_exists("../mixes") ? array_map("basenameMp3", array_filter((array) glob("../mixes/*"))) : array();
+    $mixes = file_exists("../mixes") ? array_map("basenameMp3", array_filter((array) glob("../mixes/*.mp3"))) : array();
     rsort($mixes);
     echo json_encode($mixes);
 }
@@ -207,15 +207,61 @@ if (isset($_REQUEST["mix"])) {
         $count++;
     @mkdir("../mixes");
     asort($balance_by_track_id_and_name);
-    $track_ids_and_names = array_keys($balance_by_track_id_and_name);
-    foreach ($track_ids_and_names as &$id_and_name)
-        $id_and_name = preg_replace("/[^a-zA-Z0-9]+/", "", implode(",", array_slice(explode(",", $id_and_name), 1)));
-    $mixfile .= " - " . implode(", ", $track_ids_and_names) . ").mp3";
+    $mixfile .= ").mp3";
     if (@$config->simplifiedMixTitle)
         $mixfile = "../mixes/$song " . date("Y-m-d") . ".mp3";
     $gain = isset($_REQUEST["gain"]) ? $_REQUEST["gain"] : 1;
     $command .= "amix=inputs=$count:duration=longest,volume=$gain\" \"$mixfile\"";
     shell_exec($command);
+    if (count($track_id_by_register) > 0) {
+        $width = 1600;
+        $height = 400;
+        $arc_x = $width / 2;
+        $arc_y = $height + 40;
+        $arc_width = $width - 50;
+        $arc_height = $height;
+        $pt = 35;
+        $dot = 35;
+        $img = imagecreatetruecolor($width * 2, $height * 2);
+        $black = imagecolorallocate($img, 0, 0, 0);
+        $gray = imagecolorallocate($img, 128, 128, 128);
+        $white = imagecolorallocate($img, 255, 255, 255);
+        imagefill($img, 0, 0, $white);
+        imageantialias($img, true);
+        imagesetthickness($img, 2);
+        imagearc($img, $arc_x * 2, $arc_y * 2, $arc_width * 2, $arc_height * 4, 190, -10, $gray);
+        foreach ($balance_by_track_id_and_name as $track_id_and_name => $balance) {
+            $id = explode(",", $track_id_and_name)[0];
+            $_track = null;
+            foreach ($tracks as $track)
+                if ($track["id"] === $id)
+                    $_track = $track;
+            if (!$_track || !@$config->registers->{$_track["register"]} || !@$config->registers->{$_track["register"]}->color)
+                $color = $black;
+            else {
+                list($r, $g, $b) = sscanf(@$config->registers->{$_track["register"]}->color, "#%02x%02x%02x");
+                $color = imagecolorallocate($img, (int) $r, (int) $g, (int) $b);
+            }
+            $_balance = (float) $balance * (@$config->registerScale ? @$config->registerScale : 1.0);
+            $x = $arc_x * 2 + $_balance * $arc_width;
+            $y = $arc_y * 2 - sin(acos($_balance)) * $arc_height * 2;
+            $text = explode(",", $track_id_and_name)[1];
+            $bbox = imagettfbbox($pt, 0, realpath("arial.ttf"), $text);
+            $text_width = $bbox[4] - $bbox[0];
+            $text_height = $bbox[1] - $bbox[7];
+            $x_off = ($_balance < 0 ? $dot : (-1) * ($text_width + $dot));
+            $text_x = $x + (abs($_balance) < 0.4 ? (-1) * ($text_width / 2) : $x_off);
+            $text_y = $y + (abs($_balance) < 0.4 ? $text_height * 1.7 : $text_height / 2);
+            imagefilledellipse($img, $x, $y, $dot, $dot, $color);
+            imagettftext($img, $pt, 0, $text_x + 1, $text_y + 1, $gray, realpath("arial.ttf"), $text);
+            imagettftext($img, $pt, 0, $text_x, $text_y, $color, realpath("arial.ttf"), $text);
+        }
+        $final_img = imagecreatetruecolor($width, $height);
+        imagecopyresampled($final_img, $img, 0, 0, 0, 0, $width, $height, $width * 2, $height * 2);
+        imagepng($final_img, "../mixes/" . basename($mixfile, ".mp3") . ".png");
+        imagedestroy($img);
+        imagedestroy($final_img);
+    }
     $mixfile = base64_encode(basename($mixfile, ".mp3"));
     header("Location: ../listen/$mixfile");
     die;
@@ -244,13 +290,16 @@ if (isset($_REQUEST["deleteSelected"])) {
 }
 
 if (isset($_REQUEST["renameMix"]) && isset($_REQUEST["to"]) && @$config->renameMixTitle) {
+    // only enable this when users can be trusted!
     $mix = $_REQUEST["renameMix"];
     $to = $_REQUEST["to"];
     if (!$mix || !$to)
         die("no mix given");
     if (!file_exists("../mixes/$mix.mp3") || strpos(realpath("../mixes/$mix.mp3"), realpath("../mixes/")) !== 0)
         die("invalid mix");
-    rename("../mixes/$mix.mp3", "../mixes/$to.mp3"); // only enable this when users can be trusted!
+    rename("../mixes/$mix.mp3", "../mixes/$to.mp3");
+    if (file_exists("../mixes/$mix.png"))
+        rename("../mixes/$mix.png", "../mixes/$to.png");
 }
 
 if (isset($_REQUEST["deleteMix"])) {
@@ -260,6 +309,8 @@ if (isset($_REQUEST["deleteMix"])) {
     if (!file_exists("../mixes/$mix.mp3") || strpos(realpath("../mixes/$mix.mp3"), realpath("../mixes/")) !== 0)
         die("invalid mix");
     unlink("../mixes/$mix.mp3");
+    if (file_exists("../mixes/$mix.png"))
+        unlink("../mixes/$mix.png");
 }
 
 if (isset($_REQUEST["backup"])) {
@@ -289,6 +340,9 @@ if (isset($_REQUEST["backup"])) {
         $mixes = array_filter((array) glob("$tempdir/mixes/*.mp3"));
         foreach ($mixes as $mix)
             rename($mix, "../mixes/" . basename($mix));
+        $mixes = array_filter((array) glob("$tempdir/mixes/*.png"));
+            foreach ($mixes as $mix)
+                rename($mix, "../mixes/" . basename($mix));
         shell_exec("mysql -h " . DB::$host . " -u " . DB::$user . " -p" . DB::$password . " " . DB::$dbName . " < $tempdir/dump.sql");
         header("Location: ../admin");
     } else {
