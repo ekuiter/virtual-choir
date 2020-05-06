@@ -67,6 +67,7 @@ const translationMap = {
         cursorNote: "per note",
         error: "Error",
         warning: "Warning",
+        rename: "Rename",
     },
     de: {
         title: "Virtueller Chor",
@@ -136,6 +137,7 @@ const translationMap = {
         cursorNote: "pro Note",
         error: "Fehler",
         warning: "Warnung",
+        rename: "Umbenennen",
     }
 };
 

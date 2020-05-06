@@ -243,6 +243,16 @@ if (isset($_REQUEST["deleteSelected"])) {
     DB::query("DELETE FROM tracks WHERE %l", $where);
 }
 
+if (isset($_REQUEST["renameMix"]) && isset($_REQUEST["to"]) && @$config->renameMixTitle) {
+    $mix = $_REQUEST["renameMix"];
+    $to = $_REQUEST["to"];
+    if (!$mix || !$to)
+        die("no mix given");
+    if (!file_exists("../mixes/$mix.mp3") || strpos(realpath("../mixes/$mix.mp3"), realpath("../mixes/")) !== 0)
+        die("invalid mix");
+    rename("../mixes/$mix.mp3", "../mixes/$to.mp3"); // only enable this when users can be trusted!
+}
+
 if (isset($_REQUEST["deleteMix"])) {
     $mix = $_REQUEST["deleteMix"];
     if (!$mix)

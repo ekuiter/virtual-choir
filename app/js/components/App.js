@@ -82,7 +82,8 @@ export default ({config}) => {
                                 getComponent={() => import("./Mix").then(module => module.default)}
                                 config={config} defaultSong={song} />
                             <AsyncRoute path="/listen/:encodedMix?"
-                                getComponent={() => import("./Listen").then(module => module.default)} />
+                                getComponent={() => import("./Listen").then(module => module.default)}
+                                config={config} />
                             <AsyncRoute path="/admin"
                                 getComponent={() => import("./Admin").then(module => module.default)}
                                 config={config} />
