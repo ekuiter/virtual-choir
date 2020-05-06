@@ -35,7 +35,8 @@ fetchJson({config: true}).then(config => {
         (window.navigator.userAgent.indexOf("Safari") > -1 && window.navigator.userAgent.indexOf("Chrome") === -1))
         alert(t`browserWarning`);
     if (localStorage.getItem("song") && !config.songs.hasOwnProperty(localStorage.getItem("song")) ||
-        localStorage.getItem("register") && !config.registers.hasOwnProperty(localStorage.getItem("register"))) {
+        localStorage.getItem("register") && localStorage.getItem("register") !== "null" &&
+        !config.registers.hasOwnProperty(localStorage.getItem("register"))) {
         localStorage.clear();
         location.reload();
     } else {

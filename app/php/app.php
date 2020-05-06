@@ -141,6 +141,8 @@ if (isset($_REQUEST["mix"])) {
         die("invalid song");
     $mixfile = "../mixes/" . date("Y-m-d H-i-s") . " $song (" . ($playback ? "Playback, " : "");
     foreach ($tracks as $idx => $track) {
+        if ($track["register"] === "null")
+            continue;
         if (!@$config->registers->{$track["register"]})
             die("invalid register");
         if (!is_numeric($track["recordingOffset"]) || !is_numeric($track["songOffset"]) || !is_numeric($track["gain"]))
@@ -155,7 +157,8 @@ if (isset($_REQUEST["mix"])) {
         sort($_tracks);
         $mixfile .= count($_tracks) . "x $register, ";
     }
-    $mixfile = substr($mixfile, 0, -2);
+    if (substr($mixfile, -2) === ", ")
+        $mixfile = substr($mixfile, 0, -2);
     $command = ffmpeg() . " -y";
     if ($playback)
         $command .= " -i \"../songs/$song.mp3\"";
@@ -176,17 +179,20 @@ if (isset($_REQUEST["mix"])) {
             $offset = "adelay=delays=${offset}|${offset}";
         }
         $gain = number_format((float) $track["gain"], 4, ".", "");
-        $balance = @$config->registers->{$track["register"]}->balance;
+        $balance = $track["register"] !== "null" ? @$config->registers->{$track["register"]}->balance : 0.0;
         if (!$balance)
             $balance = 0.0;
-        $variance = @$config->registers->{$track["register"]}->variance;
+        $variance = $track["register"] !== "null" ? @$config->registers->{$track["register"]}->variance : 0.0;
         if (!$variance)
             $variance = 0.0;
-        $num_by_register = count($track_id_by_register{$track["register"]});
-        $idx_by_register = array_search((int) $track["id"], $track_id_by_register{$track["register"]});
-        $my_balance = $num_by_register > 1
-            ? map($idx_by_register, 0, $num_by_register - 1, $balance - $variance, $balance + $variance)
-            : $balance;
+        if ($track["register"] !== "null") {
+            $num_by_register = count($track_id_by_register{$track["register"]});
+            $idx_by_register = array_search((int) $track["id"], $track_id_by_register{$track["register"]});
+            $my_balance = $num_by_register > 1
+                ? map($idx_by_register, 0, $num_by_register - 1, $balance - $variance, $balance + $variance)
+                : $balance;
+        } else
+            $my_balance = 0.0;
         $balance_by_track_id_and_name[$track["id"] . "," . $track["name"]] = $my_balance;
         $command .= "[$idx]aresample=44100,aformat=channel_layouts=stereo,stereotools=balance_out=$my_balance,volume=${gain},${offset}[${idx}_out];";
     }
@@ -205,6 +211,8 @@ if (isset($_REQUEST["mix"])) {
     foreach ($track_ids_and_names as &$id_and_name)
         $id_and_name = preg_replace("/[^a-zA-Z0-9]+/", "", implode(",", array_slice(explode(",", $id_and_name), 1)));
     $mixfile .= " - " . implode(", ", $track_ids_and_names) . ").mp3";
+    if (@$config->simplifiedMixTitle)
+        $mixfile = "../mixes/$song " . date("Y-m-d") . ".mp3";
     $gain = isset($_REQUEST["gain"]) ? $_REQUEST["gain"] : 1;
     $command .= "amix=inputs=$count:duration=longest,volume=$gain\" \"$mixfile\"";
     shell_exec($command);

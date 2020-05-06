@@ -118,7 +118,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
     const hasScore = song && !!songs[song].score;
     const hasMuseScore = song && !!songs[song].museScore;
     const hasAbcWeb = song && !!songs[song].abcWeb;
-    const _score = hasScore && (typeof songs[song].score === "string" ? songs[song].score : `/songs/${song}.pdf`);
+    const _score = hasScore && (typeof songs[song].score === "string" ? (songs[song].score === "*.txt" ? `/songs/${song}.txt` : songs[song].score) : `/songs/${song}.pdf`);
     const museScore = hasMuseScore && (typeof songs[song].museScore === "string" ? songs[song].museScore : `/songs/${song}.mscz`);
     const abcWeb = hasAbcWeb && (typeof songs[song].abcWeb === "string" ? songs[song].abcWeb : `/songs/${song}.${useXml2Abc ? "abc" : "musicxml"}`);
 
@@ -139,7 +139,8 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                 <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setRegister(e.target.value)} title={t`registerHelp`}>
                     <option>{t`register`}</option>
                     {Object.keys(registers).map(_register => (
-                        <option key={_register} value={typeof registers[_register].value !== "undefined" ? "" + registers[_register].value : _register} selected={register === _register}>
+                        <option key={_register} value={typeof registers[_register].value !== "undefined" ? "" + registers[_register].value : _register}
+                            selected={register === (typeof registers[_register].value !== "undefined" ? "" + registers[_register].value : _register)}>
                             {_register}
                         </option>
                     ))}
