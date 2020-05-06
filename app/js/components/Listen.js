@@ -46,7 +46,7 @@ export default ({encodedMix, config: {renameMixTitle}}) => {
             ? <Loading />
             : (
                 <>
-                    <select style="margin-bottom: 15px;" class="custom-select" size="20"
+                    <select class="custom-select" size={2} style="margin-bottom: 15px; min-height: 200px; height: calc(100vh - 350px);"
                         onchange={e => route("/listen", e.target.value)}>
                         {mixes.map(_mix => <option key={_mix} value={_mix} selected={mix === _mix}>{_mix}</option>)}
                     </select>
