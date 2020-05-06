@@ -58,7 +58,7 @@ export default ({config}) => {
             )
             : (
                 <div>
-                    <div class="toast" ref={toastRef} style="position: absolute; top: 76px; right: 20px;">
+                    <div class="toast" ref={toastRef} style="position: absolute; top: 76px; right: 20px; z-index: 99;">
                         <div class="toast-header">
                         <strong class="mr-auto">{toastTitle}</strong>
                         <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
