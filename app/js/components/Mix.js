@@ -7,7 +7,7 @@ import Track from "./Track";
 import Loading from "./Loading";
 import {decode, route, useDebounce, useRepeat} from "../helpers";
 
-export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
+export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
     const [loading, setLoading] = useState(true);
     const [tracks, setTracks] = useState([]);
     const [busy, setBusy] = useState(false);
@@ -42,7 +42,7 @@ export default ({config: {songs, useAudiowaveform}, encodedSong, encodedTrackIds
     }, [pendingApiCalls]);
 
     const [mixPlayback, setMixPlayback] = useState(false);
-    const [mixGain, setMixGain] = useState(3);
+    const [mixGain, setMixGain] = useState(defaultMixGain || 3);
     const song = decode(encodedSong) || defaultSong;
     const selectedTrackIds = decode(encodedTrackIds, true) || [];
     const isReady = songTrackReady === song && selectedTrackIds.length === readyTrackIds.length;

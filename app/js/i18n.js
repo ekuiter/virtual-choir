@@ -65,6 +65,8 @@ const translationMap = {
         cursorNone: "None",
         cursorNormal: "per measure",
         cursorNote: "per note",
+        error: "Error",
+        warning: "Warning",
     },
     de: {
         title: "Virtueller Chor",
@@ -132,6 +134,8 @@ const translationMap = {
         cursorNone: "Ohne",
         cursorNormal: "pro Takt",
         cursorNote: "pro Note",
+        error: "Fehler",
+        warning: "Warnung",
     }
 };
 

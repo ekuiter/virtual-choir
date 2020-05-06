@@ -10,12 +10,6 @@ import {t, setDefaultLanguage} from "./i18n";
 import App from "./components/App";
 import {fetchJson} from "./api";
 
-window.addEventListener("error", err =>
-    "Error: " + window.alert(err.message));
-
-window.addEventListener("unhandledrejection", e =>
-    "Unhandled Rejection: " + window.alert(e.reason));
-
 window.MediaRecorder = class extends OpusMediaRecorder {
     constructor(stream, options) {
         super(stream, options, {
@@ -30,10 +24,6 @@ render(<App />, document.body);
 
 fetchJson({config: true}).then(config => {
     setDefaultLanguage(config.defaultLanguage);
-    if ((window.navigator.userAgent.indexOf("MSIE ") > -1 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) ||
-        navigator.userAgent.indexOf("Edge/") > -1 ||
-        (window.navigator.userAgent.indexOf("Safari") > -1 && window.navigator.userAgent.indexOf("Chrome") === -1))
-        alert(t`browserWarning`);
     if (localStorage.getItem("song") && !config.songs.hasOwnProperty(localStorage.getItem("song")) ||
         localStorage.getItem("register") && localStorage.getItem("register") !== "null" &&
         !config.registers.hasOwnProperty(localStorage.getItem("register"))) {
