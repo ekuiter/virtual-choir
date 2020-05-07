@@ -114,9 +114,9 @@ export default (abcOrXml, playback, offset, timing, cursor) => {
             ntop = ntop + ybalk - yrol;
         } else {
             var ymx = ntop + deNot.clientHeight - this.vmargin;    // bottom of notation area
-            //if (this.line_offsets [line + 1] > ymx || this.line_offsets [line] < ntop + this.vmargin) {
+            if (this.line_offsets [line + 1] > ymx || this.line_offsets [line] < ntop + this.vmargin) {
                 ntop = this.line_offsets [line] - this.tmargin;
-            //}
+            }
         }
         return ntop;
     }
