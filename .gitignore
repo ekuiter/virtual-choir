@@ -17,5 +17,5 @@ app/.htpasswd
 app/favicon.ico
 config.json
 config2.json
-migrate.bat
+migrate.sh
 *.zip

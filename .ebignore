@@ -17,7 +17,7 @@ ab.txt
 config2.json
 config.template.json
 LICENSE.txt
-migrate.bat
+migrate.sh
 package*.json
 README.md
 screenshot.jpg
