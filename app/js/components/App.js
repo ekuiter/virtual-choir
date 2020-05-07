@@ -70,7 +70,7 @@ export default ({config}) => {
                     <Match>
                         {({path}) => <Navigation path={path} config={config} />}
                     </Match>
-                    <div class="container" style="position: relative; padding-top: 25px; margin-bottom: 20px;">
+                    <div class="container" style="padding-top: 25px; margin-bottom: 20px;">
                         <Router>
                             <AsyncRoute path="/"
                                 getComponent={() => import("./Record").then(module => module.default)}
