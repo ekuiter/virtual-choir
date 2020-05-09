@@ -129,7 +129,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
 
     useEffect(() => {
         if (song && hasAbcWeb)
-            setScore("abcWeb");
+            setScore("score"); // setScore("abcWeb");
         else if (song && hasScore)
             setScore("score");
         else
