@@ -3,6 +3,7 @@ import {useState, useEffect, useRef} from "preact/hooks";
 import Peaks from "../peaks.js/main";
 import {t} from "../i18n";
 import PlayButton from "./PlayButton";
+import {makeToast} from "../helpers";
 
 const fetchAudioBuffer = ((duration = 25) => {
     const cache = {};
@@ -11,7 +12,7 @@ const fetchAudioBuffer = ((duration = 25) => {
             return Promise.resolve(cache[src]);
         return fetch(src)
             .then(res => res.arrayBuffer())
-            .then(arrayBuffer => new Promise(resolve => ctx.resume().then(() => ctx.decodeAudioData(arrayBuffer, resolve))))
+            .then(arrayBuffer => new Promise((resolve, reject) => ctx.resume().then(() => ctx.decodeAudioData(arrayBuffer, resolve, reject))))
             .then(duration
                 ? audioBuffer => {
                     const shortAudioBuffer = ctx.createBuffer(audioBuffer.numberOfChannels,
@@ -25,7 +26,10 @@ const fetchAudioBuffer = ((duration = 25) => {
                     return shortAudioBuffer;
                 }
                 : audioBuffer => audioBuffer)
-            .then(audioBuffer => cache[src] = audioBuffer);
+            .then(audioBuffer => cache[src] = audioBuffer)
+            .catch(e => {
+                makeToast(e.message);
+            });
     };
 })();
 
@@ -68,8 +72,14 @@ export default ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5
                     editable: false
                 }]
             };
-            if (!dataUri)
+            if (!dataUri && audioBuffer)
                 options.webAudio = {audioContext: ctx, audioBuffer};
+            else if (!dataUri && !audioBuffer) {
+                const id = () => {};
+                setPeaks({destroy: id, player: {seek: id, play: id, pause: id}, points: {getPoint: () => ({time: 0})}});
+                onReady();
+                return;
+            }
             Peaks.init(options, (err, peaks) => {
                 if (!err) {
                     peaks.views.getView("zoomview").setZoom({seconds: displaySeconds});
