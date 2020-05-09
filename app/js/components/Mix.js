@@ -162,7 +162,8 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
                                     key={song} title={song} offset={songs[song].offset}
                                     gain={songTrackGain} gainMin={0} gainMax={5} onGainUpdated={setSongTrackGain} isPlaying={songTrackPlaying === song}
                                     onSetIsPlaying={isPlaying => setSongTrackPlaying(isPlaying && song)}
-                                    onReady={() => setSongTrackReady(song)} />
+                                    onReady={() => setSongTrackReady(song)}
+                                    showOverview={true} />
                                 {getSelectedTracks(selectedTrackIds).map(track => {
                                     const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
 
@@ -186,7 +187,8 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
                                             gain={parseFloat(gain)} gainMin="0" gainMax="5"
                                             onOffsetUpdated={onOffsetUpdated} onGainUpdated={onGainUpdated}
                                             isPlaying={playingTrackIds.indexOf(id) !== -1} onSetIsPlaying={setPlayingTrack(id)}
-                                            onReady={addReadyTrack(id)} />
+                                            onReady={addReadyTrack(id)}
+                                            showOverview={true} />
                                     );
                                 })}
                             </>

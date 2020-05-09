@@ -34,11 +34,12 @@ const fetchAudioBuffer = ((duration = 25) => {
 })();
 
 export default ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
-    isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true,
-    gainMin = 0.01, gainMax = 2, height = 140, margin = 8, topDiff = 35}) => {
+    isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true, showOverview = false,
+    gainMin = 0.01, gainMax = 2, zoomHeight = 140, overviewHeight = 50, margin = 8, topDiff = 35}) => {
     const [peaks, setPeaks] = useState();
     const audioRef = useRef();
     const zoomviewRef = useRef();
+    const overviewRef = useRef();
     const gainNodeRef = useRef();
     
     useEffect(() => {
@@ -61,7 +62,8 @@ export default ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5
             const options = {
                 editable: !!onOffsetUpdated,
                 containers: {
-                    zoomview: zoomviewRef.current
+                    zoomview: zoomviewRef.current,
+                    overview: overviewRef.current
                 },
                 mediaElement: audioRef.current,
                 dataUri,
@@ -127,8 +129,9 @@ export default ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5
                 <img src="/img/loading.gif" width="100" height="100" style="margin-top: 20px;" />
             </div>
             <audio src={src} ref={audioRef} onended={() => onSetIsPlaying && onSetIsPlaying(false)} />
-            <div ref={zoomviewRef} style={`height: ${height}px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}`} />
-            <div style={peaks ? `position: absolute; top: ${height - topDiff}px; width: 100%; display: flex; flex-basis: 1;`: "display: none;"}>
+            <div ref={zoomviewRef} style={`height: ${zoomHeight}px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}`} />
+            {showOverview && <div ref={overviewRef} style={`height: ${overviewHeight}px; ${peaks && onOffsetUpdated ? "cursor: move;" : ""}`} />}
+            <div style={peaks ? `${showOverview ? "" : `position: absolute; top: ${zoomHeight - topDiff}px; width: 100%;`} margin: 5px 0; display: flex; flex-basis: 1;`: "display: none;"}>
                 <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
                     <strong style="padding: 0 20px 0 10px">{title}</strong>
                 </div>

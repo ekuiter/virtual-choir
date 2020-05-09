@@ -29,7 +29,8 @@ define([
   function buildUi(container) {
     return {
       player:   container.querySelector('.waveform'),
-      zoomview: container.querySelector('.zoom-container')
+      zoomview: container.querySelector('.zoom-container'),
+      overview: container.querySelector('.overview-container')
     };
   }
 
@@ -132,6 +133,23 @@ define([
       zoomWaveformColor:     'rgba(0, 225, 128, 1)',
 
       /**
+       * Colour for the overview waveform
+       */
+      overviewWaveformColor: 'rgba(0,0,0,0.2)',
+
+      /**
+       * Colour for the overview waveform highlight rectangle, which shows
+       * you what you see in the zoom view.
+       */
+      overviewHighlightColor: 'grey',
+
+      /**
+       * The default number of pixels from the top and bottom of the canvas
+       * that the overviewHighlight takes up
+       */
+      overviewHighlightOffset: 11,
+
+      /**
        * Height of the waveform canvases in pixels
        */
       height:                200,
@@ -142,6 +160,7 @@ define([
       template:              [
         '<div class="waveform">',
         '<div class="zoom-container"></div>',
+        '<div class="overview-container"></div>',
         '</div>'
       ].join(''),
 
@@ -225,7 +244,8 @@ define([
 
     var zoomviewContainer = containers.zoomview || containers.zoom;
 
-    if (!Utils.isHTMLElement(zoomviewContainer)) {
+    if (!Utils.isHTMLElement(zoomviewContainer) &&
+        !Utils.isHTMLElement(containers.overview)) {
       // eslint-disable-next-line max-len
       callback(new TypeError('Peaks.init(): The containers.zoomview and/or containers.overview options must be valid HTML elements'));
       return;
@@ -255,6 +275,10 @@ define([
       }
 
       instance._waveformData = waveformData;
+
+      if (containers.overview) {
+        instance.views.createOverview(containers.overview);
+      }
 
       if (zoomviewContainer) {
         instance.views.createZoomview(zoomviewContainer);
@@ -436,7 +460,7 @@ define([
 
         self._waveformData = waveformData;
 
-        ['zoomview'].forEach(function(viewName) {
+        ['overview', 'zoomview'].forEach(function(viewName) {
           var view = self.views.getView(viewName);
 
           if (view) {

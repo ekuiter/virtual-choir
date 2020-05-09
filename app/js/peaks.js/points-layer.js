@@ -35,7 +35,8 @@ define([
     this._pointMarkers = {};
     this._layer        = new Konva.Layer();
 
-    this._layer.add(centeredLine);
+    if (centeredLine)
+      this._layer.add(centeredLine);
 
     this._onPointsDrag = this._onPointsDrag.bind(this);
 
