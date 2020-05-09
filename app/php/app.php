@@ -75,6 +75,16 @@ function map($x, $in_min, $in_max, $out_min, $out_max) {
     return ($x - $in_min) * ($out_max - $out_min) / ($in_max - $in_min) + $out_min;
 }
 
+function getRegisterColor($img, $register, $default) {
+    global $config;
+    if (!@$config->registers->{$register} || !@$config->registers->{$register}->color)
+        return $default;
+    else {
+        list($r, $g, $b) = sscanf(@$config->registers->{$register}->color, "#%02x%02x%02x");
+        return imagecolorallocate($img, (int) $r, (int) $g, (int) $b);
+    }
+}
+
 if (@$config->useAudiowaveform) {
     $songs = array_filter((array) glob("../songs/*.mp3"));
     foreach ($songs as $song) {
@@ -139,7 +149,7 @@ if (isset($_REQUEST["mix"])) {
     $track_id_by_register = array();
     if (!file_exists("../songs/$song.mp3"))
         die("invalid song");
-    $mixfile = "../mixes/" . date("Y-m-d H-i-s") . " $song (" . ($playback ? "Playback, " : "");
+    $mixfile = "../mixes/" . date("Y-m-d H-i-s") . " $song" . ($playback ? " (Playback)" : "");
     foreach ($tracks as $idx => $track) {
         if ($track["register"] === "null")
             continue;
@@ -153,12 +163,8 @@ if (isset($_REQUEST["mix"])) {
             $track_id_by_register[$track["register"]] = array((int) $track["id"]);
     }
     ksort($track_id_by_register);
-    foreach ($track_id_by_register as $register => &$_tracks) {
+    foreach ($track_id_by_register as $register => &$_tracks)
         sort($_tracks);
-        $mixfile .= count($_tracks) . "x $register, ";
-    }
-    if (substr($mixfile, -2) === ", ")
-        $mixfile = substr($mixfile, 0, -2);
     $command = ffmpeg() . " -y";
     if ($playback)
         $command .= " -i \"../songs/$song.mp3\"";
@@ -207,7 +213,7 @@ if (isset($_REQUEST["mix"])) {
         $count++;
     @mkdir("../mixes");
     asort($balance_by_track_id_and_name);
-    $mixfile .= ").mp3";
+    $mixfile .= ".mp3";
     if (@$config->simplifiedMixTitle)
         $mixfile = "../mixes/$song " . date("Y-m-d") . ".mp3";
     $gain = isset($_REQUEST["gain"]) ? $_REQUEST["gain"] : 1;
@@ -230,18 +236,22 @@ if (isset($_REQUEST["mix"])) {
         imageantialias($img, true);
         imagesetthickness($img, 2);
         imagearc($img, $arc_x * 2, $arc_y * 2, $arc_width * 2, $arc_height * 4, 190, -10, $gray);
+        foreach (array_keys($track_id_by_register) as $idx => $register) {
+            $text = count($track_id_by_register[$register]) . "x $register";
+            $bbox = imagettfbbox($pt, 0, realpath("arial.ttf"), $text);
+            $text_width = $bbox[4] - $bbox[0];
+            $text_x = map(@$config->registers->{$register}->balance, -1, 1, 0, $width * 2) - $text_width / 2;
+            $text_y = $height * 2 - $pt * 2;
+            imagettftext($img, $pt, 0, $text_x + 1, $text_y + 1, $gray, realpath("arial.ttf"), $text);
+            imagettftext($img, $pt, 0, $text_x, $text_y, getRegisterColor($img, $register, $black), realpath("arial.ttf"), $text);
+        }
         foreach ($balance_by_track_id_and_name as $track_id_and_name => $balance) {
             $id = explode(",", $track_id_and_name)[0];
             $_track = null;
             foreach ($tracks as $track)
                 if ($track["id"] === $id)
                     $_track = $track;
-            if (!$_track || !@$config->registers->{$_track["register"]} || !@$config->registers->{$_track["register"]}->color)
-                $color = $black;
-            else {
-                list($r, $g, $b) = sscanf(@$config->registers->{$_track["register"]}->color, "#%02x%02x%02x");
-                $color = imagecolorallocate($img, (int) $r, (int) $g, (int) $b);
-            }
+            $color = $_track ? getRegisterColor($img, $_track["register"], $black) : $black;
             $_balance = (float) $balance * (@$config->registerScale ? @$config->registerScale : 1.0);
             $x = $arc_x * 2 + $_balance * $arc_width;
             $y = $arc_y * 2 - sin(acos($_balance)) * $arc_height * 2;
@@ -258,6 +268,8 @@ if (isset($_REQUEST["mix"])) {
         }
         $final_img = imagecreatetruecolor($width, $height);
         imagecopyresampled($final_img, $img, 0, 0, 0, 0, $width, $height, $width * 2, $height * 2);
+        //header("Content-Type: image/png");
+        //imagepng($final_img);
         imagepng($final_img, "../mixes/" . basename($mixfile, ".mp3") . ".png");
         imagedestroy($img);
         imagedestroy($final_img);
