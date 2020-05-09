@@ -5,7 +5,7 @@ import {t} from "../i18n";
 import PlayButton from "./PlayButton";
 import {makeToast} from "../helpers";
 
-const fetchAudioBuffer = ((duration = 25) => {
+const fetchAudioBuffer = (() => {
     const cache = {};
     return (ctx, src) => {
         if (cache[src])
@@ -13,19 +13,6 @@ const fetchAudioBuffer = ((duration = 25) => {
         return fetch(src)
             .then(res => res.arrayBuffer())
             .then(arrayBuffer => new Promise((resolve, reject) => ctx.resume().then(() => ctx.decodeAudioData(arrayBuffer, resolve, reject))))
-            .then(duration
-                ? audioBuffer => {
-                    const shortAudioBuffer = ctx.createBuffer(audioBuffer.numberOfChannels,
-                        Math.min(audioBuffer.length, ctx.sampleRate * duration), ctx.sampleRate);
-                    for (var channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-                        const oldChannel = audioBuffer.getChannelData(channel);
-                        const newChannel = shortAudioBuffer.getChannelData(channel);
-                        for (var i = 0; i < shortAudioBuffer.length; i++)
-                            newChannel[i] = oldChannel[i];
-                    }
-                    return shortAudioBuffer;
-                }
-                : audioBuffer => audioBuffer)
             .then(audioBuffer => cache[src] = audioBuffer)
             .catch(e => {
                 makeToast(e.message);
