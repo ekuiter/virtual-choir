@@ -1,3 +1,4 @@
+import {h, Fragment} from "preact";
 import {useState, useEffect} from "preact/hooks";
 import {route as _route} from "preact-router";
 import {get, set, del} from "idb-keyval";
@@ -59,3 +60,5 @@ export const decode = (str, parseJson = false) => {
 
 export const route = (path, ...params) =>
     _route(path + params.reduce((acc, val) => acc + "/" + encode(val), ""));
+
+export const getName = (name, register) => register !== "null" ? <span>{name}, <em>{register}</em></span> : <span>{name}</span>;

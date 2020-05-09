@@ -363,11 +363,20 @@ if (isset($_REQUEST["backup"])) {
     }
 }
 
-if (isset($_REQUEST["setFor"]) && isset($_REQUEST["songOffset"]))
-    DB::query("UPDATE tracks SET songOffset = %s WHERE id = %i", $_REQUEST["songOffset"], (int) $_REQUEST["setFor"]);
-if (isset($_REQUEST["setFor"]) && isset($_REQUEST["recordingOffset"]))
-    DB::query("UPDATE tracks SET recordingOffset = %s WHERE id = %i", $_REQUEST["recordingOffset"], (int) $_REQUEST["setFor"]);
-if (isset($_REQUEST["setFor"]) && isset($_REQUEST["gain"]))
-    DB::query("UPDATE tracks SET gain = %s WHERE id = %i", $_REQUEST["gain"], (int) $_REQUEST["setFor"]);
+if (isset($_REQUEST["setFor"]) && $_REQUEST["setFor"]) {
+    if (isset($_REQUEST["name"]) && $_REQUEST["name"])
+        DB::query("UPDATE tracks SET name = %s WHERE id = %i", $_REQUEST["name"], (int) $_REQUEST["setFor"]);
+    if (isset($_REQUEST["song"]) && $_REQUEST["song"])
+        DB::query("UPDATE tracks SET song = %s WHERE id = %i", $_REQUEST["song"], (int) $_REQUEST["setFor"]);
+    if (isset($_REQUEST["register"]) && $_REQUEST["register"])
+        DB::query("UPDATE tracks SET register = %s WHERE id = %i", $_REQUEST["register"], (int) $_REQUEST["setFor"]);
+    if (isset($_REQUEST["songOffset"]) && $_REQUEST["songOffset"])
+        DB::query("UPDATE tracks SET songOffset = %s WHERE id = %i", $_REQUEST["songOffset"], (int) $_REQUEST["setFor"]);
+    if (isset($_REQUEST["recordingOffset"]) && $_REQUEST["recordingOffset"])
+        DB::query("UPDATE tracks SET recordingOffset = %s WHERE id = %i", $_REQUEST["recordingOffset"], (int) $_REQUEST["setFor"]);
+    if (isset($_REQUEST["gain"]) && $_REQUEST["gain"])
+        DB::query("UPDATE tracks SET gain = %s WHERE id = %i", $_REQUEST["gain"], (int) $_REQUEST["setFor"]);
+    header("Location: ../admin");
+}
 
 ?>

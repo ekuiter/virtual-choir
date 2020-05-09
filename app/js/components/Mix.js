@@ -5,7 +5,7 @@ import {post, fetchJson} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
 import Loading from "./Loading";
-import {decode, route, useDebounce, useRepeat} from "../helpers";
+import {decode, route, useDebounce, useRepeat, getName} from "../helpers";
 
 export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
     const [loading, setLoading] = useState(true);
@@ -50,7 +50,6 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
     const getSelectedTracks = selectedTrackIds => selectedTrackIds.map(id => tracks.find(track => track.id === id));
     const addReadyTrack = id => () => setReadyTrackIds(readyTrackIds => [...readyTrackIds, id]);
     const addPendingApiCall = pendingApiCall => setPendingApiCalls(pendingApiCalls => [...pendingApiCalls, pendingApiCall]);
-    const getName = (name, register) => register !== "null" ? <span>{name}, <em>{register}</em></span> : <span>{name}</span>;
 
     const setPlayingTrack = id => isPlaying => setPlayingTrackIds(playingTrackIds => {
         if (isPlaying)
