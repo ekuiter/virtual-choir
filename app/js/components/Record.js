@@ -5,7 +5,7 @@ import {t} from "../i18n";
 import {uploadTrack} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
-import {useLocalStorage, getRecordingArrayBuffer, setRecordingArrayBuffer} from "../helpers";
+import {useLocalStorage, getRecordingArrayBuffer, setRecordingArrayBuffer, makeToast} from "../helpers";
 import AbcWeb from "./AbcWeb";
 
 export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song, setSong, recordingTimeout = 1500, loadLastRecording = false}) => {
@@ -43,11 +43,11 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
         e.preventDefault();
         if (!recorder) {
             if (!name)
-                alert(t`nameMissing`);
+                makeToast(t`nameMissing`, "Error");
             else if (!register)
-                alert(t`registerMissing`);
+                makeToast(t`registerMissing`, "Error");
             else if (!song)
-                alert(t`songMissing`);
+                makeToast(t`songMissing`, "Error");
             else {
                 setBusy(true);
                 navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
@@ -62,9 +62,10 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                         setBusy(false);
                         setRecorder(recorder);
                     }, recordingTimeout);
-                }, () => {
+                    makeToast(t`recordingStarted`);
+            }, () => {
                     setBusy(false);
-                    window.alert(t`permissionMissing`);
+                    makeToast(t`permissionMissing`, "Error");
                 });
             }
         } else {
@@ -79,6 +80,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                 setRecorder();
                 setRecordingUri(recorder.toURL());
                 recorder.getBlob().arrayBuffer().then(setRecordingArrayBuffer);
+                makeToast(t`recordingDone`);
             });
         }
     };
@@ -87,9 +89,11 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
         setBusy(true);
         setIsPlaying(false);
         const gain = !isNaN(recordingTrackGain / songTrackGain) ? recordingTrackGain / songTrackGain : 1;
+        makeToast(t`uploadStarted`);
         uploadTrack(recordingUri, name, register, song, getSongTrackOffset(), getRecordingTrackOffset(), gain)
             .then(onDiscardClick)
-            .then(() => setBusy(false));
+            .then(() => setBusy(false))
+            .then(() => makeToast(t`uploadDone`));
     };
 
     const onDiscardClick = () => {
@@ -101,6 +105,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
         setSongTrackOffset();
         setSongTrackGain();
         setRecordingTrackOffset();
+        makeToast(t`recordingDiscarded`);
     };
 
     const onDownloadRecordingClick = () =>

@@ -19,16 +19,16 @@ export default ({config}) => {
     useEffect(() => {
         if (toastRef.current) {
             $(toastRef.current).toast({delay: 4000});
-            window.addEventListener("error", e => {
-                setToastTitle(t`error`);
+            window.onerror = (_1, _2, _3, _4, e) => {
+                setToastTitle(e.name === "Notice" ? t`notice` : t`error`);
                 setToastMessage(e.message);
                 $(toastRef.current).toast("show");
-            });
-            window.addEventListener("unhandledrejection", e => {
+            };
+            window.onunhandledrejection = e => {
                 setToastTitle("Unhandled Rejection");
                 setToastMessage(e.reason);
                 $(toastRef.current).toast("show");
-            });
+            };
         }
 
         if ((window.navigator.userAgent.indexOf("MSIE ") > -1 || !!navigator.userAgent.match(/Trident.*rv\:11\./)) ||

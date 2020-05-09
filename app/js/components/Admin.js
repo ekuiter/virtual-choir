@@ -2,7 +2,7 @@ import {h, Fragment} from "preact";
 import {useState, useEffect} from "preact/hooks";
 import {t, formatDate} from "../i18n";
 import {post, fetchJson} from "../api";
-import {route, deleteRecordingArrayBuffer, getName} from "../helpers";
+import {route, deleteRecordingArrayBuffer, getName, makeToast} from "../helpers";
 import Loading from "./Loading";
 
 export default ({config: {version}}) => {
@@ -21,8 +21,8 @@ export default ({config: {version}}) => {
     const onTestClick = e => {
         e.preventDefault();
         navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(
-            stream => window.alert("permission granted: " + stream),
-            err => window.alert("permission denied: " + err));
+            stream => makeToast("permission granted: " + stream),
+            err => makeToast("permission denied: " + err, "Error"));
     };
 
     const onRestoreClick = e => {

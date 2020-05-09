@@ -69,6 +69,12 @@ const translationMap = {
         warning: "Warning",
         rename: "Rename",
         uploadRecording: "Upload recording manually",
+        notice: "Notice",
+        uploadStarted: "Started uploading ...",
+        uploadDone: "Upload done.",
+        recordingStarted: "Started recording.",
+        recordingDone: "Done recording.",
+        recordingDiscarded: "Discarded recording.",
     },
     de: {
         title: "Virtueller Chor",
@@ -140,6 +146,12 @@ const translationMap = {
         warning: "Warnung",
         rename: "Umbenennen",
         uploadRecording: "Aufnahme manuell hochladen",
+        notice: "Hinweis",
+        uploadStarted: "Aufnahme wird hochgeladen ...",
+        uploadDone: "Aufnahme hochgeladen.",
+        recordingStarted: "Aufnahme begonnen.",
+        recordingDone: "Aufnahme beendet.",
+        recordingDiscarded: "Aufnahme verworfen.",
     }
 };
 

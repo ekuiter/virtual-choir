@@ -62,3 +62,9 @@ export const route = (path, ...params) =>
     _route(path + params.reduce((acc, val) => acc + "/" + encode(val), ""));
 
 export const getName = (name, register) => register !== "null" ? <span>{name}, <em>{register}</em></span> : <span>{name}</span>;
+
+export const makeToast = (message, name = "Notice") => {
+    const e = new Error(message);
+    e.name = name;
+    window.onerror(null, null, null, null, e);
+};
