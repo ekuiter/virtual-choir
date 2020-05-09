@@ -94,7 +94,7 @@ export default ({config: {version}}) => {
                 </form>
                 <p></p>
 
-                <strong>{t`setData`}</strong>
+                <strong>{t`setRecordingData`}</strong>
                 <form action="/php/app.php" method="post" style="margin-top: 5px;">
                     <select class="custom-select-sm" name="setFor" style="margin-bottom: 5px;"
                         onchange={e => setSelectedTrackId([...e.target.options].filter(o => o.selected).map(o => o.value)[0])}>
@@ -116,6 +116,16 @@ export default ({config: {version}}) => {
                         <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="recordingOffset" name="recordingOffset" value={track ? track.recordingOffset : null} />
                         <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="gain" name="gain" value={track ? track.gain : null} />
                     </div>
+                    <input type="submit" class="btn btn-outline-danger btn-sm" style="padding: 0.15rem 0.4rem; margin: 0;" value={t`save`} />
+                </form>
+                <p></p>
+
+                <strong>{t`uploadRecording`}</strong>
+                <form enctype="multipart/form-data" action="/php/app.php" method="post" class="form-inline" style="margin-top: 5px;">
+                    <input type="file" name="file" style="margin: 0 12px 0 0;" />
+                    <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="song" name="song" />
+                    <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="name" name="name" />
+                    <input type="text" class="form-control mr-sm-2 form-control-sm" placeholder="register" name="register" />
                     <input type="submit" class="btn btn-outline-danger btn-sm" style="padding: 0.15rem 0.4rem; margin: 0;" value={t`save`} />
                 </form>
                 <p></p>

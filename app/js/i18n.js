@@ -45,7 +45,7 @@ const translationMap = {
         saveChanges: "Save changes",
         confirmClose: "There are unsaved changes.",
         download: "Download",
-        backupSection: "Backup & restore data",
+        backupSection: "Backup & restore recordings",
         backup: "Backup",
         restore: "Restore",
         confirmRestore: "Sure? This will replace all recordings.",
@@ -55,7 +55,7 @@ const translationMap = {
         localStorage: "Local storage",
         clearLocalStorage: "Clear local storage",
         browserWarning: "You are using a web browser that is possibly not supported. Use at your own risk!",
-        setData: "Set data manually",
+        setRecordingData: "Edit recording manually",
         save: "Save",
         recordingStorage: "Recording storage",
         deleteLastRecording: "Delete last recording",
@@ -68,6 +68,7 @@ const translationMap = {
         error: "Error",
         warning: "Warning",
         rename: "Rename",
+        uploadRecording: "Upload recording manually",
     },
     de: {
         title: "Virtueller Chor",
@@ -115,7 +116,7 @@ const translationMap = {
         saveChanges: "Änderungen speichern",
         confirmClose: "Nicht alle Änderungen wurden gespeichert.",
         download: "Herunterladen",
-        backupSection: "Daten sichern & wiederherstellen",
+        backupSection: "Aufnahmen sichern & wiederherstellen",
         backup: "Sichern",
         restore: "Wiederherstellen",
         confirmRestore: "Sicher? Dies ersetzt alle Aufnahmen.",
@@ -125,7 +126,7 @@ const translationMap = {
         localStorage: "Lokaler Speicher",
         clearLocalStorage: "Lokalen Speicher leeren",
         browserWarning: "Du benutzt einen Webbrowser, der möglicherweise nicht unterstützt wird. Benutzung auf eigene Gefahr!",
-        setData: "Daten manuell setzen",
+        setRecordingData: "Aufnahme manuell bearbeiten",
         save: "Speichern",
         recordingStorage: "Aufnahme-Speicher",
         deleteLastRecording: "Letzte Aufnahme löschen",
@@ -138,6 +139,7 @@ const translationMap = {
         error: "Fehler",
         warning: "Warnung",
         rename: "Umbenennen",
+        uploadRecording: "Aufnahme manuell hochladen",
     }
 };
 

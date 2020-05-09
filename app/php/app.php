@@ -110,9 +110,13 @@ if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
     shell_exec(ffmpeg() . " -i $tmp_name \"../tracks/$md5.mp3\"");
     if (@$config->useAudiowaveform)
         shell_exec(audiowaveform() . " -b 8 -i \"../tracks/$md5.mp3\" -o \"../tracks/$md5.json\"");
+    $songOffset = $_POST["songOffset"] && $_POST["songOffset"] !== "undefined" ? $_POST["songOffset"] : "0.0";
+    $recordingOffset = $_POST["recordingOffset"] && $_POST["recordingOffset"] !== "undefined" ? $_POST["recordingOffset"] : "0.0";
+    $gain = $_POST["gain"] && $_POST["gain"] !== "undefined" ? $_POST["gain"] : "1.0";
+    $date = $_POST["date"] && $_POST["date"] !== "undefined" ? $_POST["date"] : date("Y-m-d\TH:i:s.000\Z");
     DB::query("INSERT INTO tracks (name, register, song, songOffset, recordingOffset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-        $_POST["name"], $_POST["register"], $_POST["song"], $_POST["songOffset"], $_POST["recordingOffset"], $_POST["gain"], $_POST["date"], $md5);
-    die;
+        $_POST["name"], $_POST["register"], $_POST["song"], $songOffset, $recordingOffset, $gain, $date, $md5);
+    header("Location: ../admin");
 }
 
 if (isset($_REQUEST["config"])) {
