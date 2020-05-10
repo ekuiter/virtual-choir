@@ -20,7 +20,7 @@ const fetchAudioBuffer = (() => {
     };
 })();
 
-export default ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5.0, onReady,
+export default ({title, src, dataUri, offset = 0.5, virtualOffset = 0.0, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true, showOverview = false,
     gainMin = 0.01, gainMax = 2, zoomHeight = 140, overviewHeight = 50, margin = 8, topDiff = 35}) => {
     const [peaks, setPeaks] = useState();
@@ -100,6 +100,15 @@ export default ({title, src, dataUri, offset = 0.5, gain = 1, displaySeconds = 5
                 peaks.player.pause();
         }
     }, [isPlaying]);
+
+    useEffect(() => {
+        if (peaks) {
+            const zoomView = peaks.views.getView("zoomview");
+            zoomView._updateWaveform(zoomView.timeToPixels(offset + virtualOffset) - zoomView._width / 4, true);
+            if (onSetIsPlaying)
+                onSetIsPlaying(false);
+        }
+    }, [virtualOffset]);
 
     const onGainInput = e => {
         const gain = parseFloat(e.target.value);

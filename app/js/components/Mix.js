@@ -18,17 +18,27 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
     const [songTrackGain, setSongTrackGain] = useState(1);
     const [pendingApiCalls, setPendingApiCalls] = useState([]);
     const [pendingApiCall, setPendingApiCall] = useState();
+    const [virtualSongTrackOffset, setVirtualSongTrackOffset] = useState(0);
+    const [mixPlayback, setMixPlayback] = useState(false);
+    const [mixGain, setMixGain] = useState(defaultMixGain || 3);
     const debouncedPendingApiCall = useDebounce(pendingApiCall, debounceApiCalls);
+    const song = decode(encodedSong) || defaultSong;
+    const selectedTrackIds = decode(encodedTrackIds, true) || [];
+    const isReady = songTrackReady === song && selectedTrackIds.length === readyTrackIds.length;
+    const isPlaying = songTrackPlaying === song || playingTrackIds.length > 0;
+    const getSelectedTracks = selectedTrackIds => selectedTrackIds.map(id => tracks.find(track => track.id === id));
+    const addReadyTrack = id => () => setReadyTrackIds(readyTrackIds => [...readyTrackIds, id]);
+    const addPendingApiCall = pendingApiCall => setPendingApiCalls(pendingApiCalls => [...pendingApiCalls, pendingApiCall]);
 
-    const updateTracks = () =>
-        pendingApiCalls.length === 0
+    const updateTracks = initial =>
+        selectedTrackIds.length === 0 || initial
             ? fetchJson({tracks: true})
                 .then(tracks => tracks.map(({date, ...track}) => ({date: new Date(date), ...track})))
                 .then(setTracks)
                 .then(() => setLoading(false))
             : null;
 
-    useRepeat(updateTracks, [pendingApiCalls]);
+    useRepeat(updateTracks, [encodedTrackIds]);
 
     useEffect(() => {
         if (debouncedPendingApiCall) {
@@ -40,16 +50,6 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
     useEffect(() => {
         window.onbeforeunload = pendingApiCalls.length > 0 && (() => t`confirmClose`);
     }, [pendingApiCalls]);
-
-    const [mixPlayback, setMixPlayback] = useState(false);
-    const [mixGain, setMixGain] = useState(defaultMixGain || 3);
-    const song = decode(encodedSong) || defaultSong;
-    const selectedTrackIds = decode(encodedTrackIds, true) || [];
-    const isReady = songTrackReady === song && selectedTrackIds.length === readyTrackIds.length;
-    const isPlaying = songTrackPlaying === song || playingTrackIds.length > 0;
-    const getSelectedTracks = selectedTrackIds => selectedTrackIds.map(id => tracks.find(track => track.id === id));
-    const addReadyTrack = id => () => setReadyTrackIds(readyTrackIds => [...readyTrackIds, id]);
-    const addPendingApiCall = pendingApiCall => setPendingApiCalls(pendingApiCalls => [...pendingApiCalls, pendingApiCall]);
 
     const setPlayingTrack = id => isPlaying => setPlayingTrackIds(playingTrackIds => {
         if (isPlaying)
@@ -160,16 +160,17 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
                                     </div>
                                 </div>
                                 <Track src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}
-                                    key={song} title={song} offset={songs[song].offset}
+                                    key={song} title={song} offset={songs[song].offset} virtualOffset={virtualSongTrackOffset}
                                     gain={songTrackGain} gainMin={0} gainMax={5} onGainUpdated={setSongTrackGain} isPlaying={songTrackPlaying === song}
                                     onSetIsPlaying={isPlaying => setSongTrackPlaying(isPlaying && song)}
                                     onReady={() => setSongTrackReady(song)}
-                                    showOverview={true} />
+                                    showOverview={true}
+                                    onOffsetUpdated={offset => setVirtualSongTrackOffset(songs[song].virtualOffset = (offset - songs[song].offset))} />
                                 {getSelectedTracks(selectedTrackIds).map(track => {
                                     const {id, name, register, song, md5, songOffset, recordingOffset, gain} = track;
 
                                     const onOffsetUpdated = offset => {
-                                        track.recordingOffset = offset + (parseFloat(songOffset) - songs[song].offset);
+                                        track.recordingOffset = offset - (songs[song].virtualOffset || 0) + (parseFloat(songOffset) - songs[song].offset);
                                         setBusy(true);
                                         setPendingApiCall({"setFor": id, "recordingOffset": track.recordingOffset});
                                     };
@@ -184,7 +185,8 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
                                         <Track key={id} title={getName(name, register)}
                                             src={`/tracks/${md5}.mp3`}
                                             dataUri={useAudiowaveform && `/tracks/${md5}.json`}
-                                            offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - songs[song].offset)}
+                                            offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - (songs[song].offset))}
+                                            virtualOffset={virtualSongTrackOffset}
                                             gain={parseFloat(gain)} gainMin="0" gainMax="5"
                                             onOffsetUpdated={onOffsetUpdated} onGainUpdated={onGainUpdated}
                                             isPlaying={playingTrackIds.indexOf(id) !== -1} onSetIsPlaying={setPlayingTrack(id)}

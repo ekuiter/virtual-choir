@@ -445,11 +445,12 @@ define([
    * @param {Number} frameOffset The new frame offset, in pixels.
    */
 
-  WaveformZoomView.prototype._updateWaveform = function(frameOffset) {
+  WaveformZoomView.prototype._updateWaveform = function(frameOffset, skipUpdateEvent) {
     const newTime = this.pixelsToTime(frameOffset + this._width / 4);
     if (newTime !== this._peaks.points.getPoint("offset").time) {
       this._peaks.points.getPoint("offset").time = newTime;
-      this._peaks.emit('points.offsetUpdated', newTime);
+      if (!skipUpdateEvent)
+        this._peaks.emit('points.offsetUpdated', newTime);
     }
 
     var upperLimit;

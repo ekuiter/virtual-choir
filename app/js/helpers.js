@@ -13,7 +13,7 @@ export const useRepeat = (fn, deps = [], delay = 5000) => {
     useEffect(
       () => {
         const timeout = setInterval(fn, delay);
-        fn();
+        fn(true);
         return () => clearInterval(timeout);
       },
       deps
