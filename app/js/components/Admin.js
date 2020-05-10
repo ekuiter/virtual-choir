@@ -8,14 +8,18 @@ import Loading from "./Loading";
 export default ({config: {version}}) => {
     const [loading, setLoading] = useState(true);
     const [tracks, setTracks] = useState([]);
+    const [mixes, setMixes] = useState([]);
     const [hasFile, setHasFile] = useState();
     const [selectedTrackId, setSelectedTrackId] = useState();
 
     useEffect(() => {
-        fetchJson({tracks: true})
-            .then(tracks => tracks.map(({date, ...track}) => ({date: new Date(date), ...track})))
-            .then(setTracks)
-            .then(() => setLoading(false));
+        Promise.all([fetchJson({tracks: true}), fetchJson({mixes: true})])
+            .then(([tracks, mixes]) => ([tracks.map(({date, ...track}) => ({date: new Date(date), ...track})), mixes]))
+            .then(([tracks, mixes]) => {
+                setTracks(tracks);
+                setMixes(mixes);
+                setLoading(false);
+            });
     }, []);
 
     const onTestClick = e => {
@@ -85,7 +89,7 @@ export default ({config: {version}}) => {
 
                 <strong>{t`recordingStorage`}</strong>
                 <form class="form form-inline my-2 my-lg-0" style="padding-top: 5px;">
-                <button class="btn btn-sm btn-outline-success my-2 my-sm-0" style="padding: 0.15rem 0.4rem; margin: 0;" onClick={() => route("/last")}>
+                    <button class="btn btn-sm btn-outline-success my-2 my-sm-0" style="padding: 0.15rem 0.4rem; margin: 0;" onClick={() => route("/last")}>
                         {t`loadLastRecording`}
                     </button>
                     <button class="btn btn-sm btn-outline-danger my-2 my-sm-0" style="padding: 0.15rem 0.4rem; margin: 0 0 0 0.3rem;" onClick={deleteRecordingArrayBuffer}>
@@ -137,6 +141,17 @@ export default ({config: {version}}) => {
                     <input type="submit" class="btn btn-outline-danger btn-sm"  style="padding: 0.15rem 0.4rem; margin: 0 0 0 0.3rem;" onclick={onRestoreClick} value={hasFile ? t`restore` : t`backup`} />
                     <button class="btn btn-outline-danger btn-sm" style="padding: 0.15rem 0.4rem; margin: 0 0 0 0.3rem;" onclick={onResetClick}>{t`reset`}</button>
                 </form>
+                <p></p>
+
+                <strong>{t`encodeMix`}</strong>
+                <form action="/php/app.php" method="post" class="form form-inline my-2 my-lg-0" style="padding-top: 5px;">
+                    <select class="custom-select-sm" name="encodeMix" style="margin-right: 6px;">
+                        <option></option>
+                        {mixes.map(mix => <option key={mix} value={mix}>{mix}</option>)}
+                    </select>
+                    <input type="submit" class="btn btn-outline-success btn-sm" style="padding: 0.15rem 0.4rem; margin: 0;" value={t`download`} />
+                </form>
+                <p></p>
             </>
         )
     );

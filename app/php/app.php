@@ -329,6 +329,17 @@ if (isset($_REQUEST["deleteMix"])) {
         unlink("../mixes/$mix.png");
 }
 
+if (isset($_REQUEST["encodeMix"]) && $_REQUEST["encodeMix"] && file_exists("background.png")) {
+    $mix = $_REQUEST["encodeMix"];
+    if (!$mix)
+        die("no mix given");
+    if (!file_exists("../mixes/$mix.mp3") || strpos(realpath("../mixes/$mix.mp3"), realpath("../mixes/")) !== 0)
+        die("invalid mix");
+    set_time_limit(0);
+    shell_exec(ffmpeg() . " -y -loop 1 -i background.png -i \"../mixes/$mix.mp3\" -c:v libx264 -tune stillimage -c:a aac -b:a 192k -pix_fmt yuv420p -shortest mix.mp4");
+    header("Location: mix.mp4");
+}
+
 if (isset($_REQUEST["backup"])) {
     @mkdir("../tracks");
     @mkdir("../mixes");

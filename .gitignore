@@ -13,6 +13,8 @@ app/tracks/*
 app/dist/*
 app/index.html
 app/php/local.php
+app/php/mix.mp4
+app/php/background.png
 app/.htpasswd
 app/favicon.ico
 config.json
