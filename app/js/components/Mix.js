@@ -123,8 +123,9 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
                 ? <Loading />
                 : (
                     <>
-                        <select class="custom-select" multiple size={2} onchange={onTracksSelected}
-                            style={`clear: both; margin: 15px 0; min-height: 200px; height: ${selectedTrackIds.length > 0 ? 0 : "calc(100vh - 250px)"};`}>
+                        <select class="custom-select" multiple size={window.screen.width >= 800 ? 2 : 1} onchange={onTracksSelected}
+                            style={window.screen.width >= 800 ? "margin-bottom: 15px; min-height: 200px; height: calc(100vh - 550px);" : ""}
+                            style={`clear: both; margin: 15px 0; ${window.screen.width >= 800 ? `min-height: 200px; height: ${selectedTrackIds.length > 0 ? 0 : "calc(100vh - 250px)"};` : ""}`}>
                             {tracks
                                 .filter(track => track.song === song)
                                 .map(({id, name, register, date}) => (

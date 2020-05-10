@@ -241,6 +241,9 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                     )}
                     {recordingUri && (
                         <>
+                            <p style="margin: 1rem 0 0.5rem 0;">
+                                {t`syncHelp`}
+                            </p>
                             <Track title={song} src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}
                                 offset={getSongTrackOffset()} gain={songTrackGain}
                                 onOffsetUpdated={setSongTrackOffset} onGainUpdated={setSongTrackGain}

@@ -75,6 +75,7 @@ const translationMap = {
         recordingStarted: "Started recording.",
         recordingDone: "Done recording.",
         recordingDiscarded: "Discarded recording.",
+        syncHelp: "Move the audio tracks with the mouse button held down to achieve a precise synchronization of your recording with the song. Use the button \"Play\" for a quick preview and, when you are done, press \"Upload\".",
     },
     de: {
         title: "Virtueller Chor",
@@ -152,6 +153,7 @@ const translationMap = {
         recordingStarted: "Aufnahme begonnen.",
         recordingDone: "Aufnahme beendet.",
         recordingDiscarded: "Aufnahme verworfen.",
+        syncHelp: "Bewege die Audiospuren mit gedrückter Maustaste hin und her, um eine möglichst genaue Synchronisation deiner Aufnahme mit dem Song zu erreichen. Benutze zur Vorschau die Schaltfläche \"Abspielen\" und, wenn du fertig bist, klicke auf \"Hochladen\".",
     }
 };
 
