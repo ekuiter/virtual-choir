@@ -1,7 +1,7 @@
 import {h, Fragment} from "preact";
 import {t} from "../i18n";
 
-const IconButton = ({onClick, icon, children, minWidth, isVisible = true, style = "height: 38px;", margin = "6px 6px 6px 0",
+export const IconButton = ({onClick, icon, children, minWidth, isVisible = true, style = "height: 38px;", margin = "6px 6px 6px 0",
         invisibleMargin = "6px 0", className = "", ...props}) => (
     <button class={`btn btn-light ${className}`} onclick={onClick}
         style={`${style} ${isVisible ?
