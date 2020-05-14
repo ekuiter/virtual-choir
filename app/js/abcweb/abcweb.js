@@ -411,6 +411,7 @@ export default (abcOrXml, playback, offset, timing, cursor) => {
             deNot.style ['scroll-behavior'] = noAnim || fLeft ? 'auto' : 'smooth';
             deNot.scroll (nleft, deTop);
         } else */{
+            console.log("scroll to", deTop);
             if (fLeft) deNot.scrollLeft = nleft;
             if (fTop) $(deNot).animate ({ scrollTop: deTop }, 200);
         }
