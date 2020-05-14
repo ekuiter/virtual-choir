@@ -138,7 +138,7 @@ export default ({title, src, dataUri, offset = 0.5, virtualOffset = 0.0, gain = 
                             style={`margin: 0 ${showPlayButton ? "20px" : "10px"} 0 0;`} value={gain} oninput={onGainInput} />
                     </label>
                 </div>
-                <PlayButton isPlaying={isPlaying} isVisible={showPlayButton} margin="0 7px 0 0" invisibleMargin="0" className="btn-sm" style=""
+                <PlayButton isPlaying={isPlaying} isVisible={showPlayButton} margin="0 7px 0 0" invisibleMargin="0" className="btn-light btn-sm" style=""
                     onClick={() => onSetIsPlaying && onSetIsPlaying(!isPlaying)} />
             </div>
         </div>

@@ -164,8 +164,8 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                 <input type="submit" class={`btn ${busy || recordingUri ? "btn-outline-secondary" : recorder ? "btn-outline-danger" : "btn-outline-success"} my-2 my-sm-0`} 
                                     value={recorder ? t`stopRecording` : t`startRecording`}
                                     disabled={recordButtonDisabled}
-                                    style="margin-right: 6px;" />
-                                <IconButton icon={showOptions ? "/img/gear-fill.svg" : "/img/gear.svg"} onClick={onOptionsClicked}>&nbsp;{t`options`}</IconButton>
+                                    style="margin-right: 12px;" />
+                                <IconButton icon={showOptions ? "/img/gear-fill.svg" : "/img/gear.svg"} onClick={onOptionsClicked} className="">&nbsp;{t`options`}</IconButton>
                             </>
                         )}
                     </>

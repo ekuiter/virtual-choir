@@ -30,6 +30,7 @@ export default (abcOrXml, playback, offset, timing, cursor) => {
     var isvgPrev = [];  // svg index of each marker
     var gCurMask = 0;   // cursor mask (0-255)
     var playLstIx = 0;  // play list index
+    var _cursor = cursor;
     
     function initPreload () {
         opt = Object.assign (opt, optdef);  // copy the default values
@@ -185,7 +186,8 @@ export default (abcOrXml, playback, offset, timing, cursor) => {
         lastTime = this.times [this.times.length - 1];
         if (t <= 0 || t > lastTime) nleft = this.setx (0, 0, 0);   // hide cursor if t not within score
         else                        nleft = this.setx (x, xleft, xright);
-        doeRol (nleft, deTop, noAnim);
+        if (_cursor !== "none")
+            doeRol (nleft, deTop, noAnim);
         if (opt.synbox) { this.showSyncInfo (); }
     
         if (opt.lncsr) {
@@ -1535,6 +1537,7 @@ export default (abcOrXml, playback, offset, timing, cursor) => {
     }
     
     function setCursor(cursor) {
+        _cursor = cursor;
         if (msc_wz)
             msc_wz.noCursor = cursor === "none" ? 1 : 0;
         opt.nocsr = cursor === "none" ? 1 : 0;
