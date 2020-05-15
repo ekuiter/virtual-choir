@@ -151,7 +151,7 @@ if (isset($_REQUEST["mix"])) {
         die("no tracks found");
     $song = $tracks[0]["song"];
     $track_id_by_register = array();
-    if (!file_exists("../songs/$song.mp3"))
+    if (!@$config->songs->{$song})
         die("invalid song");
     $mixfile = "../mixes/" . date("Y-m-d") . " $song" . ($playback ? " (Playback)" : "");
     foreach ($tracks as $idx => $track) {
