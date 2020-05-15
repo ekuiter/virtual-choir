@@ -180,7 +180,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                 <div class="form-check" style="margin-left: 0.5rem;">
                                     <input class="form-check-input" type="checkbox" id="playback"
                                         checked={playback} disabled={recordDisabled} onchange={e => setPlayback(e.target.checked)} title={t`playbackHelp`} />
-                                    <label class="form-check-label" for="playback" style="margin-right: 1rem; user-select: none;" title={t`playbackHelp`}>{t`playback`}</label>
+                                    <label class="form-check-label" for="playback" style="margin-right: 1rem;" title={t`playbackHelp`}>{t`playback`}</label>
                                 </div>
                                 <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled}
                                     onchange={e => setScore(e.target.value)} title={t`scoreHelp`}>

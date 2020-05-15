@@ -78,6 +78,9 @@ const translationMap = {
         syncHelp: "Move the audio tracks with the mouse button held down to achieve a precise synchronization of your recording with the song. Use the button \"Play\" for a quick preview and, when you are done, press \"Upload\".",
         encodeMix: "Encode as video",
         options: "Options",
+        sortByDate: "Sort by date",
+        onlyLatest: "Only latest",
+        onlyStarred: "Only starred",
     },
     de: {
         title: "Virtueller Chor",
@@ -158,6 +161,9 @@ const translationMap = {
         syncHelp: "Bewege die Audiospuren mit gedrückter Maustaste hin und her, um eine möglichst genaue Synchronisation deiner Aufnahme mit dem Song zu erreichen. Benutze zur Vorschau die Schaltfläche \"Abspielen\" und, wenn du fertig bist, klicke auf \"Hochladen\".",
         encodeMix: "Als Video kodieren",
         options: "Optionen",
+        sortByDate: "Nach Datum sortieren",
+        onlyLatest: "Nur neueste",
+        onlyStarred: "Nur markierte",
     }
 };
 
