@@ -81,6 +81,7 @@ const translationMap = {
         sortByDate: "Sort by date",
         onlyLatest: "Only latest",
         onlyStarred: "Only starred",
+        filter: "Filter",
     },
     de: {
         title: "Virtueller Chor",
@@ -164,6 +165,7 @@ const translationMap = {
         sortByDate: "Nach Datum sortieren",
         onlyLatest: "Nur neueste",
         onlyStarred: "Nur markierte",
+        filter: "Filter",
     }
 };
 

@@ -5,15 +5,16 @@ import {post, fetchJson} from "../api";
 import {route, decode, useRepeat, useLocalStorage} from "../helpers";
 import Loading from "./Loading";
 
-export default ({encodedMix, config: {renameMixTitle, sortAndFilterMixes}}) => {
+export default ({encodedMix, config: {renameMixTitle, simplifiedMixTitle}}) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [mixes, setMixes] = useState([]);
     const [imageError, setImageError] = useState(false);
     const [pendingMixName, setPendingMixName] = useState();
+    const [filter, setFilter] = useLocalStorage("filter");
     const [sortByDate, setSortByDate] = useLocalStorage("sortByDate", val => val === "true", false);
-    const [onlyLatest, setOnlyLatest] = useLocalStorage("onlyLatest", val => val === "true", false);
     const [onlyStarred, setOnlyStarred] = useLocalStorage("onlyStarred", val => val === "true", false);
+    const [onlyLatest, setOnlyLatest] = useLocalStorage("onlyLatest", val => val === "true", false);
 
     useEffect(() => {
         setImageError();
@@ -52,10 +53,14 @@ export default ({encodedMix, config: {renameMixTitle, sortAndFilterMixes}}) => {
     }
 
     const sortAndFilter = mixes => {
-        let _mixes = sortByDate ? [...mixes].sort((a, b) => getDate(b) - getDate(a)) : mixes;
+        let _mixes = filter ? mixes.filter(mix => mix.toLowerCase().includes(filter.toLowerCase())) : mixes;
+        _mixes = sortByDate ? [..._mixes].sort((a, b) => getDate(b) - getDate(a)) : _mixes;
+        _mixes = onlyStarred ? _mixes.filter(mix => mix.includes("!")) : _mixes;
         _mixes = onlyLatest ? _mixes.filter((mix, i, arr) => arr.findIndex(_mix => getSong(_mix) === getSong(mix)) === i) : _mixes;
-        return onlyStarred ? _mixes.filter(mix => mix.includes("!")) : _mixes;
+        return _mixes;
     };
+
+    const hasStarred = mixes.find(mix => mix.includes("!"));
 
     return (
         <>
@@ -64,18 +69,27 @@ export default ({encodedMix, config: {renameMixTitle, sortAndFilterMixes}}) => {
             ? <Loading />
             : (
                 <>
-                    {sortAndFilterMixes && (
-                        <form class="form form-inline my-2 my-lg-0">
-                            <div class="form-check" style="margin-left: 0.5rem;">
-                                <input class="form-check-input" type="checkbox" id="sortByDate" checked={sortByDate} onchange={e => setSortByDate(e.target.checked)} />
-                                <label class="form-check-label" for="sortByDate" style="margin-right: 1rem;">{t`sortByDate`}</label>
-                                <input class="form-check-input" type="checkbox" id="onlyLatest" checked={onlyLatest} onchange={e => setOnlyLatest(e.target.checked)} />
-                                <label class="form-check-label" for="onlyLatest" style="margin-right: 1rem;">{t`onlyLatest`}</label>
-                                <input class="form-check-input" type="checkbox" id="onlyStarred" checked={onlyStarred} onchange={e => setOnlyStarred(e.target.checked)} />
-                                <label class="form-check-label" for="onlyStarred">{t`onlyStarred`}</label>
-                            </div>
-                        </form>
-                    )}
+                    <form class="form form-inline my-2 my-lg-0">
+                        <div class="form-check" style=" margin-bottom: 0.8rem; margin-right: 0.5rem;">
+                            <input type="text" class="form-control mr-sm-2" placeholder={t`filter`} value={filter} oninput={e => setFilter(e.target.value)} />
+                        </div>
+                        <div class="form-check" style=" margin-bottom: 0.8rem;">
+                            {simplifiedMixTitle && (
+                                <>
+                                    <input class="form-check-input" type="checkbox" id="sortByDate" checked={sortByDate} onchange={e => setSortByDate(e.target.checked)} />
+                                    <label class="form-check-label" for="sortByDate" style="margin-right: 1rem;">{t`sortByDate`}</label>
+                                </>
+                            )}
+                            {hasStarred && (
+                                <>
+                                    <input class="form-check-input" type="checkbox" id="onlyStarred" checked={onlyStarred} onchange={e => setOnlyStarred(e.target.checked)} />
+                                    <label class="form-check-label" for="onlyStarred" style="margin-right: 1rem;">{t`onlyStarred`}</label>
+                                </>
+                            )}
+                            <input class="form-check-input" type="checkbox" id="onlyLatest" checked={onlyLatest} onchange={e => setOnlyLatest(e.target.checked)} />
+                            <label class="form-check-label" for="onlyLatest">{t`onlyLatest`}</label>
+                        </div>
+                    </form>
                     <select class="custom-select" size={window.screen.width >= 800 ? 2 : 1}
                         style={window.screen.width >= 800 ? "margin-bottom: 15px; min-height: 200px; height: calc(100vh - 550px);" : ""}
                         onchange={e => route("/listen", e.target.value)}>
