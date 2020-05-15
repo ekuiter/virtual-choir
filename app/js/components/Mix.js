@@ -106,8 +106,8 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
             });
     };
 
-    const mp3 = typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.mp3` : songs[song].playback) : `/songs/${song}.mp3`;
-    const json = typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.json` : songs[song].playback.replace(".mp3", ".json")) : `/songs/${song}.json`;
+    const mp3 = song && (typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.mp3` : songs[song].playback) : `/songs/${song}.mp3`);
+    const json = song && (typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.json` : songs[song].playback.replace(".mp3", ".json")) : `/songs/${song}.json`);
 
     return (
         <>

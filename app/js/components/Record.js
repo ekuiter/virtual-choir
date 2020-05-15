@@ -126,8 +126,8 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
     const hasScore = song && !!songs[song].score;
     const hasMuseScore = song && !!songs[song].museScore;
     const hasAbcWeb = song && !!songs[song].abcWeb;
-    const mp3 = typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.mp3` : songs[song].playback) : `/songs/${song}.mp3`;
-    const json = typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.json` : songs[song].playback.replace(".mp3", ".json")) : `/songs/${song}.json`;
+    const mp3 = song && (typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.mp3` : songs[song].playback) : `/songs/${song}.mp3`);
+    const json = song && (typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.json` : songs[song].playback.replace(".mp3", ".json")) : `/songs/${song}.json`);
     const _score = hasScore && (typeof songs[song].score === "string" ? (songs[song].score === "*.txt" ? `/songs/${song}.txt` : songs[song].score) : `/songs/${song}.pdf`);
     const museScore = hasMuseScore && (typeof songs[song].museScore === "string" ? songs[song].museScore : `/songs/${song}.mscz`);
     const abcWeb = hasAbcWeb && (typeof songs[song].abcWeb === "string" ? songs[song].abcWeb : `/songs/${song}.${useXml2Abc ? "abc" : "musicxml"}`);
