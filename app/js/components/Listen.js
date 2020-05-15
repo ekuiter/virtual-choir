@@ -1,5 +1,5 @@
 import {h, Fragment} from "preact";
-import {useState, useEffect} from "preact/hooks";
+import {useState, useEffect, useRef} from "preact/hooks";
 import {t} from "../i18n";
 import {post, fetchJson} from "../api";
 import {route, decode, useRepeat, useLocalStorage} from "../helpers";
@@ -45,7 +45,7 @@ export default ({encodedMix, config: {renameMixTitle, simplifiedMixTitle}}) => {
             post({deleteMix: mix}).then(updateMixes).then(() => route("/listen"));
     };
 
-    const getSong = mix => mix.replace(/\d{4}-\d{2}-\d{2}/, "").trim();
+    const getSong = mix => mix.replace(/\d{4}-\d{2}-\d{2}/, "").replace(/\(!\)/, "").trim();
 
     const getDate = mix => {
         const match = mix.match(/\d{4}-\d{2}-\d{2}/);
@@ -60,6 +60,13 @@ export default ({encodedMix, config: {renameMixTitle, simplifiedMixTitle}}) => {
         return _mixes;
     };
 
+    const onSortAndFilterSubmit = e => {
+        e.preventDefault();
+        const mix = sortAndFilter(mixes)[0];
+        if (mix)
+            route("/listen", mix);
+    };
+
     const hasStarred = mixes.find(mix => mix.includes("!"));
 
     return (
@@ -69,9 +76,10 @@ export default ({encodedMix, config: {renameMixTitle, simplifiedMixTitle}}) => {
             ? <Loading />
             : (
                 <>
-                    <form class="form form-inline my-2 my-lg-0">
+                    <form class="form form-inline my-2 my-lg-0" onsubmit={onSortAndFilterSubmit}>
                         <div class="form-check" style=" margin-bottom: 0.8rem; margin-right: 0.5rem;">
-                            <input type="text" class="form-control mr-sm-2" placeholder={t`filter`} value={filter} oninput={e => setFilter(e.target.value)} />
+                            <input type="text" class="form-control mr-sm-2" placeholder={t`filter`} value={filter}
+                                oninput={e => setFilter(e.target.value)} onkeydown={e => e.keyCode === 27 && setFilter("")} />
                         </div>
                         <div class="form-check" style=" margin-bottom: 0.8rem;">
                             {simplifiedMixTitle && (
