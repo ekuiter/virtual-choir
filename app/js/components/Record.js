@@ -126,6 +126,8 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
     const hasScore = song && !!songs[song].score;
     const hasMuseScore = song && !!songs[song].museScore;
     const hasAbcWeb = song && !!songs[song].abcWeb;
+    const mp3 = typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.mp3` : songs[song].playback) : `/songs/${song}.mp3`;
+    const json = typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.json` : songs[song].playback.replace(".mp3", ".json")) : `/songs/${song}.json`;
     const _score = hasScore && (typeof songs[song].score === "string" ? (songs[song].score === "*.txt" ? `/songs/${song}.txt` : songs[song].score) : `/songs/${song}.pdf`);
     const museScore = hasMuseScore && (typeof songs[song].museScore === "string" ? songs[song].museScore : `/songs/${song}.mscz`);
     const abcWeb = hasAbcWeb && (typeof songs[song].abcWeb === "string" ? songs[song].abcWeb : `/songs/${song}.${useXml2Abc ? "abc" : "musicxml"}`);
@@ -196,7 +198,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                         <option value="note" selected={abcWebCursor === "note"}>{t`cursorNote`}</option>
                                     </select>
                                 )}
-                                <a native download={`${song}.mp3`} class="btn btn-outline-primary" style="margin-right: 6px;" href={`/songs/${song}.mp3`}>
+                                <a native download={`${song}.mp3`} class="btn btn-outline-primary" style="margin-right: 6px;" href={mp3}>
                                     {t`playback`}
                                 </a>
                                 {hasScore && (
@@ -223,11 +225,11 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                 </iframe>
                             )}
                             {score === "abcWeb" && hasAbcWeb && !loadLastRecording && (
-                                <AbcWeb key={abcWeb} score={abcWeb} playback={`/songs/${song}.mp3`}
+                                <AbcWeb key={abcWeb} score={abcWeb} playback={mp3}
                                     offset={songs[song].abcWebOffset || 0} timing={songs[song].abcWebTiming}
                                     isPlaying={isAbcWebReady === song && isRecording} onReady={setIsAbcWebReady(song)} cursor={abcWebCursor} />
                             )}
-                            <audio src={`/songs/${song}.mp3`} ref={playbackRef} />
+                            <audio src={mp3} ref={playbackRef} />
                         </>
                     )}
                     {recordingUri && (
@@ -235,7 +237,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                             <p style="margin: 1rem 0 0.5rem 0;">
                                 {t`syncHelp`}
                             </p>
-                            <Track title={song} src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}
+                            <Track title={song} src={mp3} dataUri={useAudiowaveform && json}
                                 offset={getSongTrackOffset()} gain={songTrackGain}
                                 onOffsetUpdated={setSongTrackOffset} onGainUpdated={setSongTrackGain}
                                 isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}

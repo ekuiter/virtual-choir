@@ -106,6 +106,9 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
             });
     };
 
+    const mp3 = typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.mp3` : songs[song].playback) : `/songs/${song}.mp3`;
+    const json = typeof songs[song].playback !== "undefined" ? (songs[song].playback === false ? `/songs/none.json` : songs[song].playback.replace(".mp3", ".json")) : `/songs/${song}.json`;
+
     return (
         <>
             <h4 style="margin-bottom: 15px;">{t`mix`}</h4>
@@ -159,7 +162,7 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
                                         <PlayButton isPlaying={isPlaying} onClick={onPlayClick} disabled={!isReady || busy} />
                                     </div>
                                 </div>
-                                <Track src={`/songs/${song}.mp3`} dataUri={useAudiowaveform && `/songs/${song}.json`}
+                                <Track src={mp3} dataUri={useAudiowaveform && json}
                                     key={song} title={song} offset={songs[song].offset} virtualOffset={virtualSongTrackOffset}
                                     gain={songTrackGain} gainMin={0} gainMax={5} onGainUpdated={setSongTrackGain} isPlaying={songTrackPlaying === song}
                                     onSetIsPlaying={isPlaying => setSongTrackPlaying(isPlaying && song)}
