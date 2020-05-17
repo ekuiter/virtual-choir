@@ -153,7 +153,7 @@ if (isset($_REQUEST["mix"])) {
     $track_id_by_register = array();
     if (!@$config->songs->{$song})
         die("invalid song");
-    $mixfile = "../mixes/" . date("Y-m-d") . " $song" . ($playback ? " (Playback)" : "");
+    $mixfile = "../mixes/" . date("Y-m-d H-i-s") . " $song" . ($playback ? " (Playback)" : "");
     foreach ($tracks as $idx => $track) {
         if ($track["register"] === "null")
             continue;
