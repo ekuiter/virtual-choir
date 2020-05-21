@@ -8,7 +8,7 @@ import Track from "./Track";
 import {useLocalStorage, getRecordingArrayBuffer, setRecordingArrayBuffer, makeToast} from "../helpers";
 import AbcWeb from "./AbcWeb";
 
-export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song, setSong, recordingTimeout = 1500, loadLastRecording = false}) => {
+export default ({config: {songs, registers, useAudiowaveform, useXml2Abc, useAutomix}, song, setSong, recordingTimeout = 1500, loadLastRecording = false}) => {
     const [name, setName] = useLocalStorage("name");
     const [register, setRegister] = useLocalStorage("register");
     const [score, setScore] = useState("abcWeb");
@@ -86,12 +86,12 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
         }
     };
 
-    const onUploadClick = () => {
+    const onUploadClick = automix => () => {
         setBusy(true);
         setIsPlaying(false);
         const gain = !isNaN(recordingTrackGain / songTrackGain) ? recordingTrackGain / songTrackGain : 1;
         makeToast(t`uploadStarted`);
-        uploadTrack(recordingUri, name, register, song, getSongTrackOffset(), getRecordingTrackOffset(), gain)
+        uploadTrack(recordingUri, name, register, song, getSongTrackOffset(), getRecordingTrackOffset(), gain, automix)
             .then(onDiscardClick)
             .then(() => setBusy(false))
             .then(() => makeToast(t`uploadDone`));
@@ -247,7 +247,8 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc}, song,
                                 isPlaying={isPlaying} onSetIsPlaying={setIsPlaying} showPlayButton={false}
                                 onReady={() => setIsRecordingTrackReady(true)} margin={20} />
                             <PlayButton isPlaying={isPlaying} onClick={() => setIsPlaying(!isPlaying)} disabled={uploadDisabled} />
-                            <button class="btn btn-outline-success" style="margin-right: 6px;" disabled={uploadDisabled} onclick={onUploadClick}>{t`upload`}</button>
+                            <button class="btn btn-outline-success" style="margin-right: 6px;" disabled={uploadDisabled} onclick={onUploadClick(false)}>{t`upload`}</button>
+                            {useAutomix && <button class="btn btn-outline-success" style="margin-right: 6px;" disabled={uploadDisabled} onclick={onUploadClick(true)}>{t`automix`}</button>}
                             <button class="btn btn-outline-danger" onclick={onDiscardClick}>{t`discard`}</button>
                         </>
                     )}

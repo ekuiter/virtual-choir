@@ -5,11 +5,11 @@ export const post = params => {
     return fetch("/php/app.php", {method: "POST", body: data});
 };
 
-export const uploadTrack = (blobUri, name, register, song, songOffset, recordingOffset, gain) =>
+export const uploadTrack = (blobUri, name, register, song, songOffset, recordingOffset, gain, automix) =>
     fetch(blobUri)
         .then(res => res.blob())
         .then(blob => post({
-            name, register, song, songOffset, recordingOffset, gain,
+            name, register, song, songOffset, recordingOffset, gain, automix,
             date: (new Date).toISOString(),
             file: new File([blob], "audio.dat", {type: "application/octet-stream"})
         }));

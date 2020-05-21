@@ -116,7 +116,12 @@ if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
     $date = $_POST["date"] && $_POST["date"] !== "undefined" ? $_POST["date"] : date("Y-m-d\TH:i:s.000\Z");
     DB::query("INSERT INTO tracks (name, register, song, songOffset, recordingOffset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
         $_POST["name"], $_POST["register"], $_POST["song"], $songOffset, $recordingOffset, $gain, $date, $md5);
-    header("Location: ../admin");
+    if (isset($_REQUEST["automix"]) && $_REQUEST["automix"] === "true") {
+        $automix = true;
+        $track = DB::queryFirstRow("SELECT * FROM tracks ORDER BY id DESC LIMIT 1");
+        $_REQUEST["mix"] = "[" . $track["id"] . "]";
+    } else
+        header("Location: ../admin");
 }
 
 if (isset($_REQUEST["config"])) {
@@ -278,9 +283,10 @@ if (isset($_REQUEST["mix"])) {
         imagedestroy($img);
         imagedestroy($final_img);
     }
+    if (isset($automix))
+        $_REQUEST["deleteSelected"] = $_REQUEST["mix"];
     $mixfile = base64_encode(basename($mixfile, ".mp3"));
     header("Location: ../listen/$mixfile");
-    die;
 }
 
 if (isset($_REQUEST["reset"]))
