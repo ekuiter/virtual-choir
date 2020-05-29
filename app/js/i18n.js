@@ -83,6 +83,7 @@ const translationMap = {
         onlyStarred: "Only starred",
         filter: "Filter",
         automix: "Auto-mix",
+        replace: "Replace",
     },
     de: {
         title: "Virtueller Chor",
@@ -168,6 +169,7 @@ const translationMap = {
         onlyStarred: "Nur markierte",
         filter: "Filter",
         automix: "Auto-Mix",
+        replace: "Ersetzen",
     }
 };
 

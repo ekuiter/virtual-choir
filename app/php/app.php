@@ -114,14 +114,31 @@ if ($_FILES && isset($_FILES["file"]) && $_FILES["file"]["error"] === 0) {
     $recordingOffset = $_POST["recordingOffset"] && $_POST["recordingOffset"] !== "undefined" ? $_POST["recordingOffset"] : "0.0";
     $gain = $_POST["gain"] && $_POST["gain"] !== "undefined" ? $_POST["gain"] : "1.0";
     $date = $_POST["date"] && $_POST["date"] !== "undefined" ? $_POST["date"] : date("Y-m-d\TH:i:s.000\Z");
-    DB::query("INSERT INTO tracks (name, register, song, songOffset, recordingOffset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-        $_POST["name"], $_POST["register"], $_POST["song"], $songOffset, $recordingOffset, $gain, $date, $md5);
-    if (isset($_REQUEST["automix"]) && $_REQUEST["automix"] === "true") {
-        $automix = true;
-        $track = DB::queryFirstRow("SELECT * FROM tracks ORDER BY id DESC LIMIT 1");
-        $_REQUEST["mix"] = "[" . $track["id"] . "]";
-    } else
-        header("Location: ../admin");
+    if (isset($_REQUEST["setFor"]) && $_REQUEST["setFor"]) {
+        $track_id = (int) $_REQUEST["setFor"];
+        if (!$track_id)
+            die("no tracks given");
+        $track = DB::query("SELECT * FROM tracks WHERE id = %i", $track_id);
+        $count = count($track);
+        if ($count !== 1)
+            die("no tracks found");
+        if ($md5 !== $track[0]["md5"]) {
+            unlink("../tracks/{$track[0][md5]}.mp3");
+            if (@$config->useAudiowaveform)
+                unlink("../tracks/{$track[0][md5]}.json");
+            DB::query("UPDATE tracks SET md5 = %s WHERE id = %i", $md5, $track_id);
+        }
+        header("Location: " . $_SERVER["HTTP_REFERER"]);
+    } else {
+        DB::query("INSERT INTO tracks (name, register, song, songOffset, recordingOffset, gain, date, md5) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+            $_POST["name"], $_POST["register"], $_POST["song"], $songOffset, $recordingOffset, $gain, $date, $md5);
+        if (isset($_REQUEST["automix"]) && $_REQUEST["automix"] === "true") {
+            $automix = true;
+            $track = DB::queryFirstRow("SELECT * FROM tracks ORDER BY id DESC LIMIT 1");
+            $_REQUEST["mix"] = "[" . $track["id"] . "]";
+        } else
+            header("Location: ../admin");
+    }
 }
 
 if (isset($_REQUEST["config"])) {
@@ -396,7 +413,7 @@ if (isset($_REQUEST["backup"])) {
     }
 }
 
-if (isset($_REQUEST["setFor"]) && $_REQUEST["setFor"]) {
+if (!$_FILES && isset($_REQUEST["setFor"]) && $_REQUEST["setFor"]) {
     if (isset($_REQUEST["name"]) && $_REQUEST["name"] !== "")
         DB::query("UPDATE tracks SET name = %s WHERE id = %i", $_REQUEST["name"], (int) $_REQUEST["setFor"]);
     if (isset($_REQUEST["song"]) && $_REQUEST["song"] !== "")

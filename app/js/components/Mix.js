@@ -5,7 +5,7 @@ import {post, fetchJson} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
 import Loading from "./Loading";
-import {decode, route, useDebounce, useRepeat, getName} from "../helpers";
+import {decode, route, useDebounce, useRepeat, getName, getPlainName} from "../helpers";
 
 export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
     const [loading, setLoading] = useState(true);
@@ -186,6 +186,7 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
 
                                     return (
                                         <Track key={id} title={getName(name, register)}
+                                            downloadTitle={getPlainName(name, register)} setForId={id}
                                             src={`/tracks/${md5}.mp3`}
                                             dataUri={useAudiowaveform && `/tracks/${md5}.json`}
                                             offset={parseFloat(recordingOffset) - (parseFloat(songOffset) - (songs[song].offset))}

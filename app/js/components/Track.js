@@ -20,7 +20,7 @@ const fetchAudioBuffer = (() => {
     };
 })();
 
-export default ({title, src, dataUri, offset = 0.5, virtualOffset = 0.0, gain = 1, displaySeconds = 5.0, onReady,
+export default ({title, downloadTitle, setForId, src, dataUri, offset = 0.5, virtualOffset = 0.0, gain = 1, displaySeconds = 5.0, onReady,
     isPlaying, onSetIsPlaying, onOffsetUpdated, onGainUpdated, showPlayButton = true, showOverview = false,
     gainMin = 0.01, gainMax = 2, zoomHeight = 140, overviewHeight = 50, margin = 8, topDiff = 35}) => {
     const [peaks, setPeaks] = useState();
@@ -130,6 +130,18 @@ export default ({title, src, dataUri, offset = 0.5, virtualOffset = 0.0, gain = 
             <div style={peaks ? `${showOverview ? "" : `position: absolute; top: ${zoomHeight - topDiff}px; width: 100%;`} margin: 5px 0; display: flex; flex-basis: 1;`: "display: none;"}>
                 <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
                     <strong style="padding: 0 20px 0 10px">{title}</strong>
+                    {downloadTitle && (
+                        <>
+                            <a native download={`${downloadTitle}.mp3`} class="btn btn-sm btn-outline-primary my-2 my-sm-0" style="padding: 0.15rem 0.4rem; margin: 0;" href={src}>
+                                {t`download`}
+                            </a>
+                            <form enctype="multipart/form-data" action="/php/app.php" method="post" class="form form-inline my-2 my-lg-0">
+                                <input type="hidden" name="setFor" value={setForId} />
+                                <input type="file" name="file" style="margin: 0 12px 0 12px; font-size: 12px;" />
+                                <input type="submit" class="btn btn-outline-primary btn-sm" style="padding: 0.15rem 0.4rem; margin: 0;" value={t`replace`} />
+                            </form>
+                        </>
+                    )}
                 </div>
                 <div class="form-group form-inline" style="margin-bottom: 0;">
                     <label>
