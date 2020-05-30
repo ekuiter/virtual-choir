@@ -16,6 +16,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc, useAut
     const [abcWebCursor, setAbcWebCursor] = useLocalStorage("abcWebCursor", val => val, "normal");
     const [busy, setBusy] = useState();
     const [recorder, setRecorder] = useState();
+    const [stream, setStream] = useState();
     const [recordingUri, setRecordingUri] = useState();
     const [isRecording, setIsRecording] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
@@ -62,6 +63,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc, useAut
                     window.setTimeout(() => {
                         setBusy(false);
                         setRecorder(recorder);
+                        setStream(stream);
                     }, recordingTimeout);
                     makeToast(t`recordingStarted`);
             }, () => {
@@ -75,10 +77,10 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc, useAut
                 playbackRef.current.pause();
             setIsRecording(false);
             recorder.stopRecording(() => {
-                const internalRecorder = recorder.getInternalRecorder().getInternalRecorder();
-                internalRecorder._stream.getTracks().forEach(track => track.stop());
+                stream.getTracks().forEach(track => track.stop());
                 setBusy(false);
                 setRecorder();
+                setStream();
                 setRecordingUri(recorder.toURL());
                 recorder.getBlob().arrayBuffer().then(setRecordingArrayBuffer);
                 makeToast(t`recordingDone`);
