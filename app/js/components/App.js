@@ -16,18 +16,24 @@ export default ({config}) => {
     const [toastMessage, setToastMessage] = useState();
     const toastRef = useRef();
 
+    const showToast = className => {
+        $(toastRef.current).toast("show");
+        $(toastRef.current).find(".toast-body, .toast-header").addClass(className);
+        window.setTimeout(() => $(toastRef.current).find(".toast-body, .toast-header").removeClass(className), 300);
+    };
+
     useEffect(() => {
         if (toastRef.current) {
             $(toastRef.current).toast({delay: 4000});
             window.onerror = (_1, _2, _3, _4, e) => {
                 setToastTitle(e.name === "Notice" ? t`notice` : t`error`);
                 setToastMessage(e.message);
-                $(toastRef.current).toast("show");
+                showToast(e.name === "Notice" ? "flash-notice" : "flash-warning");
             };
             window.onunhandledrejection = e => {
                 setToastTitle("Unhandled Rejection");
                 setToastMessage(e.reason);
-                $(toastRef.current).toast("show");
+                showToast("flash-warning");
             };
         }
 
@@ -36,7 +42,7 @@ export default ({config}) => {
         (window.navigator.userAgent.indexOf("Safari") > -1 && window.navigator.userAgent.indexOf("Chrome") === -1)) {
             setToastTitle(t`warning`);
             setToastMessage(t`browserWarning`);
-            $(toastRef.current).toast("show");
+            showToast("flash-warning");
         }
     }, [config]);
 

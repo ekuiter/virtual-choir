@@ -12,3 +12,28 @@ body {
     display: block;
     margin: 0 auto;
 }
+
+.toast-header, .toast-body {
+    transition: 800ms all;
+}
+
+.toast-header.flash-notice {
+    transition: 200ms all;
+    background-color: #c3f0f7;
+}
+
+.toast-body.flash-notice {
+    transition: 200ms all;
+    background-color: #e6f9fc;
+}
+
+.toast-header.flash-warning {
+    transition: 200ms all;
+    background-color: #ffe390;
+}
+
+.toast-body.flash-warning {
+    transition: 200ms all;
+    background-color: #ffedb8;
+}
+
