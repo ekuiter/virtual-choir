@@ -84,6 +84,7 @@ const translationMap = {
         filter: "Filter",
         automix: "Auto-mix",
         replace: "Replace",
+        mixStarted: "Started mixing ...",
     },
     de: {
         title: "Virtueller Chor",
@@ -170,6 +171,7 @@ const translationMap = {
         filter: "Filter",
         automix: "Auto-Mix",
         replace: "Ersetzen",
+        mixStarted: "Wird abgemischt ...",
     }
 };
 

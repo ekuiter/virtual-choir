@@ -5,7 +5,7 @@ import {post, fetchJson} from "../api";
 import PlayButton from "./PlayButton";
 import Track from "./Track";
 import Loading from "./Loading";
-import {decode, route, useDebounce, useRepeat, getName, getPlainName} from "../helpers";
+import {decode, route, useDebounce, useRepeat, getName, getPlainName, makeToast} from "../helpers";
 
 export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong, encodedTrackIds, defaultSong, debounceApiCalls = 500}) => {
     const [loading, setLoading] = useState(true);
@@ -92,6 +92,8 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
 
     const onMixSubmit = e => {
         e.preventDefault();
+        setBusy(true);
+        makeToast(t`mixStarted`);
         location.href = `/php/app.php?mix=${JSON.stringify(selectedTrackIds)}${mixPlayback ? "&playback" : ""}&gain=${mixGain}`;
     };
 
@@ -139,9 +141,9 @@ export default ({config: {songs, useAudiowaveform, defaultMixGain}, encodedSong,
                         </select>
                         {selectedTrackIds.length > 0 && (
                             <>
-                                <div style="display: flex; flex-basis: 1;" onSubmit={onMixSubmit}>
+                                <div style="display: flex; flex-basis: 1;">
                                     <div class="form-group form-inline" style="margin-bottom: 0; flex-grow: 1;">
-                                        <form class="form-inline">
+                                        <form class="form-inline" onSubmit={onMixSubmit}>
                                             <label class="form-check-label" style="margin: 2px 5px 0 0;" title={t`playbackHelp`}>
                                                 <input class="form-check-input" type="checkbox" checked={mixPlayback} onchange={e => setMixPlayback(e.target.checked)} />
                                                 <span>{t`playback`}</span>
