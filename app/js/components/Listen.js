@@ -5,7 +5,7 @@ import {post, fetchJson} from "../api";
 import {route, decode, useRepeat, useLocalStorage} from "../helpers";
 import Loading from "./Loading";
 
-export default ({encodedMix, config: {renameMixTitle, simplifiedMixTitle}}) => {
+export default ({encodedMix, config: {renameMixTitle, simplifiedMixTitle, listenHeader, listenHeight = 550}}) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [mixes, setMixes] = useState([]);
@@ -76,6 +76,7 @@ export default ({encodedMix, config: {renameMixTitle, simplifiedMixTitle}}) => {
             ? <Loading />
             : (
                 <>
+                    <div dangerouslySetInnerHTML={{__html: listenHeader}} />
                     <form class="form form-inline my-2 my-lg-0" onsubmit={onSortAndFilterSubmit}>
                         <div class="form-check" style=" margin-bottom: 0.8rem; margin-right: 0.5rem;">
                             <input type="text" class="form-control mr-sm-2" placeholder={t`filter`} value={filter}
@@ -99,7 +100,7 @@ export default ({encodedMix, config: {renameMixTitle, simplifiedMixTitle}}) => {
                         </div>
                     </form>
                     <select class="custom-select" size={window.screen.width >= 800 ? 2 : 1}
-                        style={window.screen.width >= 800 ? "margin-bottom: 15px; min-height: 200px; height: calc(100vh - 550px);" : ""}
+                        style={window.screen.width >= 800 ? `margin-bottom: 15px; min-height: 200px; height: calc(100vh - ${listenHeight}px);` : ""}
                         onchange={e => route("/listen", e.target.value)}>
                         {sortAndFilter(mixes).map(_mix => <option key={_mix} value={_mix} selected={mix === _mix}>{_mix}</option>)}
                     </select>
