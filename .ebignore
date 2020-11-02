@@ -1,6 +1,7 @@
 .git
 .gitignore
 _stuff
+_acafin
 _kuiter.info
 node_modules
 app/mixes/*

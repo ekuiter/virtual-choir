@@ -159,7 +159,7 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc, useAut
                 </select>
                 {name && register && (
                     <>
-                        <select class="custom-select" class="form-control mr-sm-2" disabled={recordDisabled} onchange={e => setSong(e.target.value)} title={t`songHelp`}>
+                        <select class="custom-select" class={`form-control mr-sm-2 ${Object.keys(songs).length > 50 ? "form-control-sm" : ""}`} disabled={recordDisabled} onchange={e => setSong(e.target.value)} title={t`songHelp`}>
                             <option>{t`song`}</option>
                             {Object.keys(songs).map((_song) => <option key={_song} value={_song} selected={song === _song}>{_song}</option>)}
                         </select>
