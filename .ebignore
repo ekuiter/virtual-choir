@@ -2,7 +2,9 @@
 .gitignore
 _stuff
 _acafin
+_acafin_backup
 _kuiter.info
+_kuiter.info_backup
 node_modules
 app/mixes/*
 !app/mixes/.htaccess
