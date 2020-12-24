@@ -25,3 +25,4 @@ config2.json
 config3.json
 migrate.sh
 *.zip
+notes.txt
