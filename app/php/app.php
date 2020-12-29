@@ -404,7 +404,7 @@ if (isset($_REQUEST["backup"])) {
         $zip->addFromString("dump.sql", $sql);
         $tracks = array_filter((array) glob("../tracks/*"));
         foreach ($tracks as $track)
-            $zip->addFile($track, "tracks/" . basename($track));
+            ;//$zip->addFile($track, "tracks/" . basename($track));
         $mixes = array_filter((array) glob("../mixes/*"));
         foreach ($mixes as $mix)
             $zip->addFile($mix, "mixes/" . basename($mix));
