@@ -63,14 +63,6 @@ export default ({config: {version}}) => {
                 </p>
 
                 <p>
-                    <strong>{t`browserSupport`}</strong><br />
-                    ✔ Firefox 65-75, Chrome 79-81 (Windows 10, Ubuntu 18, macOS 14)<br />
-                    ✔ Chrome 81 (Android 7)<br />
-                    ✖ Internet Explorer, Edge 44 (Windows 10)<br />
-                    ✖ Safari (macOS 14)
-                </p>
-
-                <p>
                     <strong>{t`microphoneSettings`}</strong> <button class="btn btn-outline-primary btn-sm" onclick={onTestClick} style="padding: 0.15rem 0.4rem; margin: -0.3rem 0 0 0.6rem;">{t`testPermission`}</button><br />
                     Chrome: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">chrome://settings/content/microphone</span><br />
                     Firefox: <span style="font-family: monospace; font-size: 0.8rem; user-select: text;">about:preferences#privacy</span>

@@ -52,8 +52,9 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc, useAut
                 makeToast(t`songMissing`, "Error");
             else {
                 setBusy(true);
+				navigator.mozGetUserMedia = null; // workaround so Firefox uses WEBM instead
                 navigator.mediaDevices.getUserMedia({audio: true, video: false}).then(stream => {
-                    const recorder = RecordRTC(stream, {type: "audio"});
+                    const recorder = RecordRTC(stream, {type: "audio", mimeType: "audio/webm"});
                     recorder.startRecording();
                     if (playback && playbackRef.current) {
                         playbackRef.current.currentTime = 0;
@@ -66,9 +67,9 @@ export default ({config: {songs, registers, useAudiowaveform, useXml2Abc, useAut
                         setStream(stream);
                     }, recordingTimeout);
                     makeToast(t`recordingStarted`);
-            }, () => {
+            }, (e) => {
                     setBusy(false);
-                    makeToast(t`permissionMissing`, "Error");
+                    makeToast(t`permissionMissing` + " " + e.message, "Error");
                 });
             }
         } else {
